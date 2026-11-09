@@ -62,6 +62,8 @@
   device-orientation-permission-ui="enabled: false">
   <a-assets>
     <video id="v0" src="./repteis.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v2" src="./mamiferos.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v3" src="./servicos.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
     <video id="v1" src="./aves.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
   </a-assets>
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -73,6 +75,14 @@
   <!-- 1: Aves (benedito-de-testa-amarela) — proporção 2128/1700 -->
   <a-entity class="alvo" data-video="v1" mindar-image-target="targetIndex: 1">
     <a-video src="#v1" width="1" height="1.2518" position="0 0 0.001"></a-video>
+  </a-entity>
+  <!-- 2: Mamíferos (página dupla, preguiça) — proporção 720/1204 -->
+  <a-entity class="alvo" data-video="v2" mindar-image-target="targetIndex: 2">
+    <a-video src="#v2" width="1" height="0.598" position="0 0 0.001"></a-video>
+  </a-entity>
+  <!-- 3: Serviços ambientais e ecossistêmicos (página dupla, sabiá) — proporção 720/1228 -->
+  <a-entity class="alvo" data-video="v3" mindar-image-target="targetIndex: 3">
+    <a-video src="#v3" width="1" height="0.5863" position="0 0 0.001"></a-video>
   </a-entity>
 </a-scene>
 
