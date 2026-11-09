@@ -27,6 +27,10 @@
     position: fixed; left: 16px; right: 16px; top: 40%; z-index: 20; display: none; padding: 18px;
     border-radius: 14px; background: #fff; color: #10200f; font-size: 1rem; line-height: 1.4; text-align: center;
   }
+  #girar { width: 110px; height: 110px; }
+  #girar .cel { transform-origin: 55px 55px; animation: gira 2.6s ease-in-out infinite; }
+  @keyframes gira { 0%, 20% { transform: rotate(0deg); } 50%, 80% { transform: rotate(90deg); } 100% { transform: rotate(0deg); } }
+  #girar-txt { font-size: .95rem; color: #fbbf3a; font-weight: 600; margin-top: -8px; }
   #som {
     position: fixed; top: 16px; right: 16px; z-index: 6; display: none;
     font-size: 1rem; padding: 10px 16px;
@@ -37,6 +41,15 @@
 <div id="inicio">
   <h1>📱 Livro vivo</h1>
   <p>Toque em <b>Começar</b>, permita o uso da câmera e aponte o celular para uma página com o selo de realidade aumentada. Para páginas duplas, segure o celular na horizontal.</p>
+  <svg id="girar" viewBox="0 0 110 110" aria-hidden="true">
+    <path d="M18 40 A42 42 0 0 1 70 14" fill="none" stroke="#fbbf3a" stroke-width="4" stroke-linecap="round"/>
+    <path d="M64 6 L72 14 L62 20" fill="none" stroke="#fbbf3a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="cel">
+      <rect x="35" y="22" width="40" height="66" rx="7" fill="none" stroke="#fff" stroke-width="5"/>
+      <line x1="49" y1="80" x2="61" y2="80" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </svg>
+  <div id="girar-txt">Gire o celular para a horizontal</div>
   <button class="btn" id="btn">Começar</button>
 </div>
 <div id="dica">Aponte para a foto da página impressa</div>
@@ -48,8 +61,8 @@
   color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false">
   <a-assets>
-    <video id="v0" src="./repteis.mp4" preload="auto" muted playsinline webkit-playsinline crossorigin="anonymous"></video>
-    <video id="v1" src="./aves.mp4" preload="auto" muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v0" src="./repteis.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v1" src="./aves.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
   </a-assets>
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
@@ -117,7 +130,7 @@
     som.textContent = comSom ? '🔊 Som ligado' : '🔇 Ativar som';
   });
 
-  // ao encontrar a página: toca o vídeo uma vez (para no último quadro); ao perder: volta ao início
+  // ao encontrar a página: começa do início e repete sem parar; ao perder: pausa e volta ao início
   document.querySelectorAll('.alvo').forEach(alvo => {
     const v = document.getElementById(alvo.dataset.video);
     alvo.addEventListener('targetFound', () => { dica.style.display = 'none'; v.currentTime = 0; v.muted = !comSom; v.play(); });
