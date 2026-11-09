@@ -23,6 +23,10 @@
     position: fixed; left: 0; right: 0; bottom: 24px; z-index: 5; text-align: center; color: #fff;
     font-size: .95rem; text-shadow: 0 1px 4px #000; display: none;
   }
+  #erro {
+    position: fixed; left: 16px; right: 16px; top: 40%; z-index: 20; display: none; padding: 18px;
+    border-radius: 14px; background: #fff; color: #10200f; font-size: 1rem; line-height: 1.4; text-align: center;
+  }
   #som {
     position: fixed; top: 16px; right: 16px; z-index: 6; display: none;
     font-size: 1rem; padding: 10px 16px;
@@ -36,6 +40,7 @@
   <button class="btn" id="btn">Começar</button>
 </div>
 <div id="dica">Aponte para a foto da página impressa</div>
+<div id="erro"></div>
 <button class="btn" id="som">🔇 Ativar som</button>
 
 <a-scene
@@ -64,13 +69,27 @@
   const som = document.getElementById('som');
   let comSom = false;
 
-  document.getElementById('btn').addEventListener('click', async () => {
-    // desbloqueia a reprodução dos vídeos no iPhone (exige toque do usuário)
-    for (const v of videos) { try { await v.play(); v.pause(); v.currentTime = 0; } catch (e) {} }
+  const erro = document.getElementById('erro');
+  function mostrarErro(msg) { erro.textContent = msg; erro.style.display = 'block'; dica.style.display = 'none'; }
+  window.addEventListener('error', e => mostrarErro('Erro: ' + (e.message || e)));
+  window.addEventListener('unhandledrejection', e => mostrarErro('Erro: ' + (e.reason && e.reason.message || e.reason)));
+
+  const scene = document.querySelector('a-scene');
+  scene.addEventListener('arReady', () => { dica.textContent = 'Aponte para a foto da página impressa'; });
+  scene.addEventListener('arError', () => mostrarErro('Não foi possível abrir a câmera. Verifique se o navegador tem permissão para usar a câmera e abra o link direto no Safari ou no Chrome (não dentro do WhatsApp/Instagram).'));
+
+  document.getElementById('btn').addEventListener('click', () => {
     document.getElementById('inicio').style.display = 'none';
+    dica.textContent = 'Abrindo a câmera…';
     dica.style.display = 'block';
     som.style.display = 'block';
-    document.querySelector('a-scene').systems['mindar-image-system'].start();
+    // desbloqueia os vídeos no iPhone (precisa ocorrer no toque, sem esperar)
+    videos.forEach(v => { const pr = v.play(); if (pr) pr.then(() => { v.pause(); v.currentTime = 0; }).catch(() => {}); });
+    const iniciar = () => {
+      try { scene.systems['mindar-image-system'].start(); }
+      catch (e) { mostrarErro('Erro ao iniciar a realidade aumentada: ' + e.message); }
+    };
+    if (scene.hasLoaded) iniciar(); else scene.addEventListener('loaded', iniciar);
   });
 
   som.addEventListener('click', () => {
