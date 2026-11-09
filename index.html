@@ -7,7 +7,7 @@
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; background: #000; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
   #inicio {
     position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center;
@@ -53,9 +53,9 @@
   </a-assets>
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-  <!-- 0: Répteis (jararaca) — proporção 1414/1188 -->
+  <!-- 0: Répteis (página dupla) — proporção 1424/2398 -->
   <a-entity class="alvo" data-video="v0" mindar-image-target="targetIndex: 0">
-    <a-video src="#v0" width="1" height="1.1902" position="0 0 0.001"></a-video>
+    <a-video src="#v0" width="1" height="0.5938" position="0 0 0.001"></a-video>
   </a-entity>
   <!-- 1: Aves (benedito-de-testa-amarela) — proporção 2128/1700 -->
   <a-entity class="alvo" data-video="v1" mindar-image-target="targetIndex: 1">
