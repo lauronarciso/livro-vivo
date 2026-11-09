@@ -36,7 +36,7 @@
 <body>
 <div id="inicio">
   <h1>📱 Livro vivo</h1>
-  <p>Toque em <b>Começar</b>, permita o uso da câmera e aponte o celular para uma página com o selo de realidade aumentada.</p>
+  <p>Toque em <b>Começar</b>, permita o uso da câmera e aponte o celular para uma página com o selo de realidade aumentada. Para páginas duplas, segure o celular na horizontal.</p>
   <button class="btn" id="btn">Começar</button>
 </div>
 <div id="dica">Aponte para a foto da página impressa</div>
@@ -90,6 +90,25 @@
       catch (e) { mostrarErro('Erro ao iniciar a realidade aumentada: ' + e.message); }
     };
     if (scene.hasLoaded) iniciar(); else scene.addEventListener('loaded', iniciar);
+  });
+
+  // Ao girar o celular, a câmera muda de proporção: reinicia a RA para recalcular o encaixe
+  let rodando = false, horizontalInicial = null, timerGiro = null;
+  const ehHorizontal = () => window.innerWidth > window.innerHeight;
+  scene.addEventListener('arReady', () => { rodando = true; horizontalInicial = ehHorizontal(); });
+  window.addEventListener('resize', () => {
+    clearTimeout(timerGiro);
+    timerGiro = setTimeout(() => {
+      if (!rodando || ehHorizontal() === horizontalInicial) return;
+      rodando = false;
+      const sys = scene.systems['mindar-image-system'];
+      videos.forEach(v => { v.pause(); v.currentTime = 0; });
+      dica.textContent = 'Ajustando a câmera…'; dica.style.display = 'block';
+      // esconde as páginas para o vídeo recomeçar quando forem reconhecidas de novo
+      document.querySelectorAll('.alvo').forEach(a => { try { a.components['mindar-image-target'].updateWorldMatrix(null); } catch (e) {} });
+      try { sys.stop(); } catch (e) {}
+      setTimeout(() => { try { sys.start(); } catch (e) { mostrarErro('Erro ao reiniciar: ' + e.message); } }, 400);
+    }, 600);
   });
 
   som.addEventListener('click', () => {
