@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Livro vivo – Realidade Aumentada</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; background: #000; }
+  #inicio {
+    position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center;
+    background: radial-gradient(circle at 50% 30%, #2f5a2a, #10200f); color: #fff;
+  }
+  #inicio h1 { margin: 0; font-size: 1.6rem; color: #fbbf3a; }
+  #inicio p { margin: 0; max-width: 320px; line-height: 1.4; opacity: .9; }
+  .btn {
+    font-size: 1.1rem; font-weight: 700; padding: 14px 28px; border: 0; border-radius: 40px;
+    background: #fbbf3a; color: #10200f;
+  }
+  #dica {
+    position: fixed; left: 0; right: 0; bottom: 24px; z-index: 5; text-align: center; color: #fff;
+    font-size: .95rem; text-shadow: 0 1px 4px #000; display: none;
+  }
+  #som {
+    position: fixed; top: 16px; right: 16px; z-index: 6; display: none;
+    font-size: 1rem; padding: 10px 16px;
+  }
+</style>
+</head>
+<body>
+<div id="inicio">
+  <h1>📱 Livro vivo</h1>
+  <p>Toque em <b>Começar</b>, permita o uso da câmera e aponte o celular para uma página com o selo de realidade aumentada.</p>
+  <button class="btn" id="btn">Começar</button>
+</div>
+<div id="dica">Aponte para a foto da página impressa</div>
+<button class="btn" id="som">🔇 Ativar som</button>
+
+<a-scene
+  mindar-image="imageTargetSrc: ./livro.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; filterMinCF: 0.0001; filterBeta: 0.001"
+  color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
+  <a-assets>
+    <video id="v0" src="./repteis.mp4" preload="auto" muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v1" src="./aves.mp4" preload="auto" muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+  </a-assets>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <!-- 0: Répteis (jararaca) — proporção 1414/1188 -->
+  <a-entity class="alvo" data-video="v0" mindar-image-target="targetIndex: 0">
+    <a-video src="#v0" width="1" height="1.1902" position="0 0 0.001"></a-video>
+  </a-entity>
+  <!-- 1: Aves (benedito-de-testa-amarela) — proporção 2128/1700 -->
+  <a-entity class="alvo" data-video="v1" mindar-image-target="targetIndex: 1">
+    <a-video src="#v1" width="1" height="1.2518" position="0 0 0.001"></a-video>
+  </a-entity>
+</a-scene>
+
+<script>
+  const videos = [...document.querySelectorAll('video')];
+  const dica = document.getElementById('dica');
+  const som = document.getElementById('som');
+  let comSom = false;
+
+  document.getElementById('btn').addEventListener('click', async () => {
+    // desbloqueia a reprodução dos vídeos no iPhone (exige toque do usuário)
+    for (const v of videos) { try { await v.play(); v.pause(); v.currentTime = 0; } catch (e) {} }
+    document.getElementById('inicio').style.display = 'none';
+    dica.style.display = 'block';
+    som.style.display = 'block';
+    document.querySelector('a-scene').systems['mindar-image-system'].start();
+  });
+
+  som.addEventListener('click', () => {
+    comSom = !comSom;
+    videos.forEach(v => v.muted = !comSom);
+    som.textContent = comSom ? '🔊 Som ligado' : '🔇 Ativar som';
+  });
+
+  // ao encontrar a página: toca o vídeo uma vez (para no último quadro); ao perder: volta ao início
+  document.querySelectorAll('.alvo').forEach(alvo => {
+    const v = document.getElementById(alvo.dataset.video);
+    alvo.addEventListener('targetFound', () => { dica.style.display = 'none'; v.currentTime = 0; v.muted = !comSom; v.play(); });
+    alvo.addEventListener('targetLost', () => { dica.style.display = 'block'; v.pause(); v.currentTime = 0; });
+  });
+</script>
+</body>
+</html>
