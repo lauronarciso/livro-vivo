@@ -117,7 +117,7 @@
 <button class="btn" id="som">🔇 Ativar som</button>
 
 <a-scene
-  mindar-image="imageTargetSrc: ./livro.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; filterMinCF: 0.0001; filterBeta: 0.001"
+  mindar-image="imageTargetSrc: ./livro.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; filterMinCF: 0.0001; filterBeta: 10; missTolerance: 8; warmupTolerance: 3"
   color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false">
   <a-assets>
@@ -134,35 +134,35 @@
 
   <!-- 0: Répteis (página dupla) — proporção 1424/2398 -->
   <a-entity class="alvo" data-video="v0" mindar-image-target="targetIndex: 0">
-    <a-video src="#v0" width="1" height="0.5938" position="0 0 0.001"></a-video>
+    <a-video src="#v0" width="1" height="0.5938" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
   </a-entity>
   <!-- 1: Aves (página dupla 84-85, benedito, título animado) -->
   <a-entity class="alvo" data-video="v1" mindar-image-target="targetIndex: 1">
-    <a-video src="#v1" width="1" height="0.5972" position="0 0 0.001"></a-video>
+    <a-video src="#v1" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
   </a-entity>
   <!-- 2: Mamíferos (página dupla, preguiça) — proporção 720/1204 -->
   <a-entity class="alvo" data-video="v2" mindar-image-target="targetIndex: 2">
-    <a-video src="#v2" width="1" height="0.598" position="0 0 0.001"></a-video>
+    <a-video src="#v2" width="1" height="0.598" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
   </a-entity>
   <!-- 3: Serviços ambientais e ecossistêmicos (página dupla, sabiá) — proporção 720/1228 -->
   <a-entity class="alvo" data-video="v3" mindar-image-target="targetIndex: 3">
-    <a-video src="#v3" width="1" height="0.5863" position="0 0 0.001"></a-video>
+    <a-video src="#v3" width="1" height="0.5863" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
   </a-entity>
   <!-- 4: Répteis (página dupla, jacaré) — proporção 720/1280 -->
   <a-entity class="alvo" data-video="v4" mindar-image-target="targetIndex: 4">
-    <a-video src="#v4" width="1" height="0.5625" position="0 0 0.001"></a-video>
+    <a-video src="#v4" width="1" height="0.5625" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
   </a-entity>
   <!-- 5: Mamíferos (onça-parda, p. 88-89, título animado) -->
   <a-entity class="alvo" data-video="v5" mindar-image-target="targetIndex: 5">
-    <a-video src="#v5" width="1" height="0.5972" position="0 0 0.001"></a-video>
+    <a-video src="#v5" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
   </a-entity>
   <!-- 6: Répteis (caninana, p. 80-81, título animado) -->
   <a-entity class="alvo" data-video="v6" mindar-image-target="targetIndex: 6">
-    <a-video src="#v6" width="1" height="0.5972" position="0 0 0.001"></a-video>
+    <a-video src="#v6" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
   </a-entity>
   <!-- 7: Anfíbios (p. 76-77, título, olho e notas animados) -->
   <a-entity class="alvo" data-video="v7" mindar-image-target="targetIndex: 7">
-    <a-video src="#v7" width="1" height="0.5972" position="0 0 0.001"></a-video>
+    <a-video src="#v7" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
   </a-entity>
 </a-scene>
 
@@ -223,8 +223,18 @@
   // ao encontrar a página: começa do início e repete sem parar; ao perder: pausa e volta ao início
   document.querySelectorAll('.alvo').forEach(alvo => {
     const v = document.getElementById(alvo.dataset.video);
-    alvo.addEventListener('targetFound', () => { dica.style.display = 'none'; v.currentTime = 0; v.muted = !comSom; v.play(); });
-    alvo.addEventListener('targetLost', () => { dica.style.display = 'block'; v.pause(); v.currentTime = 0; });
+    const tela = alvo.querySelector('a-video');
+    const aparecer = () => {                      // entrada suave do vídeo sobre a página (0,35 s)
+      const t0 = performance.now();
+      const passo = (agora) => {
+        const k = Math.min(1, (agora - t0) / 350);
+        tela.setAttribute('material', 'opacity', k);
+        if (k < 1) requestAnimationFrame(passo);
+      };
+      requestAnimationFrame(passo);
+    };
+    alvo.addEventListener('targetFound', () => { dica.style.display = 'none'; v.currentTime = 0; v.muted = !comSom; v.play(); tela.setAttribute('material', 'opacity', 0); aparecer(); });
+    alvo.addEventListener('targetLost', () => { dica.style.display = 'block'; v.pause(); v.currentTime = 0; tela.setAttribute('material', 'opacity', 0); });
   });
 </script>
 </body>
