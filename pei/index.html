@@ -83,6 +83,25 @@
     font-size: .95rem; padding: 10px 16px; background: #fff; color: var(--azul); box-shadow: 0 2px 8px rgba(0,0,0,.3);
   }
 </style>
+<script>
+  // Vídeo "cor | máscara" lado a lado: só as partes que se mexem cobrem o papel real.
+  // tint = ajuste de cor/luz copiado da câmera.
+  AFRAME.registerShader('vivo', {
+    schema: {
+      src: { type: 'map', is: 'uniform' },
+      tint: { type: 'vec3', is: 'uniform', default: { x: 1, y: 1, z: 1 } },
+      opacity: { type: 'number', is: 'uniform', default: 1 }
+    },
+    vertexShader: `varying vec2 vUv;
+      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `uniform sampler2D src; uniform vec3 tint; uniform float opacity; varying vec2 vUv;
+      void main() {
+        vec3 c = texture2D(src, vec2(vUv.x * 0.5, vUv.y)).rgb;
+        float a = texture2D(src, vec2(0.5 + vUv.x * 0.5, vUv.y)).r;
+        gl_FragColor = vec4(c * tint, a * opacity);
+      }`
+  });
+</script>
 </head>
 <body>
 <div id="inicio">
@@ -158,7 +177,7 @@
   </a-entity>
   <!-- 6: Répteis (caninana, p. 80-81, título animado) -->
   <a-entity class="alvo" data-video="v6" mindar-image-target="targetIndex: 6">
-    <a-video src="#v6" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+    <a-plane class="vivo" width="1" height="0.5972" position="0 0 0.001" material="shader: vivo; src: #v6; transparent: true; opacity: 0"></a-plane>
   </a-entity>
   <!-- 7: Anfíbios (p. 76-77, título, olho e notas animados) -->
   <a-entity class="alvo" data-video="v7" mindar-image-target="targetIndex: 7">
@@ -195,6 +214,26 @@
     if (scene.hasLoaded) iniciar(); else scene.addEventListener('loaded', iniciar);
   });
 
+  // Copia a cor e a luz da câmera para as páginas "vivas" (média do centro da imagem, a cada 0,4 s)
+  const amostra = document.createElement('canvas'); amostra.width = 32; amostra.height = 24;
+  const ctxA = amostra.getContext('2d', { willReadFrequently: true });
+  const refCor = [110, 95, 55];          // cor média da página impressa no arquivo (referência)
+  let tintAtual = [1, 1, 1];
+  setInterval(() => {
+    const cam = document.querySelector('body > video');
+    if (!cam || cam.readyState < 2) return;
+    try {
+      ctxA.drawImage(cam, cam.videoWidth * 0.25, cam.videoHeight * 0.25, cam.videoWidth * 0.5, cam.videoHeight * 0.5, 0, 0, 32, 24);
+      const d = ctxA.getImageData(0, 0, 32, 24).data; const m = [0, 0, 0];
+      for (let i = 0; i < d.length; i += 4) { m[0] += d[i]; m[1] += d[i + 1]; m[2] += d[i + 2]; }
+      const n = d.length / 4;
+      const alvoT = m.map((v, i) => Math.min(1.15, Math.max(0.55, (v / n) / refCor[i])));
+      tintAtual = tintAtual.map((v, i) => v * 0.7 + alvoT[i] * 0.3);
+      document.querySelectorAll('a-plane.vivo').forEach(el =>
+        el.setAttribute('material', 'tint', { x: tintAtual[0], y: tintAtual[1], z: tintAtual[2] }));
+    } catch (e) {}
+  }, 400);
+
   // Ao girar o celular, a câmera muda de proporção: reinicia a RA para recalcular o encaixe
   let rodando = false, horizontalInicial = null, timerGiro = null;
   const ehHorizontal = () => window.innerWidth > window.innerHeight;
@@ -223,7 +262,7 @@
   // ao encontrar a página: começa do início e repete sem parar; ao perder: pausa e volta ao início
   document.querySelectorAll('.alvo').forEach(alvo => {
     const v = document.getElementById(alvo.dataset.video);
-    const tela = alvo.querySelector('a-video');
+    const tela = alvo.querySelector('a-video, a-plane');
     const aparecer = () => {                      // entrada suave do vídeo sobre a página (0,35 s)
       const t0 = performance.now();
       const passo = (agora) => {
