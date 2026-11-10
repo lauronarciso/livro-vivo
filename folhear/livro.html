@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Livro vivo – Preservando o Nosso Quintal</title>
+<style>
+  :root { --verde: #1b9660; --azul: #1f4573; --fundo: #0f2318; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: radial-gradient(circle at 50% 40%, #1d3b29, var(--fundo)); color: #fff;
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none; }
+  #palco { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 56px 64px 72px; }
+  #livro { position: relative; aspect-ratio: 1280 / 764; width: min(100%, calc((100vh - 128px) * 1280 / 764)); perspective: 2600px;
+    filter: drop-shadow(0 18px 30px rgba(0,0,0,.55)); }
+  .camada, .meia, video.spread { position: absolute; top: 0; height: 100%; border-radius: 4px; }
+  .camada { left: 0; width: 100%; }
+  video.spread { left: 0; width: 100%; object-fit: fill; display: block; }
+  .meia { width: 50%; background-size: 200% 100%; background-repeat: no-repeat; }
+  .meia.esq { left: 0; background-position: 0 0; border-radius: 4px 0 0 4px; }
+  .meia.dir { left: 50%; background-position: 100% 0; border-radius: 0 4px 4px 0; }
+  /* lombada: sombra no meio do livro aberto */
+  #lombada { position: absolute; top: 0; bottom: 0; left: 50%; width: 9%; transform: translateX(-50%); pointer-events: none; z-index: 6;
+    background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 38%, rgba(0,0,0,.42) 50%, rgba(0,0,0,.18) 62%, rgba(0,0,0,0) 100%); }
+  /* folha que vira */
+  .folha { position: absolute; top: 0; width: 50%; height: 100%; transform-style: preserve-3d; z-index: 8; will-change: transform; }
+  .folha.prox { left: 50%; transform-origin: 0 50%; }
+  .folha.ant { left: 0; transform-origin: 100% 50%; }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background-size: 200% 100%; overflow: hidden; }
+  .face::after { content: ""; position: absolute; inset: 0; opacity: var(--sombra, 0); transition: none; }
+  .folha.prox .frente { background-position: 100% 0; }
+  .folha.prox .verso { background-position: 0 0; transform: rotateY(180deg); }
+  .folha.ant .frente { background-position: 0 0; }
+  .folha.ant .verso { background-position: 100% 0; transform: rotateY(180deg); }
+  .folha.prox .frente::after { background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,0) 40%, rgba(255,255,255,.08)); }
+  .folha.prox .verso::after { background: linear-gradient(270deg, rgba(0,0,0,.35), rgba(0,0,0,0) 40%, rgba(255,255,255,.08)); }
+  .folha.ant .frente::after { background: linear-gradient(270deg, rgba(0,0,0,.35), rgba(0,0,0,0) 40%); }
+  .folha.ant .verso::after { background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,0) 40%); }
+  /* controles */
+  .seta { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; border: 0; z-index: 20;
+    background: rgba(255,255,255,.92); color: var(--azul); font-size: 26px; font-weight: 900; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+  .seta:disabled { opacity: .25; cursor: default; }
+  #voltar { left: 8px; } #avancar { right: 8px; }
+  #topo { position: absolute; top: 12px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 14px; z-index: 20; font-size: 15px; }
+  #titulo { font-weight: 700; letter-spacing: .3px; opacity: .92; }
+  #som { border: 0; border-radius: 30px; padding: 7px 14px; background: #fff; color: var(--azul); font-weight: 700; font-size: 14px; cursor: pointer; }
+  #rodape { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 20; }
+  .ponto { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.35); border: 0; padding: 0; cursor: pointer; }
+  .ponto.ativo { background: #fbbf3a; transform: scale(1.25); }
+  @media (max-width: 700px) { #palco { padding: 52px 8px 56px; } .seta { width: 40px; height: 40px; font-size: 22px; top: auto; bottom: 6px; transform: none; } }
+</style>
+</head>
+<body>
+<div id="topo"><span id="titulo">Livro vivo</span><button id="som">🔇 Ativar som</button></div>
+<div id="palco">
+  <div id="livro">
+    <div class="meia esq" id="baseEsq"></div>
+    <div class="meia dir" id="baseDir"></div>
+    <div id="lombada"></div>
+  </div>
+</div>
+<button class="seta" id="voltar" aria-label="Página anterior">‹</button>
+<button class="seta" id="avancar" aria-label="Próxima página">›</button>
+<div id="rodape"></div>
+
+<script>
+  // Cada item é uma página dupla. "video" é opcional (capa e fim são só imagem).
+  const PAGINAS = [
+    { nome: 'Capa',                                img: 'img/capa.jpg' },
+    { nome: 'Anfíbios · p. 76–77',                 img: 'img/p76-77_anfibios.jpg',        video: 'videos/p76-77_anfibios.mp4' },
+    { nome: 'Répteis · caninana · p. 80–81',       img: 'img/p80-81_repteis.jpg',         video: 'videos/p80-81_repteis.mp4' },
+    { nome: 'Répteis · jararaca',                  img: 'img/p00_repteis_jararaca.jpg',   video: 'videos/p00_repteis_jararaca.mp4' },
+    { nome: 'Aves · p. 84–85',                     img: 'img/p84-85_aves.jpg',            video: 'videos/p84-85_aves.mp4' },
+    { nome: 'Mamíferos · onça-parda · p. 88–89',   img: 'img/p88-89_mamiferos.jpg',       video: 'videos/p88-89_mamiferos.mp4' },
+    { nome: 'Mamíferos · preguiça',                img: 'img/p00_mamiferos_preguica.jpg', video: 'videos/p00_mamiferos_preguica.mp4' },
+    { nome: 'Serviços ambientais e ecossistêmicos',img: 'img/p00_servicos_ambientais.jpg',video: 'videos/p00_servicos_ambientais.mp4' },
+    { nome: 'Fim',                                 img: 'img/fim.jpg' }
+  ];
+  const DUR = 900;                                   // duração da virada (ms)
+  const livro = document.getElementById('livro');
+  const baseEsq = document.getElementById('baseEsq'), baseDir = document.getElementById('baseDir');
+  const titulo = document.getElementById('titulo'), btnSom = document.getElementById('som');
+  const voltar = document.getElementById('voltar'), avancar = document.getElementById('avancar');
+  const rodape = document.getElementById('rodape');
+  let atual = 0, virando = false, comSom = false, video = null;
+
+  // pré-carrega as imagens para a virada não piscar
+  PAGINAS.forEach(p => { const i = new Image(); i.src = p.img; });
+  const fundo = (el, src) => el.style.backgroundImage = `url("${src}")`;
+
+  PAGINAS.forEach((p, i) => {
+    const b = document.createElement('button'); b.className = 'ponto'; b.title = p.nome;
+    b.onclick = () => irPara(i); rodape.appendChild(b);
+  });
+
+  function mostrar(i) {
+    const p = PAGINAS[i];
+    fundo(baseEsq, p.img); fundo(baseDir, p.img);
+    if (video) { video.pause(); video.remove(); video = null; }
+    if (p.video) {
+      video = document.createElement('video');
+      Object.assign(video, { src: p.video, loop: true, muted: !comSom, playsInline: true, autoplay: true, poster: p.img });
+      video.className = 'spread'; video.setAttribute('playsinline', '');
+      livro.insertBefore(video, document.getElementById('lombada'));
+      video.play().catch(() => {});
+    }
+    titulo.textContent = p.nome === 'Capa' ? 'Livro vivo' : p.nome;
+    voltar.disabled = i === 0; avancar.disabled = i === PAGINAS.length - 1;
+    [...rodape.children].forEach((b, k) => b.classList.toggle('ativo', k === i));
+  }
+
+  function virar(dir, destino) {
+    if (virando) return;
+    const de = atual, para = destino ?? atual + dir;
+    if (para < 0 || para >= PAGINAS.length || para === de) return;
+    virando = true;
+    const A = PAGINAS[de], B = PAGINAS[para], frente = dir > 0;
+    if (video) { video.pause(); video.style.visibility = 'hidden'; }
+    // embaixo da folha: a metade que fica + a metade da página que vai aparecer
+    if (frente) { fundo(baseEsq, A.img); fundo(baseDir, B.img); } else { fundo(baseEsq, B.img); fundo(baseDir, A.img); }
+    const folha = document.createElement('div'); folha.className = 'folha ' + (frente ? 'prox' : 'ant');
+    folha.innerHTML = '<div class="face frente"></div><div class="face verso"></div>';
+    fundo(folha.children[0], A.img); fundo(folha.children[1], B.img);
+    livro.appendChild(folha);
+    const t0 = performance.now(), alvo = frente ? -180 : 180;
+    function passo(agora) {
+      const k = Math.min(1, (agora - t0) / DUR);
+      const e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;      // easeInOutCubic
+      const ang = alvo * e;
+      const curva = Math.sin(Math.PI * e);                                       // folha "levanta" no meio
+      folha.style.transform = `rotateY(${ang}deg) translateZ(${curva * 6}px) scaleX(${1 - curva * 0.04})`;
+      folha.style.setProperty('--sombra', curva.toFixed(3));
+      folha.children[0].style.setProperty('--sombra', (Math.min(1, e * 2)).toFixed(3));
+      folha.children[1].style.setProperty('--sombra', (Math.min(1, (1 - e) * 2)).toFixed(3));
+      if (k < 1) requestAnimationFrame(passo);
+      else { folha.remove(); atual = para; mostrar(atual); virando = false; }
+    }
+    requestAnimationFrame(passo);
+  }
+  function irPara(i) { if (i !== atual) virar(i > atual ? 1 : -1, i); }
+
+  avancar.onclick = () => virar(1);
+  voltar.onclick = () => virar(-1);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') virar(1);
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') virar(-1);
+  });
+  // clique na metade direita avança, na esquerda volta
+  livro.addEventListener('click', e => {
+    const r = livro.getBoundingClientRect(); virar(e.clientX - r.left > r.width / 2 ? 1 : -1);
+  });
+  // arrastar com o dedo
+  let x0 = null;
+  livro.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  livro.addEventListener('touchend', e => {
+    if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 40) { e.preventDefault(); virar(dx < 0 ? 1 : -1); }
+  });
+  btnSom.onclick = () => {
+    comSom = !comSom; btnSom.textContent = comSom ? '🔊 Som ligado' : '🔇 Ativar som';
+    if (video) { video.muted = !comSom; video.play().catch(() => {}); }
+  };
+  mostrar(0);
+</script>
+</body>
+</html>

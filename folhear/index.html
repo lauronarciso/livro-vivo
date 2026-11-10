@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0f2318">
+<title>Livro vivo – Preservando o Nosso Quintal</title>
+<script>
+  if (window.innerWidth >= 900 && window.innerWidth > window.innerHeight) location.replace('livro.html');
+</script>
+<style>
+  :root { --verde: #1b9660; --azul: #1f4573; --fundo: #0f2318; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: radial-gradient(circle at 50% 35%, #1d3b29, var(--fundo)); color: #fff;
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none;
+    overscroll-behavior: none; touch-action: none; }
+  #topo { position: fixed; top: 0; left: 0; right: 0; padding: calc(env(safe-area-inset-top) + 10px) 14px 8px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; z-index: 20; }
+  #titulo { font-weight: 700; font-size: 15px; line-height: 1.2; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  #som { flex: none; border: 0; border-radius: 30px; padding: 8px 13px; background: #fff; color: var(--azul); font-weight: 700; font-size: 13px; }
+  #palco { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: calc(env(safe-area-inset-top) + 52px) 12px calc(env(safe-area-inset-bottom) + 58px); }
+  #pagina { position: relative; aspect-ratio: 640 / 764; height: 100%; max-width: 100%; perspective: 1800px;
+    filter: drop-shadow(0 12px 22px rgba(0,0,0,.55)); }
+  @supports not (aspect-ratio: 1) { #pagina { width: 100%; height: auto; padding-top: 119.4%; } }
+  .folha, #base { position: absolute; inset: 0; overflow: hidden; border-radius: 3px; background-size: 200% 100%; background-repeat: no-repeat; }
+  #base video { position: absolute; top: 0; height: 100%; width: 200%; object-fit: fill; }
+  .folha { z-index: 8; transform-origin: 0 50%; will-change: transform; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .folha::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.45), rgba(0,0,0,0) 55%, rgba(255,255,255,.12));
+    opacity: var(--sombra, 0); }
+  /* sombra da lombada no lado da página */
+  #lomb { position: absolute; top: 0; bottom: 0; width: 7%; z-index: 6; pointer-events: none; }
+  #lomb.esq { right: 0; background: linear-gradient(270deg, rgba(0,0,0,.35), rgba(0,0,0,0)); }
+  #lomb.dir { left: 0; background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,0)); }
+  #rodape { position: fixed; bottom: 0; left: 0; right: 0; padding: 8px 14px calc(env(safe-area-inset-bottom) + 12px);
+    display: flex; align-items: center; justify-content: space-between; z-index: 20; }
+  .seta { width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); color: var(--azul);
+    font-size: 24px; font-weight: 900; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+  .seta:disabled { opacity: .25; }
+  #contador { font-size: 13px; font-weight: 700; opacity: .85; }
+  #dica { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 70px); transform: translateX(-50%); z-index: 21;
+    background: rgba(31,69,115,.9); padding: 9px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; white-space: nowrap;
+    transition: opacity .6s; }
+</style>
+</head>
+<body>
+<div id="topo"><span id="titulo">Livro vivo</span><button id="som">🔇 Som</button></div>
+<div id="palco"><div id="pagina"><div id="base"></div><div id="lomb"></div></div></div>
+<div id="rodape">
+  <button class="seta" id="voltar" aria-label="Página anterior">‹</button>
+  <span id="contador"></span>
+  <button class="seta" id="avancar" aria-label="Próxima página">›</button>
+</div>
+<div id="dica">Arraste para o lado para folhear 👆</div>
+
+<script>
+  // Páginas duplas do livro; no celular cada uma é mostrada em duas páginas (esquerda e direita).
+  const DUPLAS = [
+    { nome: 'Anfíbios · p. 76–77',                  img: 'img/p76-77_anfibios.jpg',        video: 'videos/p76-77_anfibios.mp4' },
+    { nome: 'Répteis · caninana · p. 80–81',        img: 'img/p80-81_repteis.jpg',         video: 'videos/p80-81_repteis.mp4' },
+    { nome: 'Répteis · jararaca',                   img: 'img/p00_repteis_jararaca.jpg',   video: 'videos/p00_repteis_jararaca.mp4' },
+    { nome: 'Aves · p. 84–85',                      img: 'img/p84-85_aves.jpg',            video: 'videos/p84-85_aves.mp4' },
+    { nome: 'Mamíferos · onça-parda · p. 88–89',    img: 'img/p88-89_mamiferos.jpg',       video: 'videos/p88-89_mamiferos.mp4' },
+    { nome: 'Mamíferos · preguiça',                 img: 'img/p00_mamiferos_preguica.jpg', video: 'videos/p00_mamiferos_preguica.mp4' },
+    { nome: 'Serviços ambientais e ecossistêmicos', img: 'img/p00_servicos_ambientais.jpg',video: 'videos/p00_servicos_ambientais.mp4' }
+  ];
+  const resolver = p => (typeof arq === 'function' ? arq(p) : p);
+  DUPLAS.forEach(d => { d.img = resolver(d.img); d.video = resolver(d.video); });
+  // lista de páginas simples: capa (lado direito da imagem da capa), cada dupla em 2, fim (lado esquerdo)
+  const PAGS = [{ nome: 'Livro vivo', img: resolver('img/capa.jpg'), lado: 1, dupla: -1 }];
+  DUPLAS.forEach((d, i) => { PAGS.push({ nome: d.nome, img: d.img, lado: 0, dupla: i }, { nome: d.nome, img: d.img, lado: 1, dupla: i }); });
+  PAGS.push({ nome: 'Fim', img: resolver('img/fim.jpg'), lado: 0, dupla: -2 });
+  PAGS.forEach(p => { const i = new Image(); i.src = p.img; });
+
+  const DUR = 650;
+  const pagina = document.getElementById('pagina'), base = document.getElementById('base'), lomb = document.getElementById('lomb');
+  const titulo = document.getElementById('titulo'), contador = document.getElementById('contador');
+  const voltar = document.getElementById('voltar'), avancar = document.getElementById('avancar'), btnSom = document.getElementById('som');
+  let atual = 0, virando = false, comSom = false, video = null, duplaVideo = null;
+
+  const pos = p => (p.lado ? '100% 0' : '0 0');
+  function pintar(el, p) { el.style.backgroundImage = `url("${p.img}")`; el.style.backgroundPosition = pos(p); }
+
+  function mostrar(i) {
+    const p = PAGS[i];
+    pintar(base, p);
+    if (p.dupla >= 0) {
+      if (duplaVideo !== p.dupla) {                 // nova dupla: troca o vídeo; mesma dupla: o vídeo continua
+        if (video) { video.pause(); video.remove(); }
+        video = document.createElement('video');
+        video.src = DUPLAS[p.dupla].video; video.loop = true; video.muted = !comSom; video.playsInline = true; video.autoplay = true;
+        video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', '');
+        base.appendChild(video); duplaVideo = p.dupla;
+      }
+      video.style.left = p.lado ? '-100%' : '0';
+      video.style.visibility = 'visible';
+      video.play().catch(() => {});
+    } else if (video) { video.pause(); video.remove(); video = null; duplaVideo = null; }
+    lomb.className = p.dupla >= 0 ? (p.lado ? 'dir' : 'esq') : '';
+    titulo.textContent = p.nome;
+    contador.textContent = `${i + 1} / ${PAGS.length}`;
+    voltar.disabled = i === 0; avancar.disabled = i === PAGS.length - 1;
+  }
+
+  function virar(dir) {
+    const para = atual + dir;
+    if (virando || para < 0 || para >= PAGS.length) return;
+    virando = true;
+    esconderDica();
+    const A = PAGS[atual], B = PAGS[para];
+    if (video) video.style.visibility = 'hidden';
+    const folha = document.createElement('div'); folha.className = 'folha';
+    if (dir > 0) { pintar(base, B); pintar(folha, A); } else { pintar(base, A); pintar(folha, B); }
+    pagina.appendChild(folha);
+    const t0 = performance.now();
+    function passo(agora) {
+      const k = Math.min(1, (agora - t0) / DUR);
+      const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      const f = dir > 0 ? e : 1 - e;                   // 0 = página deitada, 1 = página virada
+      folha.style.transform = `rotateY(${-100 * f}deg)`;
+      folha.style.setProperty('--sombra', Math.min(1, f * 1.6).toFixed(3));
+      if (k < 1) requestAnimationFrame(passo);
+      else { folha.remove(); atual = para; mostrar(atual); virando = false; }
+    }
+    requestAnimationFrame(passo);
+  }
+
+  avancar.onclick = () => virar(1);
+  voltar.onclick = () => virar(-1);
+  // toque: arrastar para o lado ou tocar nas bordas da página
+  let x0 = null, y0 = null;
+  pagina.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  pagina.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) virar(dx < 0 ? 1 : -1);
+    else if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+      const r = pagina.getBoundingClientRect(), x = e.changedTouches[0].clientX - r.left;
+      if (x > r.width * 0.66) virar(1); else if (x < r.width * 0.33) virar(-1);
+    }
+  });
+  pagina.addEventListener('click', e => {                 // computador
+    if (e.pointerType === 'touch') return;
+    const r = pagina.getBoundingClientRect(); virar(e.clientX - r.left > r.width / 2 ? 1 : -1);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') virar(1); if (e.key === 'ArrowLeft') virar(-1); });
+  btnSom.onclick = () => {
+    comSom = !comSom; btnSom.textContent = comSom ? '🔊 Som' : '🔇 Som';
+    if (video) { video.muted = !comSom; video.play().catch(() => {}); }
+  };
+  const dica = document.getElementById('dica');
+  function esconderDica() { dica.style.opacity = 0; setTimeout(() => dica.remove(), 700); esconderDica = () => {}; }
+  setTimeout(esconderDica, 5000);
+  mostrar(0);
+</script>
+</body>
+</html>
