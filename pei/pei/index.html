@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Livro vivo – Realidade Aumentada</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --verde: #1b9660; --azul: #1f4573; --celeste: #1fb8ec; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: 'Nunito', system-ui, sans-serif; }
+  #inicio {
+    position: fixed; inset: 0; z-index: 10; overflow-y: auto; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 20px 16px; box-sizing: border-box;
+    background: linear-gradient(180deg, rgba(10,40,25,.35), rgba(10,40,25,.85)), url('fundo.jpg') center / cover;
+  }
+  .cartao {
+    width: 100%; max-width: 360px; background: #fff; border-radius: 24px; padding: 22px 22px 20px;
+    box-sizing: border-box; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  .logo { width: 150px; position: relative; margin: 0 auto 6px; }
+  .logo-base { width: 100%; height: auto; display: block; position: relative; }
+  .camada { position: absolute; inset: 0; width: 100%; height: auto; }
+  .folha { transform-origin: 42% 60%; animation: brotar 1.5s cubic-bezier(.2,.8,.25,1.15) .3s both; }
+  @keyframes brotar {
+    from { transform: rotate(-70deg) scale(.15); opacity: 0; }
+    30% { opacity: 1; }
+    to { transform: none; opacity: 1; }
+  }
+  .ave {
+    position: absolute; width: 9.02%; height: auto; transform-origin: 50% 70%;
+    animation: bater .55s ease-in-out infinite alternate, voar 4.5s ease-in-out infinite, chegar .6s ease-out both;
+  }
+  @keyframes chegar { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes bater { from { scale: 1 1; } to { scale: 1 .55; } }
+  @keyframes voar {
+    0%, 100% { translate: 0 0; }
+    25% { translate: 6px -5px; }
+    50% { translate: 2px -9px; }
+    75% { translate: -4px -4px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .ave, .folha { animation: none; } }
+  .a-enter-vr, .a-enter-ar, .a-orientation-modal { display: none !important; }
+  .cartao h1 { margin: 4px 0 2px; font-size: 1.9rem; font-weight: 900; color: var(--azul); letter-spacing: .5px; }
+  .cartao h1 span { color: var(--verde); }
+  .sub { margin: 0 0 16px; color: #4a5a68; font-size: .98rem; line-height: 1.35; font-weight: 600; }
+  .passos { list-style: none; margin: 0 0 18px; padding: 0; text-align: left; display: grid; gap: 10px; }
+  .passos li { display: flex; align-items: center; gap: 12px; color: var(--azul); font-weight: 700; font-size: .98rem; line-height: 1.25; }
+  .passos b {
+    flex: 0 0 32px; height: 32px; border-radius: 50%; background: var(--verde); color: #fff;
+    display: grid; place-items: center; font-weight: 900; font-size: 1rem;
+  }
+  .passos small { display: block; font-weight: 600; color: #6b7a87; font-size: .82rem; }
+  .btn {
+    font-family: inherit; font-size: 1.15rem; font-weight: 900; padding: 14px 28px; border: 0; border-radius: 40px;
+    background: var(--verde); color: #fff; letter-spacing: .3px;
+  }
+  #btn { width: 100%; box-shadow: 0 4px 0 #13724a; }
+  #btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #13724a; }
+  .rodape { margin-top: 14px; color: rgba(255,255,255,.9); font-size: .8rem; font-weight: 700; text-shadow: 0 1px 3px #000; }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .cartao { max-width: 640px; display: grid; grid-template-columns: 170px 1fr; column-gap: 20px; align-items: center; text-align: left; padding: 18px 22px; }
+    .cabeca { text-align: center; }
+    .logo { width: 140px; }
+    .cartao h1 { font-size: 1.5rem; }
+    .sub { margin-bottom: 10px; font-size: .9rem; }
+    .passos { margin-bottom: 12px; gap: 6px; }
+    .rodape { margin-top: 8px; }
+  }
+  #dica {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 24px; z-index: 5; display: none;
+    background: rgba(31,69,115,.85); color: #fff; font-weight: 700; font-size: .95rem;
+    padding: 10px 18px; border-radius: 30px; white-space: nowrap;
+  }
+  #erro {
+    position: fixed; left: 16px; right: 16px; top: 40%; z-index: 20; display: none; padding: 18px;
+    border-radius: 16px; background: #fff; color: var(--azul); font-size: 1rem; font-weight: 700; line-height: 1.4; text-align: center;
+  }
+  #som {
+    position: fixed; top: 16px; right: 16px; z-index: 6; display: none;
+    font-size: .95rem; padding: 10px 16px; background: #fff; color: var(--azul); box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+</style>
+</head>
+<body>
+<div id="inicio">
+  <div class="cartao">
+    <div class="cabeca">
+      <div class="logo" role="img" aria-label="Programa Preservando o Nosso Quintal">
+        <img class="camada folha" src="logo_folha.png" alt="">
+        <img class="camada mapa" src="logo_mapa.png" alt="">
+        <img class="logo-base" src="logo_texto.png" alt="">
+        <img class="ave" src="ave0.png" alt="" style="left:14.78%;top:19.18%;animation-delay:-0.00s,-0.0s,1.6s">
+        <img class="ave" src="ave1.png" alt="" style="left:21.35%;top:24.0%;animation-delay:-0.37s,-1.3s,1.6s">
+        <img class="ave" src="ave2.png" alt="" style="left:30.89%;top:25.68%;animation-delay:-0.74s,-2.6s,1.6s">
+        <img class="ave" src="ave3.png" alt="" style="left:12.68%;top:26.91%;animation-delay:-1.11s,-3.9s,1.6s">
+        <img class="ave" src="ave4.png" alt="" style="left:21.99%;top:31.18%;animation-delay:-1.48s,-5.2s,1.6s">
+      </div>
+      <h1>Livro <span>vivo</span></h1>
+      <p class="sub">Aponte o celular para o livro e veja a natureza ganhar vida!</p>
+    </div>
+    <div>
+      <ol class="passos">
+        <li><b>1</b><span>Toque em Começar</span></li>
+        <li><b>2</b><span>Permita o uso da câmera</span></li>
+        <li><b>3</b><span>Aponte para uma página com o selo<small>Páginas duplas: celular na horizontal</small></span></li>
+      </ol>
+      <button class="btn" id="btn">Começar</button>
+    </div>
+  </div>
+  <div class="rodape">Editora Naturalistas</div>
+</div>
+<div id="dica">Aponte para a foto da página impressa</div>
+<div id="erro"></div>
+<button class="btn" id="som">🔇 Ativar som</button>
+
+<a-scene
+  mindar-image="imageTargetSrc: ./livro.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; filterMinCF: 0.0001; filterBeta: 10; missTolerance: 8; warmupTolerance: 3"
+  color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
+  <a-assets>
+    <video id="v0" src="./repteis.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v2" src="./mamiferos.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v3" src="./servicos.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v4" src="./jacare.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v5" src="./onca.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v6" src="./caninana.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v7" src="./anfibios.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+    <video id="v1" src="./aves.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+  </a-assets>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <!-- 0: Répteis (página dupla) — proporção 1424/2398 -->
+  <a-entity class="alvo" data-video="v0" mindar-image-target="targetIndex: 0">
+    <a-video src="#v0" width="1" height="0.5938" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  </a-entity>
+  <!-- 1: Aves (página dupla 84-85, benedito, título animado) -->
+  <a-entity class="alvo" data-video="v1" mindar-image-target="targetIndex: 1">
+    <a-video src="#v1" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  </a-entity>
+  <!-- 2: Mamíferos (página dupla, preguiça) — proporção 720/1204 -->
+  <a-entity class="alvo" data-video="v2" mindar-image-target="targetIndex: 2">
+    <a-video src="#v2" width="1" height="0.598" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  </a-entity>
+  <!-- 3: Serviços ambientais e ecossistêmicos (página dupla, sabiá) — proporção 720/1228 -->
+  <a-entity class="alvo" data-video="v3" mindar-image-target="targetIndex: 3">
+    <a-video src="#v3" width="1" height="0.5863" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  </a-entity>
+  <!-- 4: Répteis (página dupla, jacaré) — proporção 720/1280 -->
+  <a-entity class="alvo" data-video="v4" mindar-image-target="targetIndex: 4">
+    <a-video src="#v4" width="1" height="0.5625" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  </a-entity>
+  <!-- 5: Mamíferos (onça-parda, p. 88-89, título animado) -->
+  <a-entity class="alvo" data-video="v5" mindar-image-target="targetIndex: 5">
+    <a-video src="#v5" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  </a-entity>
+  <!-- 6: Répteis (caninana, p. 80-81, título animado) -->
+  <a-entity class="alvo" data-video="v6" mindar-image-target="targetIndex: 6">
+    <a-video src="#v6" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  </a-entity>
+  <!-- 7: Anfíbios (p. 76-77, título, olho e notas animados) -->
+  <a-entity class="alvo" data-video="v7" mindar-image-target="targetIndex: 7">
+    <a-video src="#v7" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  </a-entity>
+</a-scene>
+
+<script>
+  const videos = [...document.querySelectorAll('video')];
+  const dica = document.getElementById('dica');
+  const som = document.getElementById('som');
+  let comSom = false;
+
+  const erro = document.getElementById('erro');
+  function mostrarErro(msg) { erro.textContent = msg; erro.style.display = 'block'; dica.style.display = 'none'; }
+  window.addEventListener('error', e => mostrarErro('Erro: ' + (e.message || e)));
+  window.addEventListener('unhandledrejection', e => mostrarErro('Erro: ' + (e.reason && e.reason.message || e.reason)));
+
+  const scene = document.querySelector('a-scene');
+  scene.addEventListener('arReady', () => { dica.textContent = 'Aponte para a foto da página impressa'; });
+  scene.addEventListener('arError', () => mostrarErro('Não foi possível abrir a câmera. Verifique se o navegador tem permissão para usar a câmera e abra o link direto no Safari ou no Chrome (não dentro do WhatsApp/Instagram).'));
+
+  document.getElementById('btn').addEventListener('click', () => {
+    document.getElementById('inicio').style.display = 'none';
+    dica.textContent = 'Abrindo a câmera…';
+    dica.style.display = 'block';
+    som.style.display = 'block';
+    // desbloqueia os vídeos no iPhone (precisa ocorrer no toque, sem esperar)
+    videos.forEach(v => { const pr = v.play(); if (pr) pr.then(() => { v.pause(); v.currentTime = 0; }).catch(() => {}); });
+    const iniciar = () => {
+      try { scene.systems['mindar-image-system'].start(); }
+      catch (e) { mostrarErro('Erro ao iniciar a realidade aumentada: ' + e.message); }
+    };
+    if (scene.hasLoaded) iniciar(); else scene.addEventListener('loaded', iniciar);
+  });
+
+  // Ao girar o celular, a câmera muda de proporção: reinicia a RA para recalcular o encaixe
+  let rodando = false, horizontalInicial = null, timerGiro = null;
+  const ehHorizontal = () => window.innerWidth > window.innerHeight;
+  scene.addEventListener('arReady', () => { rodando = true; horizontalInicial = ehHorizontal(); });
+  window.addEventListener('resize', () => {
+    clearTimeout(timerGiro);
+    timerGiro = setTimeout(() => {
+      if (!rodando || ehHorizontal() === horizontalInicial) return;
+      rodando = false;
+      const sys = scene.systems['mindar-image-system'];
+      videos.forEach(v => { v.pause(); v.currentTime = 0; });
+      dica.textContent = 'Ajustando a câmera…'; dica.style.display = 'block';
+      // esconde as páginas para o vídeo recomeçar quando forem reconhecidas de novo
+      document.querySelectorAll('.alvo').forEach(a => { try { a.components['mindar-image-target'].updateWorldMatrix(null); } catch (e) {} });
+      try { sys.stop(); } catch (e) {}
+      setTimeout(() => { try { sys.start(); } catch (e) { mostrarErro('Erro ao reiniciar: ' + e.message); } }, 400);
+    }, 600);
+  });
+
+  som.addEventListener('click', () => {
+    comSom = !comSom;
+    videos.forEach(v => v.muted = !comSom);
+    som.textContent = comSom ? '🔊 Som ligado' : '🔇 Ativar som';
+  });
+
+  // ao encontrar a página: começa do início e repete sem parar; ao perder: pausa e volta ao início
+  document.querySelectorAll('.alvo').forEach(alvo => {
+    const v = document.getElementById(alvo.dataset.video);
+    const tela = alvo.querySelector('a-video');
+    const aparecer = () => {                      // entrada suave do vídeo sobre a página (0,35 s)
+      const t0 = performance.now();
+      const passo = (agora) => {
+        const k = Math.min(1, (agora - t0) / 350);
+        tela.setAttribute('material', 'opacity', k);
+        if (k < 1) requestAnimationFrame(passo);
+      };
+      requestAnimationFrame(passo);
+    };
+    alvo.addEventListener('targetFound', () => { dica.style.display = 'none'; v.currentTime = 0; v.muted = !comSom; v.play(); tela.setAttribute('material', 'opacity', 0); aparecer(); });
+    alvo.addEventListener('targetLost', () => { dica.style.display = 'block'; v.pause(); v.currentTime = 0; tela.setAttribute('material', 'opacity', 0); });
+  });
+</script>
+</body>
+</html>
