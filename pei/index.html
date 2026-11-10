@@ -84,7 +84,7 @@
   }
 </style>
 <script>
-  // Vídeo "cor | máscara" lado a lado: só as partes que se mexem cobrem o papel real.
+  // Vídeo sobre a página com a borda esfumaçada.
   // tint = ajuste de cor/luz copiado da câmera.
   AFRAME.registerShader('vivo', {
     schema: {
@@ -96,9 +96,10 @@
       void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: `uniform sampler2D src; uniform vec3 tint; uniform float opacity; varying vec2 vUv;
       void main() {
-        vec3 c = texture2D(src, vec2(vUv.x * 0.5, vUv.y)).rgb;
-        float a = texture2D(src, vec2(0.5 + vUv.x * 0.5, vUv.y)).r;
-        gl_FragColor = vec4(c * tint, a * opacity);
+        vec3 c = texture2D(src, vUv).rgb;
+        float bx = smoothstep(0.0, 0.015, min(vUv.x, 1.0 - vUv.x));
+        float by = smoothstep(0.0, 0.025, min(vUv.y, 1.0 - vUv.y));
+        gl_FragColor = vec4(c * tint, bx * by * opacity);
       }`
   });
 </script>
@@ -135,7 +136,7 @@
 <div id="erro"></div>
 <button class="btn" id="som">🔇 Ativar som</button>
 
-<a-scene
+<a-scene loading-screen="enabled: false"
   mindar-image="imageTargetSrc: ./livro.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; filterMinCF: 0.0001; filterBeta: 10; missTolerance: 8; warmupTolerance: 3"
   color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false">
@@ -152,36 +153,36 @@
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
   <!-- 0: Répteis (página dupla) — proporção 1424/2398 -->
-  <a-entity class="alvo" data-video="v0" mindar-image-target="targetIndex: 0">
-    <a-video src="#v0" width="1" height="0.5938" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  <a-entity class="alvo" data-video="v0" mindar-image-target="targetIndex: 0" data-cor="163,126,71">
+    <a-plane class="vivo" width="1" height="0.5938" position="0 0 0.001" material="shader: vivo; src: #v0; transparent: true; opacity: 0"></a-plane>
   </a-entity>
   <!-- 1: Aves (página dupla 84-85, benedito, título animado) -->
-  <a-entity class="alvo" data-video="v1" mindar-image-target="targetIndex: 1">
-    <a-video src="#v1" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  <a-entity class="alvo" data-video="v1" mindar-image-target="targetIndex: 1" data-cor="98,110,59">
+    <a-plane class="vivo" width="1" height="0.5972" position="0 0 0.001" material="shader: vivo; src: #v1; transparent: true; opacity: 0"></a-plane>
   </a-entity>
   <!-- 2: Mamíferos (página dupla, preguiça) — proporção 720/1204 -->
-  <a-entity class="alvo" data-video="v2" mindar-image-target="targetIndex: 2">
-    <a-video src="#v2" width="1" height="0.598" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  <a-entity class="alvo" data-video="v2" mindar-image-target="targetIndex: 2" data-cor="117,118,56">
+    <a-plane class="vivo" width="1" height="0.598" position="0 0 0.001" material="shader: vivo; src: #v2; transparent: true; opacity: 0"></a-plane>
   </a-entity>
   <!-- 3: Serviços ambientais e ecossistêmicos (página dupla, sabiá) — proporção 720/1228 -->
-  <a-entity class="alvo" data-video="v3" mindar-image-target="targetIndex: 3">
-    <a-video src="#v3" width="1" height="0.5863" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  <a-entity class="alvo" data-video="v3" mindar-image-target="targetIndex: 3" data-cor="87,95,43">
+    <a-plane class="vivo" width="1" height="0.5863" position="0 0 0.001" material="shader: vivo; src: #v3; transparent: true; opacity: 0"></a-plane>
   </a-entity>
   <!-- 4: Répteis (página dupla, jacaré) — proporção 720/1280 -->
-  <a-entity class="alvo" data-video="v4" mindar-image-target="targetIndex: 4">
-    <a-video src="#v4" width="1" height="0.5625" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  <a-entity class="alvo" data-video="v4" mindar-image-target="targetIndex: 4" data-cor="113,97,84">
+    <a-plane class="vivo" width="1" height="0.5625" position="0 0 0.001" material="shader: vivo; src: #v4; transparent: true; opacity: 0"></a-plane>
   </a-entity>
   <!-- 5: Mamíferos (onça-parda, p. 88-89, título animado) -->
-  <a-entity class="alvo" data-video="v5" mindar-image-target="targetIndex: 5">
-    <a-video src="#v5" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  <a-entity class="alvo" data-video="v5" mindar-image-target="targetIndex: 5" data-cor="131,106,68">
+    <a-plane class="vivo" width="1" height="0.5972" position="0 0 0.001" material="shader: vivo; src: #v5; transparent: true; opacity: 0"></a-plane>
   </a-entity>
   <!-- 6: Répteis (caninana, p. 80-81, título animado) -->
-  <a-entity class="alvo" data-video="v6" mindar-image-target="targetIndex: 6">
+  <a-entity class="alvo" data-video="v6" mindar-image-target="targetIndex: 6" data-cor="110,95,55">
     <a-plane class="vivo" width="1" height="0.5972" position="0 0 0.001" material="shader: vivo; src: #v6; transparent: true; opacity: 0"></a-plane>
   </a-entity>
   <!-- 7: Anfíbios (p. 76-77, título, olho e notas animados) -->
-  <a-entity class="alvo" data-video="v7" mindar-image-target="targetIndex: 7">
-    <a-video src="#v7" width="1" height="0.5972" position="0 0 0.001" material="transparent: true; opacity: 0"></a-video>
+  <a-entity class="alvo" data-video="v7" mindar-image-target="targetIndex: 7" data-cor="102,58,46">
+    <a-plane class="vivo" width="1" height="0.5972" position="0 0 0.001" material="shader: vivo; src: #v7; transparent: true; opacity: 0"></a-plane>
   </a-entity>
 </a-scene>
 
@@ -217,18 +218,19 @@
   // Copia a cor e a luz da câmera para as páginas "vivas" (média do centro da imagem, a cada 0,4 s)
   const amostra = document.createElement('canvas'); amostra.width = 32; amostra.height = 24;
   const ctxA = amostra.getContext('2d', { willReadFrequently: true });
-  const refCor = [110, 95, 55];          // cor média da página impressa no arquivo (referência)
+  let refCor = null;
   let tintAtual = [1, 1, 1];
+  document.querySelectorAll('.alvo').forEach(a => a.addEventListener('targetFound', () => { refCor = a.dataset.cor.split(',').map(Number); }));
   setInterval(() => {
     const cam = document.querySelector('body > video');
-    if (!cam || cam.readyState < 2) return;
+    if (!cam || cam.readyState < 2 || !refCor) return;
     try {
       ctxA.drawImage(cam, cam.videoWidth * 0.25, cam.videoHeight * 0.25, cam.videoWidth * 0.5, cam.videoHeight * 0.5, 0, 0, 32, 24);
       const d = ctxA.getImageData(0, 0, 32, 24).data; const m = [0, 0, 0];
       for (let i = 0; i < d.length; i += 4) { m[0] += d[i]; m[1] += d[i + 1]; m[2] += d[i + 2]; }
       const n = d.length / 4;
-      const alvoT = m.map((v, i) => Math.min(1.15, Math.max(0.55, (v / n) / refCor[i])));
-      tintAtual = tintAtual.map((v, i) => v * 0.7 + alvoT[i] * 0.3);
+      const alvoT = m.map((v, i) => Math.min(1.08, Math.max(0.75, (v / n) / refCor[i])));
+      tintAtual = tintAtual.map((v, i) => v * 0.75 + alvoT[i] * 0.25);
       document.querySelectorAll('a-plane.vivo').forEach(el =>
         el.setAttribute('material', 'tint', { x: tintAtual[0], y: tintAtual[1], z: tintAtual[2] }));
     } catch (e) {}
