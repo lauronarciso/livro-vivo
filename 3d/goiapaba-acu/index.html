@@ -114,16 +114,20 @@
     aviso.style.display = 'none';
   }
 
-  mv.addEventListener('load', () => {
-    material = mv.model.materials.find(m => m.pbrMetallicRoughness.baseColorTexture.texture);
-  });
+  const acharMaterial = () => {
+    if (!material && mv.loaded && mv.model)
+      material = mv.model.materials.find(m => m.pbrMetallicRoughness.baseColorTexture.texture) || null;
+    return material;
+  };
+  mv.addEventListener('load', () => { acharMaterial(); if (Object.values(ativo).some(Boolean)) compor(); });
+  acharMaterial();
 
   document.getElementById('camadas').addEventListener('click', e => {
-    const b = e.target.closest('.chip'); if (!b || !material) return;
+    const b = e.target.closest('.chip'); if (!b) return;
     const c = b.dataset.c; ativo[c] = !ativo[c];
     b.setAttribute('aria-pressed', ativo[c]);
     if (c === 'zoneamento') document.getElementById('zon').classList.toggle('on', ativo[c]);
-    compor();
+    if (acharMaterial()) compor();
   });
 </script>
 </body>
