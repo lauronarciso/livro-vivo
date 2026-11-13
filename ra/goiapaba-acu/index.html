@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>APA Goiapaba-Açu – mapa vivo</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --verm: #b8322a; --azul: #1f4573; --fundo: #f6f3ec; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: 'Nunito', system-ui, sans-serif; }
+  #inicio {
+    position: fixed; inset: 0; z-index: 10; overflow-y: auto; display: flex; align-items: center; justify-content: center;
+    padding: 20px 16px; box-sizing: border-box;
+    background: linear-gradient(180deg, rgba(40,25,10,.45), rgba(40,25,10,.88)), url('alvo.jpg') center / cover;
+  }
+  .cartao { width: 100%; max-width: 360px; background: #fff; border-radius: 24px; padding: 22px; box-sizing: border-box;
+    text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+  .cartao small { display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #6b6358; font-weight: 800; }
+  .cartao h1 { margin: 2px 0 6px; font-size: 1.7rem; font-weight: 900; color: var(--verm); line-height: 1.1; }
+  .cartao p { margin: 0 0 14px; color: #4a4339; font-size: .98rem; }
+  .passos { list-style: none; padding: 0; margin: 0 0 16px; text-align: left; }
+  .passos li { display: flex; gap: 10px; align-items: center; margin: 8px 0; color: #2b2620; font-weight: 700; }
+  .passos b { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--verm); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: .85rem; }
+  .btn { border: 0; border-radius: 30px; background: var(--verm); color: #fff; font: 800 1.1rem 'Nunito', sans-serif;
+    padding: 13px 30px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+  .teste { display: block; margin-top: 14px; font-size: .82rem; color: var(--azul); }
+  #dica, #erro { position: fixed; left: 50%; transform: translateX(-50%); z-index: 5; display: none;
+    border-radius: 16px; padding: 9px 16px; font-weight: 700; font-size: .95rem; text-align: center; max-width: 85vw; }
+  #dica { bottom: 28px; background: rgba(43,38,32,.82); color: #fff; }
+  #erro { top: 20px; background: #fff; color: var(--verm); box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+  #credito { position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; display: none; padding: 6px 10px; font-size: 10px;
+    color: #fff; text-align: center; text-shadow: 0 1px 2px #000; }
+  .a-enter-vr, .a-enter-ar, .a-orientation-modal { display: none !important; }
+</style>
+</head>
+<body>
+<div id="inicio">
+  <div class="cartao">
+    <small>Área de Proteção Ambiental</small>
+    <h1>Goiapaba-Açu<br>mapa vivo</h1>
+    <p>Aponte o celular para o mapa impresso e veja as montanhas saírem do papel!</p>
+    <ol class="passos">
+      <li><b>1</b><span>Toque em Começar</span></li>
+      <li><b>2</b><span>Permita o uso da câmera</span></li>
+      <li><b>3</b><span>Aponte para o mapa inteiro, de cima</span></li>
+    </ol>
+    <button class="btn" id="btn">Começar</button>
+    <a class="teste" href="alvo.jpg" target="_blank">Sem o livro? Abra o mapa de teste em outra tela</a>
+  </div>
+</div>
+<div id="dica">Aponte para o mapa impresso</div>
+<div id="erro"></div>
+<div id="credito">Relevo: MDT 2 m MAPES/IEMA · Elaboração: Lauro da Cunha Narciso – Biólogo, CRBio nº 96718/02 · Naturalistas Editora</div>
+
+<a-scene
+  mindar-image="imageTargetSrc: ./mapa.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; filterMinCF: 0.0001; filterBeta: 0.001"
+  color-space="sRGB" renderer="colorManagement: true; antialias: true" vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
+  <a-assets timeout="30000">
+    <a-asset-item id="relevo" src="../../3d/goiapaba-acu/goiapaba-acu.glb"></a-asset-item>
+  </a-assets>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <a-entity light="type: ambient; intensity: 0.55"></a-entity>
+  <a-entity light="type: directional; intensity: 0.9" position="-1 1.5 2"></a-entity>
+
+  <!-- Alvo: mapa (3072 × 3328 px). Largura do alvo = 1; a maquete mede 0,6 m → escala 1/0,6.
+       Rotação de 90° em X deita o relevo sobre a página, com o norte para cima. -->
+  <a-entity id="alvo" mindar-image-target="targetIndex: 0">
+    <a-entity id="maquete" gltf-model="#relevo" rotation="90 0 0" scale="1.6667 0.02 1.6667" position="0 0 0.002"></a-entity>
+  </a-entity>
+</a-scene>
+
+<script>
+  const dica = document.getElementById('dica');
+  const erro = document.getElementById('erro');
+  const credito = document.getElementById('credito');
+  const maquete = document.getElementById('maquete');
+  const S = 1.6667;
+  function mostrarErro(msg) { erro.textContent = msg; erro.style.display = 'block'; dica.style.display = 'none'; }
+  window.addEventListener('error', e => mostrarErro('Erro: ' + (e.message || e)));
+  window.addEventListener('unhandledrejection', e => mostrarErro('Erro: ' + (e.reason && e.reason.message || e.reason)));
+
+  const scene = document.querySelector('a-scene');
+  scene.addEventListener('arReady', () => { dica.textContent = 'Aponte para o mapa impresso'; });
+  scene.addEventListener('arError', () => mostrarErro('Não foi possível abrir a câmera. Verifique a permissão e abra o link direto no Safari ou no Chrome (não dentro do WhatsApp/Instagram).'));
+
+  document.getElementById('btn').addEventListener('click', () => {
+    document.getElementById('inicio').style.display = 'none';
+    dica.textContent = 'Abrindo a câmera…';
+    dica.style.display = 'block';
+    const iniciar = () => {
+      try { scene.systems['mindar-image-system'].start(); }
+      catch (e) { mostrarErro('Erro ao iniciar a realidade aumentada: ' + e.message); }
+    };
+    if (scene.hasLoaded) iniciar(); else scene.addEventListener('loaded', iniciar);
+  });
+
+  // Textura com o limite da APA desenhado (a do .glb vem sem ele)
+  maquete.addEventListener('model-loaded', () => {
+    const T = AFRAME.THREE;
+    new T.TextureLoader().load('textura.jpg', tex => {
+      tex.flipY = false; tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = 4;
+      maquete.getObject3D('mesh').traverse(o => {
+        if (o.isMesh && o.material.map) { o.material.map = tex; o.material.needsUpdate = true; }
+      });
+    });
+  });
+
+  // O relevo "sobe" do papel quando o mapa é reconhecido e se achata quando ele some
+  const alvo = document.getElementById('alvo');
+  alvo.addEventListener('targetFound', () => {
+    dica.style.display = 'none'; credito.style.display = 'block';
+    maquete.setAttribute('animation__subir', { property: 'scale', from: `${S} 0.02 ${S}`, to: `${S} ${S} ${S}`,
+      dur: 1600, easing: 'easeOutElastic', elasticity: 400, startEvents: 'subir' });
+    maquete.emit('subir', null, false);
+  });
+  alvo.addEventListener('targetLost', () => {
+    dica.style.display = 'block'; credito.style.display = 'none';
+    maquete.setAttribute('scale', `${S} 0.02 ${S}`);
+  });
+</script>
+</body>
+</html>
