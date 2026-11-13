@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APA Goiapaba-Açu em 3D</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js"></script>
+<style>
+  :root { --verm:#b8322a; --fundo:#f6f3ec; --tinta:#2b2620; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--fundo); color:var(--tinta);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { position:absolute; top:0; left:0; right:0; z-index:2; padding:14px 18px 10px;
+    background:linear-gradient(var(--fundo) 60%, rgba(246,243,236,0)); pointer-events:none; }
+  header small { display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#6b6358; font-weight:600; }
+  header h1 { margin:2px 0 0; font-size:24px; color:var(--verm); line-height:1.1; }
+  header p { margin:4px 0 0; font-size:13px; color:#5a5248; }
+  model-viewer { width:100%; height:100%; --poster-color: transparent; }
+  .hot { background:#fff; border:2px solid var(--tinta); border-radius:50%; width:26px; height:26px;
+    font:700 12px system-ui; display:flex; align-items:center; justify-content:center; color:var(--tinta); }
+  .ar-btn { position:absolute; bottom:86px; left:50%; transform:translateX(-50%);
+    background:var(--verm); color:#fff; border:0; border-radius:24px; padding:12px 22px;
+    font:600 15px system-ui; box-shadow:0 3px 10px rgba(0,0,0,.25); }
+  footer { position:absolute; bottom:0; left:0; right:0; z-index:2; padding:10px 18px 14px;
+    font-size:11.5px; color:#5a5248; background:linear-gradient(rgba(246,243,236,0), var(--fundo) 40%); pointer-events:none; }
+  .leg { display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:4px; font-size:12.5px; color:var(--tinta); }
+  .linha { display:inline-block; width:26px; height:4px; background:#a00a0a; outline:1.5px solid #fff; vertical-align:middle; margin-right:6px; }
+  .dica { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(43,38,32,.75); color:#fff;
+    padding:8px 14px; border-radius:16px; font-size:13px; pointer-events:none; transition:opacity .6s; }
+</style>
+</head>
+<body>
+<header>
+  <small>Área de Proteção Ambiental</small>
+  <h1>Goiapaba-Açu em 3D</h1>
+  <p>Fundão e Santa Teresa – ES · gire, aproxime e incline com os dedos</p>
+</header>
+
+<model-viewer id="mv" src="goiapaba-acu.glb" alt="Maquete 3D do relevo da APA Goiapaba-Açu"
+  camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="4000" rotation-per-second="8deg"
+  camera-orbit="15deg 58deg 95%" field-of-view="30deg" min-camera-orbit="auto 0deg auto" max-camera-orbit="auto 88deg auto"
+  shadow-intensity="1" shadow-softness="0.8" exposure="0.95" tone-mapping="neutral"
+  ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto" ar-placement="floor">
+  <button slot="hotspot-norte" class="hot" data-position="0 0.03 -0.335" data-normal="0 0 -1">N</button>
+  <button slot="ar-button" class="ar-btn">Ver na mesa (realidade aumentada)</button>
+</model-viewer>
+
+<footer>
+  <div class="leg"><span><span class="linha"></span>Limite da APA (IEMA)</span><span>Exagero vertical 1,5×</span><span>Área: 12 × 13 km</span></div>
+  Relevo: MDT 2 m MAPES/IEMA (2012-2015) · Elaboração: Lauro da Cunha Narciso – Biólogo, CRBio nº 96718/02 · Naturalistas Editora · Série Preservando o Nosso Quintal
+</footer>
+
+</body>
+</html>
