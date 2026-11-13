@@ -61,29 +61,20 @@
   <div class="camadas" id="camadas">
     <span>Camadas</span>
     <button class="chip" data-c="orto" aria-pressed="false"><i class="ck"></i>Ortofoto 2019-20</button>
-    <button class="chip" data-c="zoneamento" aria-pressed="false"><i class="ck"></i>Zoneamento</button>
-    <button class="chip" data-c="hidro_estradas" aria-pressed="false"><i class="ck"></i>Rios e estradas</button>
-    <button class="chip" data-c="pontos" aria-pressed="false"><i class="ck"></i>Pontos e nomes</button>
-  </div>
-  <div class="zon" id="zon">
-    <span><i style="background:#6fae7c"></i>ZC Conservação</span>
-    <span><i style="background:#c9e5a6"></i>ZUM Uso Moderado</span>
-    <span><i style="background:#f5e3b3"></i>ZP Produção</span>
-    <span><i style="background:#b3a7d1"></i>ZDIP Dif. Interesses Públicos</span>
-    <span><i style="background:#e8a197"></i>ZST Sobreposição Territorial</span>
+    <button class="chip" data-c="rios" aria-pressed="false"><i class="ck"></i>Rios e córregos</button>
   </div>
   <div class="leg"><span><span class="linha"></span>Limite da APA (IEMA)</span><span>Exagero vertical 1,5×</span><span>12 × 13 km</span></div>
-  Relevo: MDT 2 m MAPES/IEMA · Ortofoto KOMPSAT IJSN · Zoneamento 2026 · OSM · Elaboração: Lauro da Cunha Narciso – Biólogo, CRBio nº 96718/02 · Naturalistas Editora · Série Preservando o Nosso Quintal
+  Relevo: MDT 2 m MAPES/IEMA · Ortofoto KOMPSAT IJSN · Hidrografia IJSN · Elaboração: Lauro da Cunha Narciso – Biólogo, CRBio nº 96718/02 · Naturalistas Editora · Série Preservando o Nosso Quintal
 </footer>
 
 <script type="module">
   const mv = document.getElementById('mv');
   const aviso = document.getElementById('aviso');
   const W = 3072, H = 3328;
-  const ordem = ['zoneamento', 'hidro_estradas', 'pontos'];      // sobreposições, de baixo para cima
+  const ordem = ['rios'];      // sobreposições, de baixo para cima
   const arquivos = { base:'camadas/base.jpg', orto:'camadas/orto.jpg', limite:'camadas/limite.webp',
-    zoneamento:'camadas/zoneamento.webp', hidro_estradas:'camadas/hidro_estradas.webp', pontos:'camadas/pontos.webp' };
-  const ativo = { orto:false, zoneamento:false, hidro_estradas:false, pontos:false };
+    rios:'camadas/rios.webp' };
+  const ativo = { orto:false, rios:false };
   const cache = {};
   const carregar = n => cache[n] || (cache[n] = new Promise((ok, erro) => {
     const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = arquivos[n];
@@ -126,7 +117,6 @@
     const b = e.target.closest('.chip'); if (!b) return;
     const c = b.dataset.c; ativo[c] = !ativo[c];
     b.setAttribute('aria-pressed', ativo[c]);
-    if (c === 'zoneamento') document.getElementById('zon').classList.toggle('on', ativo[c]);
     if (acharMaterial()) compor();
   });
 </script>
