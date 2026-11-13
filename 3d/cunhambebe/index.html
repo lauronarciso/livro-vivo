@@ -63,7 +63,7 @@
   camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="4000" rotation-per-second="8deg"
   camera-orbit="8deg 52deg 68%" camera-target="auto auto 0.07m" field-of-view="30deg" min-camera-orbit="auto 0deg auto" max-camera-orbit="auto 88deg auto"
   shadow-intensity="1" shadow-softness="0.8" exposure="0.95" tone-mapping="neutral"
-  ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto" ar-placement="floor">
+  ar ar-modes="scene-viewer quick-look" ar-scale="auto" ar-placement="floor">
   <button slot="hotspot-norte" class="hot" data-position="0 0.02 -0.176" data-normal="0 0 -1">N</button>
   <button class="flag f-sede" style="--h:40px" slot="hotspot-p0" data-position="0.1216 0.0101 0.0226" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">⌂ Sede do Parque (INEA)</span></button>
   <button class="flag f-cidade" slot="hotspot-p1" data-position="0.0778 0.0106 0.0566" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">● Mangaratiba</span></button>
@@ -135,11 +135,24 @@
 
   const acharMaterial = () => {
     if (!material && mv.loaded && mv.model)
-      material = mv.model.materials.find(m => m.pbrMetallicRoughness.baseColorTexture.texture) || null;
+      material = mv.model.materials.find(m => m.name !== 'bandeiras' && m.pbrMetallicRoughness.baseColorTexture.texture) || null;
     return material;
   };
   mv.addEventListener('load', () => { acharMaterial(); if (Object.values(ativo).some(Boolean)) compor(); });
   acharMaterial();
+  // Bandeiras 3D (dentro do modelo) só aparecem na realidade aumentada; na tela usamos as bandeiras da página
+  const matsBandeira = () => mv.model ? mv.model.materials.filter(m => ['bandeiras','hastes'].includes(m.name)) : [];
+  const verBandeiras3D = on => matsBandeira().forEach(m => {
+    const c = m.pbrMetallicRoughness.baseColorFactor; m.pbrMetallicRoughness.setBaseColorFactor([c[0], c[1], c[2], on ? 1 : 0]);
+  });
+  mv.addEventListener('load', () => verBandeiras3D(false));
+  if (mv.loaded) verBandeiras3D(false);
+  const pontosLigados = () => document.querySelector('[data-c=pontos]').getAttribute('aria-pressed') === 'true';
+  document.querySelector('.ar-btn').addEventListener('click', () => {
+    verBandeiras3D(pontosLigados());
+    setTimeout(() => verBandeiras3D(false), 15000);
+  }, true);
+  mv.addEventListener('ar-status', e => { if (e.detail.status === 'not-presenting') verBandeiras3D(false); });
   let raio0 = null;
   const distancia = () => {
     const r = mv.getCameraOrbit().radius;
