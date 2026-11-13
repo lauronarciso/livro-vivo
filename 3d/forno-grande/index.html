@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PE Forno Grande em 3D</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js"></script>
+<style>
+  :root { --verm:#b8322a; --fundo:#f6f3ec; --tinta:#2b2620; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--fundo); color:var(--tinta);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow:hidden; }
+  header { position:absolute; top:0; left:0; right:0; z-index:2; padding:14px 18px 10px;
+    background:linear-gradient(var(--fundo) 60%, rgba(246,243,236,0)); pointer-events:none; }
+  header small { display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#6b6358; font-weight:600; }
+  header h1 { margin:2px 0 0; font-size:24px; color:var(--verm); line-height:1.1; }
+  header p { margin:4px 0 0; font-size:13px; color:#5a5248; }
+  model-viewer { width:100%; height:100%; }
+  .hot { background:#fff; border:2px solid var(--tinta); border-radius:50%; width:26px; height:26px;
+    font:700 12px system-ui; display:flex; align-items:center; justify-content:center; color:var(--tinta); }
+  .ar-btn { position:absolute; right:14px; top:96px; background:var(--verm); color:#fff; border:0; border-radius:20px;
+    padding:9px 15px; font:600 13.5px system-ui; white-space:nowrap; box-shadow:0 3px 10px rgba(0,0,0,.25); }
+  footer { position:absolute; bottom:0; left:0; right:0; z-index:2; padding:30px 14px 12px;
+    font-size:11px; color:#5a5248; background:linear-gradient(rgba(246,243,236,0), var(--fundo) 28%); pointer-events:none; }
+  .camadas { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:9px; pointer-events:auto; }
+  .camadas span { width:100%; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:#6b6358; }
+  .chip { border:1.5px solid #b9ad9b; background:#fffdf8; color:var(--tinta); border-radius:18px; padding:7px 12px;
+    font:600 13px system-ui; cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .chip .ck { width:14px; height:14px; border-radius:4px; border:1.5px solid #b9ad9b; background:#fff; flex:none; }
+  .chip[aria-pressed="true"] { border-color:var(--verm); background:#fbebe8; }
+  .chip[aria-pressed="true"] .ck { background:var(--verm); border-color:var(--verm);
+    box-shadow: inset 0 0 0 2px #fbebe8; }
+  .chip.carregando { opacity:.55; }
+  .leg { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:5px; font-size:12px; color:var(--tinta); }
+  .linha { display:inline-block; width:24px; height:4px; background:#a00a0a; outline:1.5px solid #fff; vertical-align:middle; margin-right:5px; }
+  .zon { display:none; gap:9px; flex-wrap:wrap; margin-bottom:6px; font-size:11.5px; color:var(--tinta); }
+  .zon.on { display:flex; }
+  .zon i { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:-2px; margin-right:4px; border:1px solid rgba(0,0,0,.15); }
+  #aviso { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:3; background:rgba(43,38,32,.8);
+    color:#fff; padding:8px 14px; border-radius:14px; font-size:13px; display:none; }
+</style>
+</head>
+<body>
+<header>
+  <small>Parque Estadual</small>
+  <h1>Forno Grande em 3D</h1>
+  <p>Castelo – ES · gire, aproxime e incline com os dedos</p>
+</header>
+
+<model-viewer id="mv" src="forno-grande.glb" alt="Maquete 3D do relevo do Parque Estadual do Forno Grande"
+  camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="4000" rotation-per-second="8deg"
+  camera-orbit="15deg 58deg 100%" camera-target="auto auto 0.07m" field-of-view="30deg" min-camera-orbit="auto 0deg auto" max-camera-orbit="auto 88deg auto"
+  shadow-intensity="1" shadow-softness="0.8" exposure="0.95" tone-mapping="neutral"
+  ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto" ar-placement="floor">
+  <button slot="hotspot-norte" class="hot" data-position="0 0.03 -0.335" data-normal="0 0 -1">N</button>
+  <button slot="ar-button" class="ar-btn">Ver na mesa (RA)</button>
+</model-viewer>
+<div id="aviso">carregando camada…</div>
+
+<footer>
+  <div class="camadas" id="camadas">
+    <span>Camadas</span>
+    <button class="chip" data-c="orto" aria-pressed="false"><i class="ck"></i>Ortofoto 2019-20</button>
+    <button class="chip" data-c="rios" aria-pressed="false"><i class="ck"></i>Rios e córregos</button>
+  </div>
+  <div class="leg"><span><span class="linha"></span>Limite do Parque (IEMA)</span><span>Relevo em escala real (1×)</span><span>7,2 × 7,8 km</span></div>
+  Relevo: MDT 2 m MAPES/IEMA · Ortofoto KOMPSAT IJSN · Hidrografia IJSN · Elaboração: Lauro da Cunha Narciso – Biólogo, CRBio nº 96718/02 · Naturalistas Editora · Série Preservando o Nosso Quintal
+</footer>
+
+<script type="module">
+  const mv = document.getElementById('mv');
+  const aviso = document.getElementById('aviso');
+  const W = 3072, H = 3328;
+  const ordem = ['rios'];      // sobreposições, de baixo para cima
+  const arquivos = { base:'camadas/base.jpg', orto:'camadas/orto.jpg', limite:'camadas/limite.webp',
+    rios:'camadas/rios.webp' };
+  const ativo = { orto:false, rios:false };
+  const cache = {};
+  const carregar = n => cache[n] || (cache[n] = new Promise((ok, erro) => {
+    const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = arquivos[n];
+  }));
+  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  let material = null, versao = 0, urlAnterior = null;
+
+  async function compor() {
+    const minha = ++versao;
+    const nomes = [ativo.orto ? 'orto' : 'base', ...ordem.filter(n => ativo[n]), 'limite'];
+    const algoNovo = nomes.some(n => !cache[n]);
+    if (algoNovo) aviso.style.display = 'block';
+    let imgs;
+    try { imgs = await Promise.all(nomes.map(carregar)); }
+    catch (e) { aviso.textContent = 'não foi possível carregar a camada'; return; }
+    if (minha !== versao) return;
+    ctx.clearRect(0, 0, W, H);
+    for (const im of imgs) ctx.drawImage(im, 0, 0, W, H);
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
+    if (minha !== versao) return;
+    const url = URL.createObjectURL(blob);
+    const tex = await mv.createTexture(url);
+    if (minha !== versao) return;
+    material.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+    if (urlAnterior) URL.revokeObjectURL(urlAnterior);
+    urlAnterior = url;
+    aviso.style.display = 'none';
+  }
+
+  const acharMaterial = () => {
+    if (!material && mv.loaded && mv.model)
+      material = mv.model.materials.find(m => m.pbrMetallicRoughness.baseColorTexture.texture) || null;
+    return material;
+  };
+  mv.addEventListener('load', () => { acharMaterial(); if (Object.values(ativo).some(Boolean)) compor(); });
+  acharMaterial();
+
+  document.getElementById('camadas').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const c = b.dataset.c; ativo[c] = !ativo[c];
+    b.setAttribute('aria-pressed', ativo[c]);
+    if (acharMaterial()) compor();
+  });
+</script>
+</body>
+</html>
