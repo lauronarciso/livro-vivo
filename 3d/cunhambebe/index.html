@@ -38,6 +38,18 @@
   .zon i { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:-2px; margin-right:4px; border:1px solid rgba(0,0,0,.15); }
   #aviso { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:3; background:rgba(43,38,32,.8);
     color:#fff; padding:8px 14px; border-radius:14px; font-size:13px; display:none; }
+
+  .flag { width:0; height:0; border:0; padding:0; background:none; position:relative; pointer-events:none; transition:opacity .25s; }
+  .flag .pau { position:absolute; left:-1px; bottom:0; width:2px; height:var(--h,30px); background:#1b2a4e; }
+  .flag .pe { position:absolute; left:-4px; bottom:-3px; width:8px; height:8px; border-radius:50%; background:#fff; border:2px solid #1b2a4e; box-sizing:border-box; }
+  .flag .rot { position:absolute; left:0; bottom:calc(var(--h,30px) - 18px); background:var(--c,#1b2a4e); color:#fff; font:600 11px/1 system-ui;
+    padding:4px 8px 4px 6px; border-radius:0 7px 7px 0; white-space:nowrap; box-shadow:0 1px 4px rgba(0,0,0,.3); }
+  .longe .f-vila .rot, .longe .f-atrativo .rot { display:none; }
+  .longe .f-vila .pau { height:14px; }
+  .sem-pontos .flag { display:none; }
+  .f-cidade { --c:#1b2a4e; --h:46px; } .f-vila { --c:#4a6285; --h:30px; } .f-pico { --c:#7a4f2a; --h:40px; }
+  .f-mirante { --c:#c27800; --h:36px; } .f-sede { --c:#2e7d32; --h:46px; } .f-atrativo { --c:#00796b; --h:34px; }
+  .f-cidade .rot { font-size:12.5px; } .f-vila .rot { font-weight:500; }
 </style>
 </head>
 <body>
@@ -53,6 +65,21 @@
   shadow-intensity="1" shadow-softness="0.8" exposure="0.95" tone-mapping="neutral"
   ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto" ar-placement="floor">
   <button slot="hotspot-norte" class="hot" data-position="0 0.02 -0.176" data-normal="0 0 -1">N</button>
+  <button class="flag f-sede" slot="hotspot-p0" data-position="0.1216 0.0101 0.0226" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">⌂ Sede do Parque (INEA)</span></button>
+  <button class="flag f-cidade" slot="hotspot-p1" data-position="0.0778 0.0106 0.0566" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">● Mangaratiba</span></button>
+  <button class="flag f-cidade" slot="hotspot-p2" data-position="-0.2075 0.0111 0.1068" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">● Angra dos Reis</span></button>
+  <button class="flag f-pico" slot="hotspot-p3" data-position="-0.0587 0.0472 0.0197" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">▲ Pico das Três Orelhas · 1.565 m</span></button>
+  <button class="flag f-pico" slot="hotspot-p4" data-position="0.2038 0.0392 -0.0178" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">▲ Morro Mazomba · 1.220 m</span></button>
+  <button class="flag f-pico" slot="hotspot-p5" data-position="-0.0587 0.0484 -0.0161" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">▲ Pedra do Papagaio de Lídice</span></button>
+  <button class="flag f-mirante" slot="hotspot-p6" data-position="0.1019 0.0190 -0.0008" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">★ Mirante Imperial</span></button>
+  <button class="flag f-mirante" slot="hotspot-p7" data-position="-0.2406 0.0143 0.0970" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">★ Mirante da Ribeira</span></button>
+  <button class="flag f-atrativo" slot="hotspot-p8" data-position="0.1678 0.0131 0.0062" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">✦ Cachoeira Véu da Noiva</span></button>
+  <button class="flag f-atrativo" slot="hotspot-p9" data-position="0.0903 0.0211 -0.1222" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">✦ Antiga São João Marcos</span></button>
+  <button class="flag f-vila" slot="hotspot-p10" data-position="-0.0837 0.0242 -0.0877" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">• Lídice</span></button>
+  <button class="flag f-vila" slot="hotspot-p11" data-position="-0.0484 0.0106 0.1355" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">• Conceição de Jacareí</span></button>
+  <button class="flag f-vila" slot="hotspot-p12" data-position="0.1787 0.0103 0.0128" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">• Muriqui</span></button>
+  <button class="flag f-vila" slot="hotspot-p13" data-position="0.2156 0.0106 0.0216" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">• Itacurussá</span></button>
+  <button class="flag f-vila" slot="hotspot-p14" data-position="0.1195 0.0205 -0.0512" data-normal="0 1 0" tabindex="-1"><span class="pau"></span><span class="pe"></span><span class="rot">• Serra do Piloto</span></button>
   <button slot="ar-button" class="ar-btn">Ver na mesa (RA)</button>
 </model-viewer>
 <div id="aviso">carregando camada…</div>
@@ -60,6 +87,7 @@
 <footer>
   <div class="camadas" id="camadas">
     <span>Camadas</span>
+    <button class="chip" data-c="pontos" aria-pressed="true"><i class="ck"></i>Pontos de referência</button>
     <button class="chip" data-c="orto" aria-pressed="false"><i class="ck"></i>Satélite 2016</button>
     <button class="chip" data-c="rios" aria-pressed="false"><i class="ck"></i>Rios e córregos</button>
   </div>
@@ -112,10 +140,20 @@
   };
   mv.addEventListener('load', () => { acharMaterial(); if (Object.values(ativo).some(Boolean)) compor(); });
   acharMaterial();
+  let raio0 = null;
+  const distancia = () => {
+    const r = mv.getCameraOrbit().radius;
+    if (raio0 === null) raio0 = r;
+    mv.classList.toggle('longe', r > raio0 * 0.72);
+  };
+  mv.addEventListener('camera-change', distancia);
+  mv.addEventListener('load', () => { raio0 = null; distancia(); });
 
   document.getElementById('camadas').addEventListener('click', e => {
     const b = e.target.closest('.chip'); if (!b) return;
-    const c = b.dataset.c; ativo[c] = !ativo[c];
+    const c = b.dataset.c;
+    if (c === 'pontos') { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on); mv.classList.toggle('sem-pontos', !on); return; }
+    ativo[c] = !ativo[c];
     b.setAttribute('aria-pressed', ativo[c]);
     if (acharMaterial()) compor();
   });
