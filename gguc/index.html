@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Indicadores GGUC 2027</title>
+<meta name="theme-color" content="#1f6b45">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GGUC 2027">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f3f5f1; --card:#fff; --ink:#1d2a22; --mute:#66756b; --line:#e2e7e0;
+  --green:#1f6b45; --green2:#2f8a5c; --soft:#e7f2ea; --auto:#eef2f6; --autoInk:#40566b;
+  --na:#f4ecdc; --naInk:#8a6516; --zero:#e8eef9; --err:#c0392b;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;font-size:16px}
+body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:10;background:var(--green);color:#fff;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 12px}
+header .row{display:flex;align-items:center;gap:10px}
+header h1{font-size:17px;margin:0;font-weight:700;flex:1;line-height:1.2}
+header small{display:block;font-weight:400;opacity:.8;font-size:12px}
+.icon-btn{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:10px;min-width:40px;height:40px;font-size:18px;font-family:inherit}
+main{padding:14px 14px 0;max-width:640px;margin:0 auto}
+.hidden{display:none!important}
+.group-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:18px 4px 8px}
+.uc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.uc-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 12px;text-align:left;font-family:inherit;color:inherit;display:flex;flex-direction:column;gap:6px}
+.uc-card b{font-size:16px}
+.uc-card span{font-size:12px;color:var(--mute)}
+.bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green2);width:0}
+.months{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none;margin:0 -14px;padding-left:14px;padding-right:14px}
+.months::-webkit-scrollbar{display:none}
+.m{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-family:inherit;font-size:14px;color:var(--ink);position:relative}
+.m.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+.m.done::after{content:"";position:absolute;top:4px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--green2)}
+.m.on.done::after{background:#bfe8cf}
+.summary{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.summary .bar{flex:1}
+.summary b{font-size:14px;white-space:nowrap}
+details.prog{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+details.prog>summary{list-style:none;padding:14px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px;cursor:pointer}
+details.prog>summary::-webkit-details-marker{display:none}
+details.prog>summary .cnt{margin-left:auto;font-size:12px;color:var(--mute);font-weight:500;background:var(--bg);padding:3px 8px;border-radius:999px}
+details.prog>summary .cnt.full{background:var(--soft);color:var(--green)}
+details.prog>summary::after{content:"▾";color:var(--mute);transition:transform .2s}
+details.prog[open]>summary::after{transform:rotate(180deg)}
+.ind{border-top:1px solid var(--line);padding:12px 14px}
+.ind .top{display:flex;align-items:baseline;gap:8px}
+.ind .name{font-size:15px;font-weight:500;flex:1}
+.ind .tag{font-size:11px;color:var(--mute);white-space:nowrap}
+.ind .hint{font-size:12px;color:var(--mute);margin:3px 0 8px;line-height:1.35}
+.ctrl{display:flex;gap:8px;align-items:center}
+.ctrl input{flex:1;min-width:0;height:46px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;font-size:18px;font-family:inherit;background:#fbfcfa;color:var(--ink)}
+.ctrl input:focus{outline:none;border-color:var(--green2);background:#fff}
+.ctrl input.na{background:var(--na);color:var(--naInk);font-weight:600;border-color:#e6d3a8}
+.ctrl input.zero{background:var(--zero)}
+.ctrl input.bad{border-color:var(--err);background:#fdf0ee}
+.chip{height:46px;min-width:52px;border:1px solid var(--line);background:var(--card);border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink)}
+.chip.na{color:var(--naInk)}
+.year{font-size:12px;color:var(--mute);margin-top:6px}
+.year b{color:var(--green)}
+.ind.auto{background:var(--auto)}
+.ind.auto .val{font-size:20px;font-weight:700;color:var(--autoInk);margin-top:4px}
+.err{font-size:12px;color:var(--err);margin-top:4px}
+.obs-t{font-size:12px;color:var(--green);background:none;border:0;padding:6px 0 0;font-family:inherit}
+textarea{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:14px;min-height:60px;resize:vertical}
+.bottom{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;z-index:10}
+.bottom button{flex:1;height:48px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.bottom button.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:20;display:flex;align-items:flex-end}
+.sheet{background:#fff;width:100%;max-height:85vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+.sheet h2{margin:0 0 10px;font-size:18px}
+.sheet .rule{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.4}
+.sheet .rule b{flex:0 0 74px;color:var(--green)}
+.sheet pre{white-space:pre-wrap;background:var(--bg);border-radius:10px;padding:12px;font-size:12.5px;max-height:40vh;overflow:auto;font-family:ui-monospace,monospace}
+.sheet .acts{display:flex;gap:8px;margin-top:12px}
+.sheet .acts button{flex:1;height:46px;border-radius:12px;font-family:inherit;font-weight:600;font-size:14px;border:1px solid var(--line);background:#fff}
+.sheet .acts button.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.note{font-size:12px;color:var(--mute);text-align:center;margin:18px 10px 6px;line-height:1.4}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <button class="icon-btn hidden" id="back" aria-label="Voltar">←</button>
+    <h1 id="title">Indicadores GGUC 2027<small>Lançamento mensal · 19 UCs</small></h1>
+    <button class="icon-btn" id="help" aria-label="Como preencher">?</button>
+  </div>
+</header>
+
+<main>
+  <section id="home"></section>
+  <section id="uc" class="hidden">
+    <div class="months" id="months"></div>
+    <div class="summary"><div class="bar"><i id="pbar"></i></div><b id="ptxt">0/24</b></div>
+    <div id="progs"></div>
+    <p class="note">Os dados ficam salvos neste aparelho. Ao terminar o mês, use <b>Enviar</b> para copiar o resumo e repassar à GGUC ou colar na planilha.</p>
+  </section>
+</main>
+
+<div class="bottom hidden" id="bottom">
+  <button id="clearM">Limpar mês</button>
+  <button class="primary" id="send">Enviar</button>
+</div>
+
+<div class="sheet-bg hidden" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MESES_L=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const GRUPOS=[
+ ["Parques Estaduais","Parque","Proteção Integral",["PECF","PEFG","PEI","PEMF","PEPCV","PEPAZ","PESA"]],
+ ["Monumentos Naturais","Monumento Natural","Proteção Integral",["MONAFF","MONAST","MONACP"]],
+ ["Reserva Biológica","Reserva Biológica","Proteção Integral",["REBIODB"]],
+ ["Áreas de Proteção Ambiental","APA","Uso Sustentável",["APACB","APASE","APAGO","APAGUA","APAPE","APAPM"]],
+ ["Área de Relevante Interesse Ecológico","ARIE","Uso Sustentável",["ARIEMV"]],
+ ["Reserva de Desenvolvimento Sustentável","RDS","Uso Sustentável",["RDSCO"]]
+];
+// [id, indicador, unidade, natureza, regra, entrada, observação]
+const PROGS=[
+ ["Educação ambiental e relação com o entorno",[
+  ["vis","Visitantes","visitas","Resultado (alcance)","Soma","M","Número de entradas/visitas registradas; padronizar método de contagem."],
+  ["reu","Reuniões do conselho","reuniões","Esforço","Soma","M","Reuniões efetivamente realizadas."],
+  ["eve","Eventos","eventos","Esforço","Soma","M","Eventos realizados ou apoiados pela UC; evitar dupla contagem."],
+  ["pev","Público dos eventos","participações","Resultado (alcance)","Soma","M","Pessoas participantes em eventos; contar mesmo quando a ação ocorrer fora da UC."],
+  ["mid","Mídias","publicações","Esforço","Soma","M","Definir alcance: publicações feitas, menções ou ambos."],
+  ["pvu","PVUC","a definir","A definir","A definir","M","Indicador e unidade de medida dependem de definição interna."],
+  ["aci","Acidentes no uso público","acidentes","Resultado (segurança)","Soma","M","Ocorrências de acidentes envolvendo visitantes no uso público."],
+  ["ptt","Público total atingido","registros de público","Resultado (alcance)","Soma","A","Visitantes + público dos eventos; pode contar repetidamente uma pessoa."],
+  ["apm","Acidentes por mil visitas","acidentes/1.000 visitas","Resultado (segurança)","Razão","A","Acidentes ÷ visitas × 1.000; exibido somente quando houver dados."]]],
+ ["Monitoramento ambiental e manejo da biodiversidade",[
+  ["fau","Fauna total da UC","espécies","Contexto (estoque)","Último","M","Número conhecido de espécies, não somar meses."],
+  ["faa","Espécies da fauna ameaçadas","espécies","Contexto (estoque)","Último","M","Número conhecido de espécies ameaçadas, não somar meses."],
+  ["atr","Fauna atropelada","indivíduos","Pressão registrada","Soma","M","Indivíduos registrados atropelados."],
+  ["flo","Flora total da UC","espécies","Contexto (estoque)","Último","M","Número conhecido de espécies, não somar meses."],
+  ["fla","Espécies da flora ameaçadas","espécies","Contexto (estoque)","Último","M","Número conhecido de espécies ameaçadas, não somar meses."],
+  ["exo","Manejo e controle de exóticas","ações","Esforço","Soma","M","Contar ações de manejo; evita misturar área e quantidades."],
+  ["mon","Ações de monitoramento da biodiversidade","ações","Esforço","Soma","M","Contar ações técnicas de monitoramento efetivamente executadas."],
+  ["mfa","Manejo de fauna","ações","Esforço","Soma","M","Ações de manejo registradas."]]],
+ ["Proteção e fiscalização",[
+  ["cac","Caça, pesca ou retirada de animais","ocorrências","Pressão registrada","Soma","M","Ocorrências identificadas; não presumir que aumento signifique pior desempenho."],
+  ["fog","Uso irregular do fogo","ocorrências","Pressão registrada","Soma","M","Ocorrências identificadas."],
+  ["sup","Supressão de vegetação","ocorrências","Pressão registrada","Soma","M","Ocorrências identificadas."],
+  ["air","Atividade irregular dentro da UC","ocorrências","Pressão registrada","Soma","M","Ocorrências identificadas."],
+  ["dom","Presença de animal doméstico","ocorrências","Pressão registrada","Soma","M","Ocorrências identificadas."],
+  ["aut","Autuações realizadas","autos","Esforço","Soma","M","Autuações lavradas; evitar dupla contagem da mesma ação."],
+  ["fis","Ações de fiscalização e monitoramento","ações","Esforço","Soma","M","Ações realizadas e registradas."]]],
+ ["Prevenção e combate a incêndios",[
+  ["inc","Incêndios combatidos","incêndios","Esforço","Soma","M","Incêndios nos quais houve atuação da equipe."],
+  ["roi","ROIF","relatórios","Esforço","Soma","M","Registros/relatórios formalizados; definição a validar."]]]
+];
+const MANUAIS=PROGS.flatMap(p=>p[1]).filter(i=>i[5]==="M");
+const UC_INFO={};GRUPOS.forEach(g=>g[3].forEach(s=>UC_INFO[s]={cat:g[1],grupo:g[2]}));
+
+// ---------- armazenamento local ----------
+const KEY="gguc2027-v1";
+let DB={};
+try{DB=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){DB={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
+function ucData(uc){return DB[uc]||(DB[uc]={v:{},obs:{}})}
+function getV(uc,id,m){const d=DB[uc];return d&&d.v[id]?d.v[id][m]??"":""}
+function setV(uc,id,m,val){const d=ucData(uc);(d.v[id]||(d.v[id]=Array(12).fill("")))[m]=val;save()}
+
+// ---------- regras ----------
+function parse(s){
+  s=String(s??"").trim(); if(s==="")return {k:"vazio"};
+  if(/^n\/?a$/i.test(s))return {k:"na"};
+  const n=Number(s.replace(/\./g,"").replace(",","."));
+  if(isFinite(n)&&n>=0)return {k:"num",n};
+  return {k:"bad"};
+}
+function autoVal(uc,id,m){
+  const v=parse(getV(uc,"vis",m));
+  if(id==="ptt"){const e=parse(getV(uc,"pev",m));
+    if(v.k==="vazio"||e.k==="vazio")return "";
+    if(v.k==="na"&&e.k==="na")return "N/A";
+    return fmt((v.k==="num"?v.n:0)+(e.k==="num"?e.n:0));}
+  if(id==="apm"){const a=parse(getV(uc,"aci",m));
+    if(v.k==="vazio"||a.k==="vazio")return "";
+    if(v.k!=="num"||a.k!=="num"||v.n===0)return "N/A";
+    return fmt(a.n/v.n*1000,2);}
+}
+function anual(uc,ind){
+  const [id,, ,,regra,ent]=ind;
+  const vals=MESES.map((_,m)=>ent==="A"?autoVal(uc,id,m):getV(uc,id,m)).map(parse);
+  const nums=vals.filter(x=>x.k==="num");
+  if(!nums.length) return vals.every(x=>x.k==="na")?"N/A":"—";
+  if(regra==="Último") return fmt(nums[nums.length-1].n);
+  if(regra==="Razão"){ // acidentes/visitas do ano
+    const s=k=>MESES.reduce((t,_,m)=>{const p=parse(getV(uc,k,m));return t+(p.k==="num"?p.n:0)},0);
+    const vv=s("vis");return vv?fmt(s("aci")/vv*1000,2):"N/A";}
+  if(regra==="A definir") return "—";
+  return fmt(nums.reduce((t,x)=>t+x.n,0));
+}
+function fmt(n,d=0){return n.toLocaleString("pt-BR",{maximumFractionDigits:d})}
+function filled(uc,m){return MANUAIS.filter(i=>parse(getV(uc,i[0],m)).k!=="vazio").length}
+
+// ---------- estado / telas ----------
+const $=id=>document.getElementById(id);
+let cur=null, mes=defaultMes();
+function defaultMes(){const d=new Date();if(d.getFullYear()===2027)return Math.max(0,d.getMonth()-1);if(d.getFullYear()>2027)return 11;return 0}
+
+function renderHome(){
+  cur=null;
+  $("title").innerHTML='Indicadores GGUC 2027<small>Lançamento mensal · 19 UCs</small>';
+  $("back").classList.add("hidden");$("bottom").classList.add("hidden");
+  $("uc").classList.add("hidden");$("home").classList.remove("hidden");
+  let h='<div class="summary" style="margin-top:4px"><span style="font-size:14px;flex:1">Selecione sua unidade de conservação</span></div>';
+  GRUPOS.forEach(g=>{
+    h+=`<div class="group-title">${g[0]}</div><div class="uc-grid">`;
+    g[3].forEach(s=>{
+      const tot=MESES.reduce((t,_,m)=>t+filled(s,m),0), pct=tot/(MANUAIS.length*12)*100;
+      const meses=MESES.filter((_,m)=>filled(s,m)===MANUAIS.length).length;
+      h+=`<button class="uc-card" data-uc="${s}"><b>${s}</b><span>${g[1]} · ${meses}/12 meses completos</span><div class="bar"><i style="width:${pct}%"></i></div></button>`;
+    });
+    h+='</div>';
+  });
+  $("home").innerHTML=h;
+  $("home").querySelectorAll("[data-uc]").forEach(b=>b.onclick=()=>openUC(b.dataset.uc));
+  window.scrollTo(0,0);
+}
+
+function openUC(uc){
+  cur=uc;
+  try{history.replaceState(null,"","#"+uc)}catch(e){}
+  const inf=UC_INFO[uc];
+  $("title").innerHTML=`${uc}<small>${inf.cat} · ${inf.grupo}</small>`;
+  $("back").classList.remove("hidden");$("bottom").classList.remove("hidden");
+  $("home").classList.add("hidden");$("uc").classList.remove("hidden");
+  renderMonths();renderProgs();window.scrollTo(0,0);
+  setTimeout(()=>{const on=$("months").querySelector(".on");on&&on.scrollIntoView({inline:"center",block:"nearest"})},50);
+}
+function renderMonths(){
+  $("months").innerHTML=MESES.map((n,m)=>`<button class="m ${m===mes?"on":""} ${filled(cur,m)===MANUAIS.length?"done":""}" data-m="${m}">${n}</button>`).join("");
+  $("months").querySelectorAll(".m").forEach(b=>b.onclick=()=>{mes=+b.dataset.m;renderMonths();renderProgs()});
+}
+function updProgress(){
+  const f=filled(cur,mes);$("pbar").style.width=(f/MANUAIS.length*100)+"%";
+  $("ptxt").textContent=`${MESES_L[mes]}: ${f}/${MANUAIS.length}`;
+}
+function renderProgs(){
+  const openSet=new Set([...document.querySelectorAll("details.prog[open]")].map(d=>d.dataset.p));
+  const first=!document.querySelector("details.prog");
+  let h="";
+  PROGS.forEach(([pn,inds],pi)=>{
+    const man=inds.filter(i=>i[5]==="M"), f=man.filter(i=>parse(getV(cur,i[0],mes)).k!=="vazio").length;
+    h+=`<details class="prog" data-p="${pi}" ${(first&&pi===0)||openSet.has(String(pi))?"open":""}><summary>${pn}<span class="cnt ${f===man.length?"full":""}" id="cnt${pi}">${f}/${man.length}</span></summary>`;
+    inds.forEach(ind=>{
+      const [id,nome,un,nat,regra,ent,obs]=ind;
+      const tag=`${un}${regra==="Último"?" · estoque":""}`;
+      if(ent==="A"){
+        const v=autoVal(cur,id,mes);
+        h+=`<div class="ind auto"><div class="top"><span class="name">${nome}</span><span class="tag">automático</span></div>
+        <div class="hint">${obs}</div><div class="val" id="av_${id}">${v===""?"—":v}</div>
+        <div class="year">Ano 2027: <b id="yr_${id}">${anual(cur,ind)}</b></div></div>`;
+      }else{
+        const v=getV(cur,id,mes), p=parse(v), o=(DB[cur]&&DB[cur].obs[id])||"";
+        h+=`<div class="ind"><div class="top"><span class="name">${nome}</span><span class="tag">${tag}</span></div>
+        <div class="hint">${obs}</div>
+        <div class="ctrl"><input id="in_${id}" data-id="${id}" inputmode="decimal" autocomplete="off" placeholder="—" value="${esc(v)}" class="${cls(p)}">
+        <button class="chip" data-z="${id}">0</button><button class="chip na" data-na="${id}">N/A</button></div>
+        <div class="err ${p.k==="bad"?"":"hidden"}" id="er_${id}">Use número, 0 ou N/A.</div>
+        <div class="year">Ano 2027 (${regra==="Último"?"último informado":regra.toLowerCase()}): <b id="yr_${id}">${anual(cur,ind)}</b></div>
+        <button class="obs-t" data-ot="${id}">${o?"✎ Observação":"+ Observação"}</button>
+        <textarea class="${o?"":"hidden"}" id="ob_${id}" data-ob="${id}" placeholder="Observações da UC sobre este indicador">${esc(o)}</textarea></div>`;
+      }
+    });
+    h+="</details>";
+  });
+  $("progs").innerHTML=h;
+  const P=$("progs");
+  P.querySelectorAll("input[data-id]").forEach(inp=>inp.addEventListener("input",()=>commit(inp.dataset.id,inp.value)));
+  P.querySelectorAll("[data-z]").forEach(b=>b.onclick=()=>{$("in_"+b.dataset.z).value="0";commit(b.dataset.z,"0")});
+  P.querySelectorAll("[data-na]").forEach(b=>b.onclick=()=>{$("in_"+b.dataset.na).value="N/A";commit(b.dataset.na,"N/A")});
+  P.querySelectorAll("[data-ot]").forEach(b=>b.onclick=()=>{const t=$("ob_"+b.dataset.ot);t.classList.toggle("hidden");if(!t.classList.contains("hidden"))t.focus()});
+  P.querySelectorAll("[data-ob]").forEach(t=>t.addEventListener("input",()=>{ucData(cur).obs[t.dataset.ob]=t.value;save()}));
+  updProgress();
+}
+function cls(p){return p.k==="na"?"na":p.k==="bad"?"bad":(p.k==="num"&&p.n===0)?"zero":""}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function commit(id,raw){
+  let v=raw.trim(); const p=parse(v);
+  if(p.k==="na")v="N/A";
+  setV(cur,id,mes,v);
+  const inp=$("in_"+id); inp.className=cls(p);
+  $("er_"+id).classList.toggle("hidden",p.k!=="bad");
+  // atualiza totais e campos automáticos
+  PROGS.forEach(([,inds],pi)=>{
+    inds.forEach(ind=>{const y=$("yr_"+ind[0]);if(y)y.textContent=anual(cur,ind);
+      if(ind[5]==="A"){const a=autoVal(cur,ind[0],mes);$("av_"+ind[0]).textContent=a===""?"—":a}});
+    const man=inds.filter(i=>i[5]==="M"),f=man.filter(i=>parse(getV(cur,i[0],mes)).k!=="vazio").length;
+    const c=$("cnt"+pi);c.textContent=`${f}/${man.length}`;c.classList.toggle("full",f===man.length);
+  });
+  updProgress();
+  const b=$("months").querySelector(`[data-m="${mes}"]`);b&&b.classList.toggle("done",filled(cur,mes)===MANUAIS.length);
+}
+
+// ---------- folhas (ajuda / envio) ----------
+function openSheet(html){$("sheet").innerHTML=html;$("sheetBg").classList.remove("hidden")}
+function closeSheet(){$("sheetBg").classList.add("hidden")}
+$("sheetBg").onclick=e=>{if(e.target.id==="sheetBg")closeSheet()};
+$("help").onclick=()=>openSheet(`<h2>Como preencher</h2>
+ <div class="rule"><b>Frequência</b><span>Mensal, preferencialmente até o 5º dia útil do mês seguinte.</span></div>
+ <div class="rule"><b>0</b><span>Atividade ou ocorrência verificada e inexistente.</span></div>
+ <div class="rule"><b>Vazio</b><span>Dado ainda não informado/apurado.</span></div>
+ <div class="rule"><b>N/A</b><span>Indicador não aplicável à UC; justifique na observação quando necessário.</span></div>
+ <div class="rule"><b>Automático</b><span>Público total atingido, acidentes por mil visitas e totais anuais são calculados — não é preciso digitar.</span></div>
+ <div class="rule"><b>Público</b><span>Público total = visitas + público dos eventos; a mesma pessoa pode estar nas duas contagens.</span></div>
+ <div class="rule"><b>Espécies</b><span>Fauna e flora são estoques (número conhecido); não somam entre meses. Informe quando atualizar o levantamento.</span></div>
+ <div class="rule"><b>A definir</b><span>Regras de PVUC, Mídias e ROIF ainda serão padronizadas pela GGUC.</span></div>
+ <div class="rule"><b>Privacidade</b><span>Não insira informações pessoais sensíveis nas observações.</span></div>
+ <div class="acts"><button class="primary" onclick="closeSheet()">Entendi</button></div>`);
+
+function resumo(){
+  let t=`*${cur} · Indicadores GGUC 2027 · ${MESES_L[mes]}*\n`;
+  PROGS.forEach(([pn,inds])=>{
+    t+=`\n_${pn}_\n`;
+    inds.forEach(([id,nome,un,,,ent])=>{
+      const v=ent==="A"?autoVal(cur,id,mes):getV(cur,id,mes);
+      t+=`• ${nome}: ${v===""?"(não informado)":v}${ent==="A"&&v!==""?" (auto)":""}\n`;
+    });
+  });
+  const obs=MANUAIS.filter(i=>DB[cur]&&DB[cur].obs[i[0]]).map(i=>`• ${i[1]}: ${DB[cur].obs[i[0]]}`);
+  if(obs.length)t+=`\n_Observações_\n${obs.join("\n")}\n`;
+  t+=`\nPreenchidos: ${filled(cur,mes)}/${MANUAIS.length}`;
+  return t;
+}
+function tsv(){ // ordem das linhas da aba da UC (valores manuais; automáticos vazios para não sobrescrever fórmulas)
+  const rows=[];
+  PROGS.forEach(([pn,inds],pi)=>{
+    if(pi>0){rows.push("");rows.push("")}
+    inds.forEach(([id,,,,,ent])=>rows.push(ent==="A"?"":getV(cur,id,mes)));
+  });
+  return rows;
+}
+$("send").onclick=()=>{
+  const t=resumo();
+  openSheet(`<h2>${cur} · ${MESES_L[mes]}</h2>
+  <pre id="rtxt">${esc(t)}</pre>
+  <div class="acts"><button class="primary" id="cpR">Copiar resumo</button><button id="cpT">Copiar p/ planilha</button></div>
+  <p class="note" style="text-align:left">“Copiar resumo” gera texto pronto para WhatsApp ou e-mail. “Copiar p/ planilha” copia os 4 blocos de valores na ordem da aba da UC (comece colando na linha <b>Visitantes</b>, coluna <b>${MESES[mes]}</b>, um bloco por vez, sem colar sobre as linhas automáticas).</p>`);
+  $("cpR").onclick=()=>copy(t,"Resumo copiado");
+  $("cpT").onclick=()=>copy(tsvBlocks(),"Valores copiados");
+};
+function tsvBlocks(){
+  return PROGS.map(([pn,inds])=>`# ${pn}\n`+inds.filter(i=>i[5]==="M").map(i=>getV(cur,i[0],mes)).join("\n")).join("\n\n");
+}
+function copy(t,msg){
+  const ok=()=>toast(msg), fb=()=>{try{const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();ok()}catch(e){toast("Não foi possível copiar — selecione o texto")}};
+  try{navigator.clipboard.writeText(t).then(ok,fb)}catch(e){fb()}
+}
+$("clearM").onclick=()=>openSheet(`<h2>Limpar ${MESES_L[mes]}?</h2><p style="font-size:14px;color:var(--mute)">Apaga os valores de ${cur} neste mês, apenas neste aparelho.</p>
+  <div class="acts"><button onclick="closeSheet()">Cancelar</button><button class="primary" id="doClr">Limpar</button></div>`)||($("doClr").onclick=()=>{
+    MANUAIS.forEach(i=>setV(cur,i[0],mes,""));closeSheet();renderMonths();renderProgs();toast("Mês limpo")});
+let tt;function toast(m){const e=$("toast");e.textContent=m;e.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("show"),1800)}
+
+$("back").onclick=()=>{try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}renderHome()};
+function route(){const h=(location.hash||"").slice(1).toUpperCase();UC_INFO[h]?openUC(h):renderHome()}
+window.addEventListener("hashchange",route);
+route();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
