@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SisGAP-ES — Protótipo</title>
+<link rel="icon" href="iema-verde.png">
+<style>#login{overflow:auto}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -23,7 +25,7 @@ a{color:var(--brand-2)}
 
 /* ---------- login ---------- */
 #login{position:fixed;inset:0;display:grid;grid-template-columns:1.1fr 1fr;background:var(--surface)}
-#login .hero{background:linear-gradient(160deg,#173f2c 0%,#1f5c3f 55%,#2c7a54 100%);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:space-between}
+#login .hero{overflow:auto;gap:24px;background:linear-gradient(160deg,#173f2c 0%,#1f5c3f 55%,#2c7a54 100%);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:space-between}
 #login .hero h1{font-size:44px;margin:0;letter-spacing:-.02em}
 #login .hero h2{font-size:18px;font-weight:500;opacity:.85;margin:8px 0 0;max-width:460px;line-height:1.4}
 #login .hero ul{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:14px;max-width:460px}
@@ -31,7 +33,7 @@ a{color:var(--brand-2)}
 #login .hero li b{display:block}
 #login .hero .dot{flex:0 0 28px;height:28px;border-radius:8px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:14px}
 #login .hero small{opacity:.6}
-#login .panel{padding:56px;display:flex;flex-direction:column;justify-content:center;max-width:520px}
+#login .panel{overflow:auto;padding:56px;display:flex;flex-direction:column;justify-content:center;max-width:520px}
 #login .panel h3{font-size:22px;margin:0 0 6px}
 #login .panel p{color:var(--ink-2);margin:0 0 24px;line-height:1.5}
 .gbtn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:10px;cursor:pointer;text-align:left}
@@ -107,6 +109,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .btn:hover{border-color:var(--brand-2)}
 .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
 .btn.primary:hover{background:var(--brand-2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.sm{padding:4px 9px;font-size:12.5px}
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
 .filters select,.filters input{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
@@ -185,6 +188,7 @@ svg text{font-family:Inter,system-ui,sans-serif}
 <section id="login">
   <div class="hero">
     <div>
+      <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px"><img src="iema-branco.png" alt="IEMA — Instituto Estadual de Meio Ambiente" style="height:62px"></div>
       <span class="demo-flag">● Versão de teste — protótipo para validação · dados simulados</span>
       <h1 style="margin-top:28px">SisGAP-ES</h1>
       <h2>Sistema Integrado de Gestão de Áreas Protegidas do Espírito Santo</h2>
@@ -203,7 +207,7 @@ svg text{font-family:Inter,system-ui,sans-serif}
     <small>IEMA · Gerência de Gestão de Unidades de Conservação (GGUC)</small>
   </div>
   <div class="panel">
-    <h3>Entrar com conta Google</h3>
+    <img src="iema-verde.png" alt="IEMA" style="height:48px;align-self:flex-start;margin-bottom:22px"><h3>Entrar com conta Google</h3>
     <p>No sistema real, cada pessoa entra com o próprio e-mail e vê apenas o que o seu papel permite. Neste protótipo, escolha um perfil para simular o acesso:</p>
     <div id="loginList"></div>
   </div>
@@ -212,7 +216,7 @@ svg text{font-family:Inter,system-ui,sans-serif}
 <!-- APP -->
 <div id="app" class="hidden">
   <aside>
-    <div class="logo" id="logoHome" style="cursor:pointer" title="Voltar ao início"><b>SisGAP-ES</b><span>Sistema Integrado de Gestão de Áreas Protegidas do ES</span></div>
+    <div class="logo" id="logoHome" style="cursor:pointer" title="Voltar ao início"><img src="iema-branco.png" alt="IEMA" style="height:34px;display:block;margin-bottom:12px;opacity:.95"><b>SisGAP-ES</b><span>Sistema Integrado de Gestão de Áreas Protegidas do ES</span></div>
     <a href="#" id="btnHome" class="home-btn">⌂ Início</a>
     <nav id="nav"></nav>
     <button id="btnSair" class="sair-btn">⎋ Sair / trocar perfil</button>
