@@ -5,6 +5,7 @@ const limiteDe = uc => LIMITES.features.find(f=>f.properties.s===uc);
 const HEX = {conc:"#0ca30c",and:"#2a78d6",venc:"#fab219",atr:"#d03b3b",nao:"#8f8d86"};
 const PROG_HEX = ["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300","#6250d6","#e34948"];
 
+const ZON_COR={"Zona de Conservação":"#1baf7a","Zona de Uso Moderado":"#eda100","Zona de Produção":"#e8d9a8","Zona de Diferentes Interesses Públicos":"#6250d6","Zona de Sobreposição Territorial":"#e87ba4"};
 // ---------- geometria ----------
 function pip(lon,lat,geom){
   const polys = geom.type==="Polygon"?[geom.coordinates]:geom.coordinates;
@@ -127,7 +128,7 @@ function geoCard(uc){
   if(uc&&!temGeo(uc))return "";
   const f=uc?limiteDe(uc):null;
   return `<div class="card" style="margin-top:16px"><div class="card-h"><div><h3>${uc?"Mapa da UC — evidências das ações":"Mapa das UCs da versão de teste — evidências das ações"}</h3>
-    <p class="sub">${uc?`${esc(f.properties.nome)} · ${fmt(f.properties.ha,1)} ha · ${esc(f.properties.leg)}`:"Clique numa UC para abrir o painel dela"} · Limite: IEMA 2026</p></div>
+    <p class="sub">${uc?`${esc(f.properties.nome)} · ${fmt(f.properties.ha,1)} ha · ${esc(f.properties.leg)}`:"Clique numa UC para abrir o painel dela"} · Limite: IEMA 2026${uc&&typeof CAMADAS!=="undefined"&&CAMADAS[uc]?" · Zoneamento: PM 2026 · Quilombo: INCRA · Hidrografia: IBGE":""}</p></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
       <select id="mpCor" class="btn sm"><option value="st">Cor por status</option><option value="prog">Cor por programa</option></select>
       <select id="mpPer" class="btn sm"><option value="">Todo o período</option><option value="90">Últimos 90 dias</option><option value="30">Últimos 30 dias</option></select>
@@ -137,8 +138,10 @@ function geoCard(uc){
       <div class="small">
         <div style="font-weight:700;margin-bottom:6px">Camadas</div>
         <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="checkbox" id="lyLim" checked> Limite da UC <span class="muted">(IEMA 2026)</span></label>
-        <label style="display:flex;gap:8px;align-items:center;padding:4px 0;color:var(--muted)" title="Arquivo ainda não enviado"><input type="checkbox" disabled> Zoneamento <span class="pill" style="font-size:10px">aguardando arquivo</span></label>
-        <label style="display:flex;gap:8px;align-items:center;padding:4px 0;color:var(--muted)" title="Arquivo ainda não enviado"><input type="checkbox" disabled> Zona de amortecimento <span class="pill" style="font-size:10px">aguardando arquivo</span></label>
+        ${uc&&typeof CAMADAS!=="undefined"&&CAMADAS[uc]&&CAMADAS[uc].zoneamento?`<label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="checkbox" id="lyZon" checked> Zoneamento <span class="muted">(PM 2026)</span></label>`:`<label style="display:flex;gap:8px;align-items:center;padding:4px 0;color:var(--muted)" title="Arquivo ainda não enviado"><input type="checkbox" disabled> Zoneamento <span class="pill" style="font-size:10px">aguardando arquivo</span></label>`}
+        ${uc&&ucObj(uc).cat==="APA"?`<label style="display:flex;gap:8px;align-items:center;padding:4px 0;color:var(--muted)" title="APA não tem zona de amortecimento (Lei 9.985/2000, art. 25)"><input type="checkbox" disabled> Zona de amortecimento <span class="pill" style="font-size:10px">não se aplica a APA</span></label>`:`<label style="display:flex;gap:8px;align-items:center;padding:4px 0;color:var(--muted)" title="Arquivo ainda não enviado"><input type="checkbox" disabled> Zona de amortecimento <span class="pill" style="font-size:10px">aguardando arquivo</span></label>`}
+        ${uc&&typeof CAMADAS!=="undefined"&&CAMADAS[uc]&&CAMADAS[uc].quilombo?`<label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="checkbox" id="lyQui" checked> Território quilombola <span class="muted">(INCRA)</span></label>`:""}
+        ${uc&&typeof CAMADAS!=="undefined"&&CAMADAS[uc]&&CAMADAS[uc].hidro?`<label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="checkbox" id="lyHid" checked> Cursos d'água <span class="muted">(IBGE)</span></label>`:""}
         <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="checkbox" id="lyPts" checked> Evidências das ações</label>
         <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="checkbox" id="lySat"> Imagem de satélite</label>
         <div style="font-weight:700;margin:12px 0 6px">Legenda</div><div id="mpLeg"></div>
@@ -149,6 +152,26 @@ function geoMount(uc){
   if(!document.getElementById("mpMap"))return;
   _mapas.forEach(m=>m.remove());_mapas=[];
   const map=L_map("mpMap",uc);_mapas.push(map);
+  const CM=uc&&typeof CAMADAS!=="undefined"?CAMADAS[uc]:null, extraLeg=[];
+  if(CM){
+    const pane=(n,z)=>{if(!map.getPane(n)){map.createPane(n);map.getPane(n).style.zIndex=z}return n};
+    if(CM.zoneamento){const zl=window.L.geoJSON({type:"FeatureCollection",features:CM.zoneamento.features},{pane:pane("zon",390),style:f=>({color:"#ffffff",weight:.8,fillColor:ZON_COR[f.properties.zona]||"#b8b6ae",fillOpacity:.5}),
+        onEachFeature:(f,l)=>l.bindTooltip(`<b>${esc(f.properties.zona)}</b><br>${fmt(f.properties.ha,1)} ha (polígono)`,{sticky:true})}).addTo(map);
+      $("#lyZon").onchange=e=>e.target.checked?zl.addTo(map):map.removeLayer(zl);
+      const zs=[...new Set(CM.zoneamento.features.map(f=>f.properties.zona))];
+      extraLeg.push(`<div style="font-weight:700;margin:8px 0 4px">Zoneamento (PM 2026)</div>`+zs.map(z=>`<div style="display:flex;gap:8px;align-items:center;padding:2px 0"><span style="width:14px;height:11px;border-radius:2px;background:${ZON_COR[z]||"#b8b6ae"};opacity:.75;flex:0 0 14px"></span>${esc(z)} <span class="muted">${fmt(CM.zoneamento.features.filter(f=>f.properties.zona===z).reduce((t,f)=>t+f.properties.ha,0),0)} ha</span></div>`).join(""))}
+    if(CM.hidro){const hl=window.L.geoJSON({type:"FeatureCollection",features:CM.hidro.features},{pane:pane("hid",405),style:{color:"#2a78d6",weight:1.6,opacity:.9},
+        onEachFeature:(f,l)=>l.bindTooltip(`<b>${esc(f.properties.nome||"Curso d'água sem nome")}</b><br>${esc(f.properties.regime)} · IBGE`,{sticky:true})}).addTo(map);
+      $("#lyHid").onchange=e=>e.target.checked?hl.addTo(map):map.removeLayer(hl);
+      extraLeg.push(`<div style="display:flex;gap:8px;align-items:center;padding:2px 0;margin-top:6px"><span style="width:14px;height:0;border-top:2px solid #2a78d6;flex:0 0 14px"></span>Cursos d'água (IBGE)</div>`)}
+    if(CM.quilombo){const ql=window.L.geoJSON({type:"FeatureCollection",features:CM.quilombo.features},{pane:pane("qui",410),style:{color:"#8a4b1f",weight:2.5,dashArray:"6 4",fillColor:"#8a4b1f",fillOpacity:.08},
+        onEachFeature:(f,l)=>{const p=f.properties;l.bindPopup(`<div style="font-family:Inter,sans-serif;width:230px"><div style="font-size:11px;color:#7c877f">Território quilombola · INCRA</div><div style="font-weight:700;font-size:14px">Comunidade ${esc(p.comunidade)}</div>
+          <div style="font-size:12px;margin-top:6px;line-height:1.5">Município: ${esc(p.municipio)}<br>Processo INCRA: ${esc(p.processo)}<br>Famílias: ${p.familias}<br>Área: ${fmt(p.area_ha,1)} ha<br>Decreto: ${esc(p.decreto)} · Fase: ${esc(p.fase)}</div>
+          <div style="font-size:11px;color:#7c877f;margin-top:6px">A gestão da APA deve considerar a consulta livre, prévia e informada à comunidade (PM, Integração, ativ. 6).</div></div>`)}}).addTo(map);
+      $("#lyQui").onchange=e=>e.target.checked?ql.addTo(map):map.removeLayer(ql);
+      extraLeg.push(`<div style="display:flex;gap:8px;align-items:center;padding:2px 0"><span style="width:14px;height:10px;border:2px dashed #8a4b1f;flex:0 0 14px"></span>Território quilombola São Pedro (INCRA)</div>`)}
+    map._lim.bringToFront();
+  }
   const pts=window.L.layerGroup().addTo(map);
   const acoes=S.acoes.filter(a=>uc?a.uc===uc:temGeo(a.uc));
   const progs=[...new Set(acoes.map(a=>a.prog))];
@@ -171,7 +194,7 @@ function geoMount(uc){
     $("#mpLeg").innerHTML=porCor==="st"
       ? ST_ORDER.map(k=>`<div style="display:flex;gap:8px;align-items:center;padding:2px 0"><span style="width:12px;height:12px;border-radius:50%;background:${HEX[k]};border:2px solid #fff;box-shadow:0 0 0 1px #ccc"></span>${ST[k]}</div>`).join("")
       : progs.map((p,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:2px 0"><span style="width:12px;height:12px;border-radius:50%;background:${PROG_HEX[i%PROG_HEX.length]};flex:0 0 12px"></span>${esc(p)}</div>`).join("");
-    $("#mpLeg").innerHTML+=`<div style="display:flex;gap:8px;align-items:center;padding:2px 0;margin-top:4px"><span style="width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid #d03b3b"></span>Ponto fora do limite</div>`;
+    $("#mpLeg").innerHTML+=`<div style="display:flex;gap:8px;align-items:center;padding:2px 0;margin-top:4px"><span style="width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid #d03b3b"></span>Ponto fora do limite</div>`+extraLeg.join("");
     $("#mpStat").innerHTML=`<b>${n}</b> evidências no mapa<br><b>${foto}</b> com foto · <b>${n-foto}</b> simuladas<br>${fora?`<b style="color:#9b2424">${fora} fora do limite</b>`:"Nenhuma fora do limite"}`;
   };
   $("#mpCor").onchange=draw;$("#mpPer").onchange=draw;

@@ -50,7 +50,12 @@ function gMapa(uc,{w=520,h=380}={}){
   const P=([lon,lat])=>[(ox+(lon-b[0])*k*sc).toFixed(1),(oy+(b[3]-lat)*sc).toFixed(1)];
   const path=g=>(g.type==="Polygon"?[g.coordinates]:g.coordinates).map(pl=>pl.map(r=>"M"+r.map(c=>P(c).join(",")).join("L")+"Z").join("")).join("");
   let s=`<svg viewBox="0 0 ${w} ${h}" width="100%"><rect width="${w}" height="${h}" fill="#f3f6f1" rx="8"/>`;
-  if(typeof CAR!=="undefined")CAR.imoveis.features.filter(x=>x.properties.uc===uc).forEach(x=>s+=`<path d="${path(x.geometry)}" fill="${condInfo(x.properties.cond)[2]}" fill-opacity=".55" stroke="#fff" stroke-width=".6"/>`);
+  const CM=typeof CAMADAS!=="undefined"?CAMADAS[uc]:null;
+  const line=g=>(g.type==="LineString"?[g.coordinates]:g.coordinates).map(l=>"M"+l.map(c=>P(c).join(",")).join("L")).join("");
+  if(CM&&CM.zoneamento)CM.zoneamento.features.forEach(z=>s+=`<path d="${path(z.geometry)}" fill="${ZON_COR[z.properties.zona]||"#ccc"}" fill-opacity=".45" stroke="#fff" stroke-width=".5"/>`);
+  else if(typeof CAR!=="undefined")CAR.imoveis.features.filter(x=>x.properties.uc===uc).forEach(x=>s+=`<path d="${path(x.geometry)}" fill="${condInfo(x.properties.cond)[2]}" fill-opacity=".55" stroke="#fff" stroke-width=".6"/>`);
+  if(CM&&CM.hidro)CM.hidro.features.forEach(h=>{if(h.geometry.type.includes("Line"))s+=`<path d="${line(h.geometry)}" fill="none" stroke="#2a78d6" stroke-width="1"/>`});
+  if(CM&&CM.quilombo)CM.quilombo.features.forEach(q=>s+=`<path d="${path(q.geometry)}" fill="none" stroke="#8a4b1f" stroke-width="2" stroke-dasharray="5 3"/>`);
   s+=`<path d="${path(f.geometry)}" fill="none" stroke="#1f5c3f" stroke-width="2.4"/>`;
   (S.evid||[]).filter(e=>e.uc===uc&&e.lat!==null).forEach(e=>{const a=S.acoes.find(x=>x.id===e.acao);if(!a)return;const [x,y]=P([e.lon,e.lat]);s+=`<circle cx="${x}" cy="${y}" r="4.5" fill="${SC[status(a)]}" stroke="#fff" stroke-width="1.5"/>`});
   (S.reg||[]).filter(r=>r.uc===uc&&r.lat!==null).forEach(r=>{const [x,y]=P([r.lon,r.lat]);const c=PRESSAO.includes(r.ind)||r.ind==="inc"?"#e34948":"#6250d6";s+=`<rect x="${x-4}" y="${y-4}" width="8" height="8" transform="rotate(45 ${x} ${y})" fill="${c}" stroke="#fff" stroke-width="1.2"/>`});
@@ -118,7 +123,7 @@ function relatorioUC(uc){
   <section class="rp-page">
    <div class="rp-mini"><b>${u.s}</b> · Território e biodiversidade</div>
    <div class="rp-g2">
-    ${temGeo(uc)?card("#1f5c3f","Mapa da UC — imóveis do CAR, evidências e registros",gMapa(uc)+legenda([...(r?COND.map(x=>[x[1],x[2]]):[]),["Evidência de ação (cor = status)","#2a78d6"],["Ocorrência de pressão","#e34948"],["Outros registros","#6250d6"]])+`<div class="rp-note">Limite: IEMA 2026${r?" · CAR: SICAR (consulta pública, nov/2026)":""}. Espécies não são mapeadas no relatório.</div>`):""}
+    ${temGeo(uc)?card("#1f5c3f",(typeof CAMADAS!=="undefined"&&CAMADAS[uc]&&CAMADAS[uc].zoneamento)?"Mapa da UC — zoneamento, hidrografia, território quilombola e registros":"Mapa da UC — imóveis do CAR, evidências e registros",gMapa(uc)+legenda([...((typeof CAMADAS!=="undefined"&&CAMADAS[uc]&&CAMADAS[uc].zoneamento)?Object.keys(ZON_COR).map(z=>[z,ZON_COR[z]]).concat([["Cursos d'água (IBGE)","#2a78d6"],["Território quilombola (INCRA)","#8a4b1f"]]):(r?COND.map(x=>[x[1],x[2]]):[])),["Evidência de ação (cor = status)","#2a78d6"],["Ocorrência de pressão","#e34948"],["Outros registros","#6250d6"]])+`<div class="rp-note">Limite: IEMA 2026${r?" · CAR: SICAR (consulta pública, nov/2026)":""}. Espécies não são mapeadas no relatório.</div>`):""}
     <div>
      ${r?card("#eb6834","Situação fundiária (CAR)",`<div style="display:flex;gap:14px;align-items:center">${gDonut(COND.map((x,i)=>({v:[r.cond_aguardando,r.cond_em_analise,r.cond_analisado_pendente,r.cond_conforme][i],cor:x[2]})),{size:150,centro:r.n_relevante,sub:"imóveis"})}
        <div style="flex:1">${COND.map((x,i)=>`<div class="rp-row"><i style="background:${x[2]}"></i>${x[1]}<b>${[r.cond_aguardando,r.cond_em_analise,r.cond_analisado_pendente,r.cond_conforme][i]}</b></div>`).join("")}
