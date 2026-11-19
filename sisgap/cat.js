@@ -139,15 +139,16 @@ function fichaInd(id){
 function catAcoes(uc){
   const ucs=[...new Set(S.acoes.filter(a=>a.kpi&&(!uc||a.uc===uc)).map(a=>a.uc))];
   const tot=S.acoes.filter(a=>a.kpi&&(!uc||a.uc===uc)),cnt={};tot.forEach(a=>{const r=kpiRitmo(a)[0];cnt[r]=(cnt[r]||0)+1});
-  $("#catBody").innerHTML=`<div class="note" style="margin-bottom:14px"><b>Cada ação do plano de manejo virou um indicador.</b> Ações com número (dias, reuniões, %, escolas…) têm linha de base, meta e valor atual. Ações de entrega (planos, termos, normas, obras) têm etapas: o progresso é a fração de etapas concluídas. O ritmo compara o progresso com o tempo já decorrido até o prazo.</div>
+  $("#catBody").innerHTML=`<div class="note" style="margin-bottom:14px"><b>Cada ação do plano de manejo virou um indicador</b> com fórmula, meio de verificação, linha de base, meta do ano e meta final. <b>Plano</b> = meta escrita no plano de manejo; <b>Proposta</b> = meta numérica sugerida para validação pela UC (o plano não fixa número ou prazo). Ações com número têm valor atual e série de medições. Ações de entrega (planos, termos, normas, obras) têm etapas: o progresso é a fração de etapas concluídas. O ritmo compara o progresso com o tempo já decorrido até o prazo.</div>
    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${["Meta atingida","No ritmo","Atenção","Abaixo do esperado","Prazo vencido"].map(k=>`<span class="pill ${{"Meta atingida":"st-conc","No ritmo":"st-and","Atenção":"st-venc","Abaixo do esperado":"st-atr","Prazo vencido":"st-atr"}[k]}"><i></i>${k}: ${cnt[k]||0}</span>`).join("")}</div>`+
   ucs.map(s=>`<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden"><div style="padding:12px 16px;border-bottom:1px solid var(--line)"><h3 style="margin:0">${s} — ${esc(ucObj(s).n)}</h3></div>
-   <table><thead><tr><th style="width:34%">Ação → indicador</th><th>Tipo</th><th class="num">Base</th><th class="num">Meta</th><th class="num">Atual</th><th style="width:16%">Progresso</th><th>Ritmo</th><th>Prazo</th></tr></thead><tbody>
+   <table><thead><tr><th style="width:30%">Ação → indicador</th><th class="num">Base</th><th class="num">Meta ${ANO}</th><th class="num">Meta final</th><th class="num">Atual</th><th style="width:14%">Progresso</th><th>Ritmo</th><th>Origem da meta</th></tr></thead><tbody>
    ${S.acoes.filter(a=>a.uc===s&&a.kpi).sort((a,b)=>a.prazo.localeCompare(b.prazo)).map(a=>{const k=a.kpi,p=kpiPct(k)||0,[rt,cl]=kpiRitmo(a);
-     return `<tr style="cursor:pointer" onclick="editarAcao('${a.id}')"><td><b>${esc(k.nome)}</b><div class="small muted">${esc(a.ativ)} · ${esc(a.prog)}</div></td><td class="small">${k.tipo==="marco"?"Entrega por etapas":"Numérico"}</td>
-     <td class="num small">${k.tipo==="marco"?"0":fmt(k.base,1)}</td><td class="num small">${k.tipo==="marco"?k.etapas.length+" etapas":(k.sentido==="menor"?"≤ ":"")+fmt(k.meta,1)+" "+esc(k.un)}</td><td class="num"><b>${k.tipo==="marco"?k.feitas:fmt(k.atual,1)}</b></td>
+     return `<tr style="cursor:pointer" onclick="editarAcao('${a.id}')"><td><b>${esc(k.nome)}</b><div class="small muted">${esc(a.ativ)} · ${esc(a.prog)}</div></td><td class="num small">${k.tipo==="marco"?"—":k.base===null||k.base===undefined?'<span class="muted">a levantar</span>':fmt(k.base,1)}</td>
+     <td class="num small">${multiAno(a)?(k.m26!=null?(k.tipo==="marco"?k.m26+" etapa"+(k.m26>1?"s":""):(k.sentido==="menor"?"≤ ":"")+fmt(k.m26,1)):"—"):(k.tipo==="marco"?"entrega":(k.sentido==="menor"?"≤ ":"")+fmt(k.meta,1))}</td>
+     <td class="num small">${k.tipo==="marco"?k.etapas.length+" etapas":(k.sentido==="menor"?"≤ ":"")+fmt(k.meta,1)+" "+esc(k.un)}<div class="muted">${fmtD(a.prazo)}</div></td><td class="num"><b>${k.tipo==="marco"?k.feitas+"/"+k.etapas.length:fmt(k.atual,1)}</b></td>
      <td><div style="display:flex;gap:6px;align-items:center"><div class="prog" style="flex:1"><i style="width:${Math.max(3,p*100)}%;background:${p>=1?"var(--good)":"var(--prog)"}"></i></div><span class="small">${Math.round(p*100)}%</span></div></td>
-     <td><span class="pill ${cl}"><i></i>${rt}</span></td><td class="small">${fmtD(a.prazo)}</td></tr>`}).join("")}</tbody></table></div>`).join("");
+     <td><span class="pill ${cl}"><i></i>${rt}</span></td><td><span class="pill ${ORIG[k.orig||"proposta"][1]}" style="white-space:nowrap"><i></i>${k.orig==="plano"?"Plano":"Proposta"}</span></td></tr>`}).join("")}</tbody></table></div>`).join("");
 }
 function catEsp(){
   const B=$("#catBody"),sem=UCS.filter(u=>!ESPECIFICOS[u.s]);
@@ -166,41 +167,85 @@ const ET={DOC:["Termo de referência","Diagnóstico","Minuta","Consulta e valida
   NORMA:["Minuta","Consulta pública","Análise jurídica","Publicação"],SIS:["Modelo de dados","Carga dos registros","Validação","Em uso"],CRON:["Elaborado","Aprovado","Em uso"],
   PROG:["Diagnóstico","Desenho do programa","Edital / chamamento","Primeira turma","Programa em execução"],ESTUDO:["Levantamento","Campo","Digitalização","Publicação"],
   OBRA:["Projeto","Contratação","Instalação"],CART:["Texto","Ilustração e diagramação","Revisão","Publicação"],EDITAL:["Minuta","Aprovação","Publicação"],FUND:["Levantamento dominial","Relatório","Processo encaminhado"],SITE:["Conteúdo","Publicação no site","Redes sociais ativas"]};
-// [nome do indicador, unidade, tipo, sentido, linha de base, meta | etapas]
-const KPI_ACAO={1:["Reuniões do conselho realizadas no ano","reuniões","num","maior",9,12],2:["Programa de voluntariado","etapas","marco","maior",0,"PROG"],3:["Reuniões com o Quilombo São Pedro","reuniões","num","maior",1,4],
- 4:["Plano de Ação de Educação Ambiental","etapas","marco","maior",0,"DOC"],5:["Escolas do entorno com parceria","escolas","num","maior",0,10],6:["Sinalização implantada","%","num","maior",0,100],
- 7:["Oficina de planejamento integrado","oficinas","num","maior",0,1],8:["Dias de fiscalização no ano","dias","num","maior",41,60],9:["Banco SIG de ilícitos e denúncias","etapas","marco","maior",0,"SIS"],
- 10:["Pequenas barragens mapeadas","%","num","maior",0,100],11:["Parceria de coleta de resíduos","etapas","marco","maior",0,"TERMO"],12:["Área afetada por incêndios","ha","num","menor",5.1,0],
- 13:["Plano de Comunicação","etapas","marco","maior",0,"DOC"],14:["Plano anual de trabalho","etapas","marco","maior",0,"DOC"],15:["Mapa geológico da APAGO","etapas","marco","maior",0,"ESTUDO"],
- 16:["Pesquisas sobre juçara, patioba e aves ameaçadas","pesquisas","num","maior",0,3],17:["Plano de Comunicação e Educação Ambiental","etapas","marco","maior",0,"DOC"],18:["Nascentes mapeadas e caracterizadas","%","num","maior",0,100],
- 19:["Reuniões com proprietários rurais","reuniões","num","maior",1,2],20:["Escolas de Ibiraçu com parceria","escolas","num","maior",0,6],21:["Trilhas turísticas mapeadas","%","num","maior",0,100],
- 22:["Dias de fiscalização no ano","dias","num","maior",38,60],23:["Banco SIG de ilícitos","etapas","marco","maior",0,"SIS"],24:["Parceria de coleta de resíduos com Ibiraçu","etapas","marco","maior",0,"TERMO"],
- 25:["Pontos de mineração irregular ativos","pontos","num","menor",4,0],26:["Site e redes sociais atualizados","etapas","marco","maior",0,"SITE"],27:["Instrumento Regulamentador Específico","etapas","marco","maior",0,"NORMA"],
- 28:["Estudos sobre a gênese geomorfológica","estudos","num","maior",0,1],29:["Levantamento fundiário encaminhado","etapas","marco","maior",0,"FUND"],30:["Regras da Zona de Amortecimento","etapas","marco","maior",0,"NORMA"],
- 31:["Escolas atendidas — Preservando o Nosso Quintal","escolas","num","maior",6,10],32:["Cartilha do plano de manejo","etapas","marco","maior",0,"CART"],33:["Campanhas contra caça e captura de aves","campanhas","num","maior",0,2],
- 34:["Edital de chamamento para pesquisa","etapas","marco","maior",0,"EDITAL"],35:["Rotina e cronograma de fiscalização","etapas","marco","maior",0,"CRON"],36:["Acessos clandestinos bloqueados","acessos","num","maior",0,10],
- 37:["Bebedouros para fauna instalados","bebedouros","num","maior",0,6],38:["Guarda-corpo do mirante da Pedra Azul","etapas","marco","maior",0,"OBRA"],39:["Plano de contingência e risco","etapas","marco","maior",0,"DOC"],
- 40:["Cronograma de controle de exóticas","etapas","marco","maior",0,"CRON"],41:["Ações do Prevines realizadas","ações","num","maior",2,6],42:["Plano de Monitoramento da Biodiversidade","etapas","marco","maior",0,"DOC"],
- 43:["Ninhos de tartaruga encontrados que foram monitorados","%","num","maior",90,100],44:["Campanhas do peixe-anual-de-Itaúnas","campanhas","num","maior",0,2],45:["Plano de Educação Ambiental e Comunicação","etapas","marco","maior",0,"DOC"],
- 46:["TCPU com a Aldeia Jacó Pataxó","etapas","marco","maior",0,"TERMO"],47:["TCPU com a Comunidade de Riacho Doce","etapas","marco","maior",0,"TERMO"],48:["TCPU com pescadores do Rio Itaúnas","etapas","marco","maior",0,"TERMO"],
- 49:["Barracas em conformidade com o TAC","barracas","num","maior",3,8],50:["Plano de Uso Público","etapas","marco","maior",0,"DOC"],51:["Sítios arqueológicos vistoriados no ano","sítios","num","maior",0,14],
- 52:["Plano de Proteção e Consolidação Territorial","etapas","marco","maior",0,"DOC"],53:["Plano de Gestão","etapas","marco","maior",0,"DOC"]};
+ET.PLANO_ANUAL=["Minuta","Aprovação pelo conselho","Publicação"];
+ET.SINAL=["Projeto elaborado","Contratação","Implantação de 50%","Implantação de 100%"];
+// [nome do indicador, unidade, tipo, sentido, linha de base (null = a levantar), meta final | etapas, origem da meta, fórmula, meta de 2026 (se a meta final for posterior)]
+const KPI_ACAO={
+ 1:["Reuniões do Conselho Gestor realizadas","reuniões","num","maior",9,12,"plano","Nº de reuniões com ata registrada no ano"],
+ 2:["Programa de voluntariado consolidado","etapas","marco","maior",0,"PROG","plano","Etapas concluídas ÷ total de etapas",2],
+ 3:["Reuniões com o Quilombo São Pedro","reuniões","num","maior",null,4,"proposta","Nº de reuniões com ata no ano (consulta livre, prévia e informada)"],
+ 4:["Plano de Ação de Educação Ambiental","etapas","marco","maior",0,"DOC","plano","Etapas concluídas ÷ total de etapas",2],
+ 5:["Escolas do entorno com parceria formalizada","escolas","num","maior",null,10,"proposta","Nº de escolas com termo ou plano de trabalho assinado",3],
+ 6:["Sinalização turística da APA","etapas","marco","maior",0,"SINAL","plano","Etapas concluídas ÷ total de etapas (projeto em 3 anos; implantação em 5 anos)",1],
+ 7:["Oficina de planejamento integrado da fiscalização","oficinas","num","maior",0,1,"plano","Nº de oficinas no ano com IEMA, IBAMA, polícia e municípios"],
+ 8:["Dias de fiscalização no ano","dias","num","maior",41,60,"plano","Nº de dias com ação de fiscalização registrada"],
+ 9:["Banco SIG de ilícitos e denúncias","etapas","marco","maior",0,"SIS","plano","Etapas concluídas ÷ total de etapas"],
+ 10:["Pequenas barragens mapeadas","%","num","maior",0,100,"plano","Barragens mapeadas ÷ barragens existentes × 100"],
+ 11:["Parceria municipal de coleta de resíduos","etapas","marco","maior",0,"TERMO","plano","Etapas concluídas ÷ total de etapas"],
+ 12:["Área afetada por incêndios","ha","num","menor",5.1,2.5,"proposta","Soma da área queimada no ano (ROIF); meta: reduzir 50% em 2 anos",3.8],
+ 13:["Plano de Comunicação","etapas","marco","maior",0,"DOC","plano","Etapas concluídas ÷ total de etapas"],
+ 14:["Plano anual de trabalho","etapas","marco","maior",0,"PLANO_ANUAL","plano","Etapas concluídas ÷ total de etapas"],
+ 15:["Mapa geológico da APAGO","etapas","marco","maior",0,"ESTUDO","plano","Etapas concluídas ÷ total de etapas",1],
+ 16:["Pesquisas sobre juçara, patioba e aves ameaçadas","pesquisas","num","maior",0,3,"plano","Nº de pesquisas autorizadas ou concluídas sobre os alvos",1],
+ 17:["Plano de Comunicação e Educação Ambiental","etapas","marco","maior",0,"DOC","plano","Etapas concluídas ÷ total de etapas"],
+ 18:["Nascentes mapeadas e caracterizadas","%","num","maior",0,100,"plano","Nascentes caracterizadas ÷ nascentes existentes × 100",50],
+ 19:["Reuniões com proprietários rurais","reuniões","num","maior",1,2,"plano","Nº de reuniões com lista de presença e ata no ano"],
+ 20:["Escolas de Ibiraçu com parceria formalizada","escolas","num","maior",null,6,"proposta","Nº de escolas com termo ou plano de trabalho assinado",2],
+ 21:["Trilhas turísticas mapeadas","%","num","maior",0,100,"plano","Trilhas mapeadas ÷ trilhas conhecidas × 100",35],
+ 22:["Dias de fiscalização no ano","dias","num","maior",38,60,"plano","Nº de dias com ação de fiscalização registrada"],
+ 23:["Banco SIG de ilícitos","etapas","marco","maior",0,"SIS","plano","Etapas concluídas ÷ total de etapas"],
+ 24:["Parceria de coleta de resíduos com Ibiraçu","etapas","marco","maior",0,"TERMO","plano","Etapas concluídas ÷ total de etapas"],
+ 25:["Pontos de mineração irregular em atividade","pontos","num","menor",4,0,"proposta","Nº de pontos ativos na última vistoria (notificados à ANM)"],
+ 26:["Site do IEMA e redes sociais da ARIE atualizados","etapas","marco","maior",0,"SITE","plano","Etapas concluídas ÷ total de etapas",1],
+ 27:["Instrumento Regulamentador Específico","etapas","marco","maior",0,"NORMA","plano","Etapas concluídas ÷ total de etapas",1],
+ 28:["Estudos publicados sobre a gênese do Morro da Vargem","estudos","num","maior",0,1,"proposta","Nº de estudos publicados ou divulgados"],
+ 29:["Levantamento fundiário encaminhado","etapas","marco","maior",0,"FUND","proposta","Etapas concluídas ÷ total de etapas"],
+ 30:["Regras da Zona de Amortecimento publicadas","etapas","marco","maior",0,"NORMA","proposta","Etapas concluídas ÷ total de etapas"],
+ 31:["Escolas atendidas — Preservando o Nosso Quintal","escolas","num","maior",6,10,"proposta","Nº de escolas atendidas no ano"],
+ 32:["Cartilha didática do plano de manejo","etapas","marco","maior",0,"CART","proposta","Etapas concluídas ÷ total de etapas"],
+ 33:["Campanhas contra caça e captura de aves","campanhas","num","maior",0,2,"proposta","Nº de campanhas realizadas no ano"],
+ 34:["Edital de chamamento para pesquisa","etapas","marco","maior",0,"EDITAL","proposta","Etapas concluídas ÷ total de etapas"],
+ 35:["Rotina e cronograma de fiscalização","etapas","marco","maior",0,"CRON","proposta","Etapas concluídas ÷ total de etapas"],
+ 36:["Acessos clandestinos bloqueados e sinalizados","acessos","num","maior",0,10,"proposta","Nº de acessos bloqueados (com foto georreferenciada)"],
+ 37:["Bebedouros para fauna instalados","bebedouros","num","maior",0,6,"proposta","Nº de bebedouros instalados antes da estiagem"],
+ 38:["Guarda-corpo do mirante da Pedra Azul","etapas","marco","maior",0,"OBRA","proposta","Etapas concluídas ÷ total de etapas",1],
+ 39:["Plano de contingência e gerenciamento de risco","etapas","marco","maior",0,"DOC","proposta","Etapas concluídas ÷ total de etapas",2],
+ 40:["Cronograma de controle de exóticas","etapas","marco","maior",0,"CRON","proposta","Etapas concluídas ÷ total de etapas",1],
+ 41:["Ações do Prevines realizadas","ações","num","maior",2,6,"proposta","Nº de ações de prevenção a incêndios no ano"],
+ 42:["Plano de Monitoramento da Biodiversidade","etapas","marco","maior",0,"DOC","proposta","Etapas concluídas ÷ total de etapas",2],
+ 43:["Ninhos de tartaruga monitorados","%","num","maior",90,100,"plano","Ninhos monitorados ÷ ninhos encontrados na temporada × 100"],
+ 44:["Campanhas do peixe-anual-de-Itaúnas","campanhas","num","maior",0,2,"proposta","Nº de campanhas de monitoramento no ano"],
+ 45:["Plano de Educação Ambiental e Comunicação","etapas","marco","maior",0,"DOC","proposta","Etapas concluídas ÷ total de etapas",2],
+ 46:["TCPU com a Aldeia Jacó Pataxó","etapas","marco","maior",0,"TERMO","plano","Etapas concluídas ÷ total de etapas"],
+ 47:["TCPU com a Comunidade de Riacho Doce","etapas","marco","maior",0,"TERMO","plano","Etapas concluídas ÷ total de etapas"],
+ 48:["TCPU com pescadores artesanais do Rio Itaúnas","etapas","marco","maior",0,"TERMO","plano","Etapas concluídas ÷ total de etapas"],
+ 49:["Barracas de praia em conformidade com o TAC","barracas","num","maior",3,8,"plano","Nº de barracas conformes na última vistoria semestral"],
+ 50:["Plano de Uso Público","etapas","marco","maior",0,"DOC","proposta","Etapas concluídas ÷ total de etapas",2],
+ 51:["Sítios arqueológicos vistoriados no ano","sítios","num","maior",0,14,"plano","Nº de sítios com relatório de vistoria no ano"],
+ 52:["Plano de Proteção e Consolidação Territorial","etapas","marco","maior",0,"DOC","proposta","Etapas concluídas ÷ total de etapas"],
+ 53:["Plano de Gestão","etapas","marco","maior",0,"DOC","proposta","Etapas concluídas ÷ total de etapas"]};
+const ORIG={plano:["Meta do plano de manejo","st-conc"],proposta:["Meta proposta — validar","st-venc"]};
+const metaFinal=k=>k.tipo==="marco"?k.etapas.length:k.meta;
+const multiAno=a=>parseD(a.prazo).getFullYear()>ANO;
 function kpiPct(k){if(!k)return null;
   if(k.tipo==="marco")return k.feitas/k.etapas.length;
-  if(k.sentido==="menor")return k.base===k.meta?(k.atual<=k.meta?1:0):Math.max(0,Math.min(1,(k.base-k.atual)/(k.base-k.meta)));
+  if(k.sentido==="menor")return (k.base??0)===k.meta?(k.atual<=k.meta?1:0):Math.max(0,Math.min(1,((k.base??0)-k.atual)/((k.base??0)-k.meta)));
   return k.meta?Math.max(0,Math.min(1,k.atual/k.meta)):null}
-function kpiEsperado(a){const ini=new Date(ANO,0,1),fim=parseD(a.prazo);const t=(HOJE-ini)/(fim-ini);return Math.max(0,Math.min(1,t))}
+function kpiEsperado(a){const k=a.kpi,ini=new Date(ANO,0,1);
+  if(k&&k.m26!=null&&multiAno(a)){const fimAno=new Date(ANO,11,31),frac=Math.max(0,Math.min(1,(HOJE-ini)/(fimAno-ini)));
+    const alvo=k.sentido==="menor"?(((k.base??0)-k.m26)/(((k.base??0)-k.meta)||1)):k.m26/metaFinal(k);return Math.max(0,Math.min(1,alvo*frac))}
+  const fim=parseD(a.prazo);const t=(HOJE-ini)/(fim-ini);return Math.max(0,Math.min(1,t))}
 function kpiRitmo(a){const k=a.kpi,p=kpiPct(k);if(p===null)return["Sem meta","st-nao"];if(p>=1)return["Meta atingida","st-conc"];
   const e=kpiEsperado(a);if(dias(a.prazo)<0)return["Prazo vencido","st-atr"];if(p>=e-.1)return["No ritmo","st-and"];if(p>=e-.3)return["Atenção","st-venc"];return["Abaixo do esperado","st-atr"]}
 const kpiFmt=(k,v)=>k.tipo==="marco"?`${v}/${k.etapas.length} etapas`:`${fmt(v,1)} ${k.un}`;
 function kpiSeed(){
   let mud=false;
-  S.acoes.forEach(a=>{if(a.kpi)return;const n=+a.id.slice(1),K=KPI_ACAO[n];
-    if(!K){a.kpi={nome:a.ind||a.ativ,un:"etapas",tipo:"marco",sentido:"maior",base:0,etapas:ET.DOC.slice(),feitas:Math.round(5*a.pct/100),med:[]};mud=true;return}
-    const [nome,un,tipo,sent,base,meta]=K;
-    if(tipo==="marco"){const et=ET[meta].slice();a.kpi={nome,un,tipo,sentido:"maior",base:0,etapas:et,feitas:Math.round(et.length*a.pct/100),med:[]}}
-    else{const at=sent==="menor"?base-(base-meta)*a.pct/100:meta*a.pct/100;a.kpi={nome,un,tipo,sentido:sent,base,meta,atual:Math.round(at*10)/10,med:[]};
-      const r=rng("k"+a.id);let v=sent==="menor"?base:0;[2,5,8].forEach(m=>{if(m<FECHADOS){v=sent==="menor"?Math.max(a.kpi.atual,v-(base-a.kpi.atual)/3):Math.min(a.kpi.atual,v+a.kpi.atual/3);a.kpi.med.push({d:`${ANO}-${String(m+1).padStart(2,"0")}-28`,v:Math.round(v*10)/10})}})}
+  S.acoes.forEach(a=>{if(a.kpi&&a.kpi.v===3)return;const n=+a.id.slice(1),K=KPI_ACAO[n];
+    if(!K){a.kpi={v:3,nome:a.ind||a.ativ,un:"etapas",tipo:"marco",sentido:"maior",base:0,etapas:ET.DOC.slice(),feitas:Math.round(5*a.pct/100),orig:"proposta",form:"Etapas concluídas ÷ total de etapas",m26:null,med:[]};mud=true;return}
+    const [nome,un,tipo,sent,base,meta,orig,form,m26]=K, base0=base??0;
+    if(tipo==="marco"){const et=ET[meta].slice();a.kpi={v:3,nome,un,tipo,sentido:"maior",base:0,etapas:et,feitas:Math.round(et.length*a.pct/100),orig,form,m26:m26??null,med:[]}}
+    else{const at=sent==="menor"?base0-(base0-meta)*a.pct/100:meta*a.pct/100;a.kpi={v:3,nome,un,tipo,sentido:sent,base,meta,atual:["%","ha"].includes(un)?Math.round(at*10)/10:Math.round(at),orig,form,m26:m26??null,med:[]};
+      let v=sent==="menor"?base0:0;[2,5,8].forEach(m=>{if(m<FECHADOS){v=sent==="menor"?Math.max(a.kpi.atual,v-(base0-a.kpi.atual)/3):Math.min(a.kpi.atual,v+a.kpi.atual/3);a.kpi.med.push({d:`${ANO}-${String(m+1).padStart(2,"0")}-28`,v:["%","ha"].includes(un)?Math.round(v*10)/10:Math.round(v)})}})}
     mud=true});
   if(mud)save();
 }
@@ -214,18 +259,21 @@ kpiSeed();
   const draw=()=>{const p=kpiPct(k),aa=Object.assign({},a,{kpi:k}),[rt,cl]=kpiRitmo(aa);
     box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="margin:0">📈 Indicador da ação</h3><span class="pill ${cl}"><i></i>${rt}</span></div>
      <div class="fld" style="margin-top:8px"><label>Indicador</label><input id="kNome" value="${esc(k.nome)}" ${pode?"":"disabled"}></div>
+     <div style="display:grid;grid-template-columns:130px 1fr;gap:4px 10px;margin:4px 0 10px" class="small"><span class="muted">Fórmula</span><span>${esc(k.form||"")}</span><span class="muted">Meio de verificação</span><span>${esc(a.ind||"")}</span>
+     <span class="muted">Origem da meta</span><span><span class="pill ${ORIG[k.orig||"proposta"][1]}"><i></i>${ORIG[k.orig||"proposta"][0]}</span> <span class="muted">(${esc(a.meta)})</span></span></div>
      ${k.tipo==="num"?`<div class="grid" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
        <div class="fld"><label>Unidade</label><input id="kUn" value="${esc(k.un)}" ${pode?"":"disabled"}></div>
-       <div class="fld"><label>Linha de base</label><input id="kBase" type="number" step="any" value="${k.base}" ${pode?"":"disabled"}></div>
-       <div class="fld"><label>Meta ${k.sentido==="menor"?"(≤)":""}</label><input id="kMeta" type="number" step="any" value="${k.meta}" ${pode?"":"disabled"}></div>
+       <div class="fld"><label>Linha de base</label><input id="kBase" type="number" step="any" value="${k.base??""}" placeholder="a levantar" ${pode?"":"disabled"}></div>
+       <div class="fld"><label>Meta final ${k.sentido==="menor"?"(≤)":""}</label><input id="kMeta" type="number" step="any" value="${k.meta}" ${pode?"":"disabled"}></div>
        <div class="fld"><label>Valor atual</label><input id="kAt" type="number" step="any" value="${k.atual}" ${pode?"":"disabled"} style="font-weight:700"></div></div>
+       ${multiAno(a)?`<div class="fld"><label>Meta para ${ANO} (meta final em ${fmtD(a.prazo)})</label><input id="kM26" type="number" step="any" value="${k.m26??""}" placeholder="—" ${pode?"":"disabled"}></div>`:""}
        <div class="fld"><label>Sentido</label><select id="kSen" ${pode?"":"disabled"}><option value="maior" ${k.sentido==="maior"?"selected":""}>Quanto maior, melhor</option><option value="menor" ${k.sentido==="menor"?"selected":""}>Quanto menor, melhor</option></select></div>`
-     :`<div class="fld"><label>Etapas da entrega (marque as concluídas)</label>${k.etapas.map((e,i)=>`<label style="display:flex;gap:10px;align-items:center;justify-content:flex-start;padding:5px 0;font-weight:400;cursor:pointer"><input type="checkbox" style="width:18px;height:18px;flex:0 0 auto;margin:0" data-et="${i}" ${i<k.feitas?"checked":""} ${pode?"":"disabled"}> ${i+1}. ${esc(e)}</label>`).join("")}</div>`}
+     :`${multiAno(a)?`<div class="fld"><label>Etapas a concluir em ${ANO} (entrega final em ${fmtD(a.prazo)})</label><input id="kM26" type="number" min="0" max="${k.etapas.length}" value="${k.m26??""}" ${pode?"":"disabled"} style="width:120px"></div>`:""}<div class="fld"><label>Etapas da entrega (marque as concluídas)</label>${k.etapas.map((e,i)=>`<label style="display:flex;gap:10px;align-items:center;justify-content:flex-start;padding:5px 0;font-weight:400;cursor:pointer"><input type="checkbox" style="width:18px;height:18px;flex:0 0 auto;margin:0" data-et="${i}" ${i<k.feitas?"checked":""} ${pode?"":"disabled"}> ${i+1}. ${esc(e)}</label>`).join("")}</div>`}
      <div style="display:flex;gap:10px;align-items:center;margin-top:6px"><div class="prog" style="flex:1;height:10px"><i style="width:${(p||0)*100}%;background:${p>=1?"var(--good)":"var(--prog)"}"></i></div><b>${Math.round((p||0)*100)}%</b></div>
      <div class="small muted" style="margin-top:4px">Progresso da ação calculado pelo indicador · esperado para hoje: ${Math.round(kpiEsperado(aa)*100)}% (prazo ${fmtD(a.prazo)})</div>
      ${k.tipo==="num"&&k.med.length?`<div style="margin-top:8px">${lineChart(k.med.map(m=>fmtD(m.d).slice(0,5)),k.med.map(m=>m.v),{unit:k.un,h:140,closed:99})}</div><div class="small muted">Medições registradas: ${k.med.length} · cada novo valor salvo entra na série</div>`:""}`;
     const bind=(id,f)=>{const el=box.querySelector("#"+id);if(el)el.onchange=e=>{f(e.target.value);draw()}};
-    bind("kNome",v=>k.nome=v);bind("kUn",v=>k.un=v);bind("kBase",v=>k.base=+v);bind("kMeta",v=>k.meta=+v);bind("kAt",v=>k.atual=+v);bind("kSen",v=>k.sentido=v);
+    bind("kNome",v=>k.nome=v);bind("kUn",v=>k.un=v);bind("kBase",v=>k.base=v===""?null:+v);bind("kM26",v=>k.m26=v===""?null:+v);bind("kMeta",v=>k.meta=+v);bind("kAt",v=>k.atual=+v);bind("kSen",v=>k.sentido=v);
     box.querySelectorAll("[data-et]").forEach(c=>c.onchange=()=>{k.feitas=[...box.querySelectorAll("[data-et]")].filter(x=>x.checked).length;draw()});
     const sl=$("#ePct");if(sl){sl.step=1;sl.value=Math.round((p||0)*100);sl.disabled=true;$("#ePv").textContent=sl.value+"% (pelo indicador)"}
   };
