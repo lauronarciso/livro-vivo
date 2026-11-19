@@ -188,7 +188,7 @@ $("#btnHome").onclick=irInicio;$("#logoHome").onclick=irInicio;
 function showLogin(){
   $("#app").classList.add("hidden");$("#login").classList.remove("hidden");
   const papel={admin:"GGUC · administrador",gestor:"Gestor(a) da UC",tecnico:"Técnico(a)"};
-  $("#loginList").innerHTML=USERS.filter(u=>["u0","u1","u2","u5","u7"].includes(u.id)).map(u=>`<button class="gbtn" data-u="${u.id}"><span class="av" style="background:${u.papel==="admin"?"#173f2c":u.papel==="gestor"?"#2c7a54":"#5b8a72"}">${u.nome[0]}</span><span class="t"><b>${esc(u.nome)}</b><span>${u.email}</span></span><span class="role">${papel[u.papel]}${u.uc?" · "+u.uc:""}</span></button>`).join("")
+  $("#loginList").innerHTML=USERS.filter(u=>["u0","u1","u3","u5","u7","u2"].includes(u.id)).map(u=>`<button class="gbtn" data-u="${u.id}"><span class="av" style="background:${u.papel==="admin"?"#173f2c":u.papel==="gestor"?"#2c7a54":"#5b8a72"}">${u.nome[0]}</span><span class="t"><b>${esc(u.nome)}</b><span>${u.email}</span></span><span class="role">${papel[u.papel]}${u.uc?" · "+u.uc:""}</span></button>`).join("")
    +`<p class="small muted" style="margin-top:14px">Os perfis, nomes e e-mails são fictícios. Alterações feitas no protótipo ficam salvas só neste navegador.</p>
      <button class="btn sm" onclick="resetDemo()">Restaurar dados de demonstração</button>`;
   document.querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{S.user=b.dataset.u;S.uc=isAdmin()?"":user().uc;save();startApp()});
