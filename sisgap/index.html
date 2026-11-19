@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SisGAP-ES — Protótipo</title>
-<link rel="icon" href="iema-verde.png">
+<link rel="icon" href="sisgap-simbolo.png">
 <style>#login{overflow:auto}
 #printArea{display:none}
 @media print{
@@ -74,7 +74,7 @@
   .rp-foot{margin-top:10px;border-top:1px solid #ccc;padding-top:4px;font-size:7pt;color:#7c877f}
 }
 </style>
-<link rel="stylesheet" href="lib/leaflet.css?v=202611191837">
+<link rel="stylesheet" href="lib/leaflet.css?v=202611191915">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -262,8 +262,7 @@ svg text{font-family:Inter,system-ui,sans-serif}
     <div>
       <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px"><img src="iema-branco.png" alt="IEMA — Instituto Estadual de Meio Ambiente" style="height:62px"></div>
       <span class="demo-flag">● Versão de teste — protótipo para validação · dados simulados</span>
-      <h1 style="margin-top:28px">SisGAP-ES</h1>
-      <h2>Sistema Integrado de Gestão de Áreas Protegidas do Espírito Santo</h2>
+      <div style="margin-top:22px;background:#fff;border-radius:16px;padding:14px 20px;display:table;box-shadow:0 6px 24px rgba(0,0,0,.18)"><img src="sisgap-logo.png" alt="SisGAP-ES — Sistema Integrado de Gestão de Áreas Protegidas do Espírito Santo" style="height:150px;display:block"></div>
       <ul>
         <li><span class="dot">✎</span><div><b>Lançamento mensal por UC</b>Indicadores comuns às 19 UCs e específicos de cada plano de manejo.</div></li>
         <li><span class="dot">▦</span><div><b>Dashboards</b>Visão geral da rede e painel de cada unidade.</div></li>
@@ -279,7 +278,7 @@ svg text{font-family:Inter,system-ui,sans-serif}
     <small>IEMA · Gerência de Gestão de Unidades de Conservação (GGUC)</small>
   </div>
   <div class="panel">
-    <img src="iema-verde.png" alt="IEMA" style="height:48px;align-self:flex-start;margin-bottom:22px"><h3>Entrar com conta Google</h3>
+    <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px"><img src="sisgap-simbolo.png" alt="SisGAP-ES" style="height:58px"><img src="iema-verde.png" alt="IEMA" style="height:44px"></div><h3>Entrar com conta Google</h3>
     <p>No sistema real, cada pessoa entra com o próprio e-mail e vê apenas o que o seu papel permite. Neste protótipo, escolha um perfil para simular o acesso:</p>
     <div id="loginList"></div>
   </div>
@@ -288,10 +287,10 @@ svg text{font-family:Inter,system-ui,sans-serif}
 <!-- APP -->
 <div id="app" class="hidden">
   <aside>
-    <div class="logo" id="logoHome" style="cursor:pointer" title="Voltar à página inicial"><img src="iema-branco.png" alt="IEMA" style="height:34px;display:block;margin-bottom:12px;opacity:.95"><b>SisGAP-ES</b><span>Sistema Integrado de Gestão de Áreas Protegidas do ES</span></div>
+    <div class="logo" id="logoHome" style="cursor:pointer" title="Voltar à página inicial"><div style="background:#fff;border-radius:12px;padding:8px 10px;margin-bottom:10px"><img src="sisgap-logo.png" alt="SisGAP-ES" style="width:100%;display:block"></div><img src="iema-branco.png" alt="IEMA" style="height:28px;display:block;opacity:.95"></div>
     <a href="#" id="btnHome" class="home-btn" title="Voltar à página inicial (entrada no sistema)">⌂ Início</a>
     <nav id="nav"></nav>
-    <div class="foot">Versão 202611191837 · protótipo de validação · dados simulados.<br>Ações e indicadores específicos extraídos dos planos de manejo.</div>
+    <div class="foot">Versão 202611191915 · protótipo de validação · dados simulados.<br>Ações e indicadores específicos extraídos dos planos de manejo.</div>
   </aside>
   <main>
     <div class="topbar">
@@ -311,18 +310,18 @@ svg text{font-family:Inter,system-ui,sans-serif}
 <div class="toast" id="toast"></div>
 <div id="drawerRoot"></div>
 
-<script src="lib/leaflet.js?v=202611191837"></script>
-<script src="lib/exifr.umd.js?v=202611191837"></script>
-<script src="lib/xlsx.full.min.js?v=202611191837"></script>
-<script src="data.js?v=202611191837"></script>
-<script src="limites.js?v=202611191837"></script>
-<script src="app.js?v=202611191837"></script>
-<script src="car.js?v=202611191837"></script>
-<script src="bio.js?v=202611191837"></script>
-<script src="camadas.js?v=202611191837"></script>
-<script src="geo.js?v=202611191837"></script>
-<script src="mod.js?v=202611191837"></script>
-<script src="reg.js?v=202611191837"></script>
-<script src="rel.js?v=202611191837"></script>
+<script src="lib/leaflet.js?v=202611191915"></script>
+<script src="lib/exifr.umd.js?v=202611191915"></script>
+<script src="lib/xlsx.full.min.js?v=202611191915"></script>
+<script src="data.js?v=202611191915"></script>
+<script src="limites.js?v=202611191915"></script>
+<script src="app.js?v=202611191915"></script>
+<script src="car.js?v=202611191915"></script>
+<script src="bio.js?v=202611191915"></script>
+<script src="camadas.js?v=202611191915"></script>
+<script src="geo.js?v=202611191915"></script>
+<script src="mod.js?v=202611191915"></script>
+<script src="reg.js?v=202611191915"></script>
+<script src="rel.js?v=202611191915"></script>
 </body>
 </html>
