@@ -5,8 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SisGAP-ES — Protótipo</title>
 <link rel="icon" href="iema-verde.png">
-<style>#login{overflow:auto}</style>
-<link rel="stylesheet" href="lib/leaflet.css?v=202611191744">
+<style>#login{overflow:auto}
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  body{background:#fff}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important;font-size:9.5pt;color:#16211a}
+  #printArea h1{font-size:17pt;margin:2px 0}
+  #printArea h2{font-size:12pt;color:#1f5c3f;border-bottom:1.5px solid #1f5c3f;padding-bottom:3px;margin:16px 0 6px;break-after:avoid}
+  .rp-head{display:flex;gap:14px;align-items:center;border-bottom:3px solid #1f5c3f;padding-bottom:8px}
+  .rp-head img{height:46px}
+  .rp-sis{font-size:8.5pt;color:#4d5a51;font-weight:600}
+  .rp-sub{font-size:8.5pt;color:#4d5a51}
+  .rp-warn{background:#fff6dd;border:1px solid #f1d98a;padding:5px 8px;border-radius:4px;font-size:8pt;margin:8px 0}
+  .rp-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}
+  .rp-kpis div{border:1px solid #d5dad3;border-radius:4px;padding:6px;font-size:8pt;color:#4d5a51}
+  .rp-kpis b{display:block;font-size:14pt;color:#16211a}
+  .rp-t{width:100%;border-collapse:collapse;margin:4px 0 8px;font-size:8pt}
+  .rp-t th{background:#e6f0ea;color:#1e4b34;text-transform:none;letter-spacing:0;font-size:7.5pt;padding:3px 4px;border:1px solid #c7ddd0;position:static}
+  .rp-t td{padding:3px 4px;border:1px solid #e0e4de}
+  .rp-t tr{break-inside:avoid}
+  .rp-sec td{background:#f4f5f2;font-weight:700;color:#1f5c3f}
+  .rp-tot td{font-weight:700;background:#f4f5f2}
+  .rp-un{color:#7c877f;font-size:7.5pt}
+  .rp-foot{margin-top:14px;border-top:1px solid #ccc;padding-top:5px;font-size:7.5pt;color:#7c877f}
+}
+</style>
+<link rel="stylesheet" href="lib/leaflet.css?v=202611191754">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -223,7 +249,7 @@ svg text{font-family:Inter,system-ui,sans-serif}
     <div class="logo" id="logoHome" style="cursor:pointer" title="Voltar à página inicial"><img src="iema-branco.png" alt="IEMA" style="height:34px;display:block;margin-bottom:12px;opacity:.95"><b>SisGAP-ES</b><span>Sistema Integrado de Gestão de Áreas Protegidas do ES</span></div>
     <a href="#" id="btnHome" class="home-btn" title="Voltar à página inicial (entrada no sistema)">⌂ Início</a>
     <nav id="nav"></nav>
-    <div class="foot">Versão 202611191744 · protótipo de validação · dados simulados.<br>Ações e indicadores específicos extraídos dos planos de manejo.</div>
+    <div class="foot">Versão 202611191754 · protótipo de validação · dados simulados.<br>Ações e indicadores específicos extraídos dos planos de manejo.</div>
   </aside>
   <main>
     <div class="topbar">
@@ -243,14 +269,17 @@ svg text{font-family:Inter,system-ui,sans-serif}
 <div class="toast" id="toast"></div>
 <div id="drawerRoot"></div>
 
-<script src="lib/leaflet.js?v=202611191744"></script>
-<script src="lib/exifr.umd.js?v=202611191744"></script>
-<script src="data.js?v=202611191744"></script>
-<script src="limites.js?v=202611191744"></script>
-<script src="app.js?v=202611191744"></script>
-<script src="car.js?v=202611191744"></script>
-<script src="bio.js?v=202611191744"></script>
-<script src="geo.js?v=202611191744"></script>
-<script src="mod.js?v=202611191744"></script>
+<script src="lib/leaflet.js?v=202611191754"></script>
+<script src="lib/exifr.umd.js?v=202611191754"></script>
+<script src="lib/xlsx.full.min.js?v=202611191754"></script>
+<script src="data.js?v=202611191754"></script>
+<script src="limites.js?v=202611191754"></script>
+<script src="app.js?v=202611191754"></script>
+<script src="car.js?v=202611191754"></script>
+<script src="bio.js?v=202611191754"></script>
+<script src="geo.js?v=202611191754"></script>
+<script src="mod.js?v=202611191754"></script>
+<script src="reg.js?v=202611191754"></script>
+<script src="rel.js?v=202611191754"></script>
 </body>
 </html>
