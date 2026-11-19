@@ -12,6 +12,8 @@ const ST_COLOR = {conc:"var(--good)",and:"var(--prog)",venc:"var(--warning)",atr
 const ST_ORDER = ["conc","and","venc","atr","nao"];
 
 // ---------- persistência ----------
+const DATA_VER="2026-11-19b";
+try{if(localStorage.getItem("sisgap:ver")!==JSON.stringify(DATA_VER)){Object.keys(localStorage).filter(k=>k.startsWith("sisgap:")).forEach(k=>localStorage.removeItem(k));localStorage.setItem("sisgap:ver",JSON.stringify(DATA_VER))}}catch(e){}
 const LS = {
   get(k,d){try{const v=localStorage.getItem("sisgap:"+k);return v?JSON.parse(v):d}catch(e){return d}},
   set(k,v){try{localStorage.setItem("sisgap:"+k,JSON.stringify(v))}catch(e){}}
@@ -58,16 +60,16 @@ const REGRAS_PADRAO=[
   {id:"conc",on:false,t:"Ação concluída",d:"Avisa o(a) gestor(a) quando um responsável marca uma ação como concluída."}
 ];
 
-let S = {
+let S;try{S = {
   user: LS.get("user",null),
   lanc: LS.get("lanc",null) || gerarLancamentos(),
   enviados: LS.get("enviados",null),
   acoes: LS.get("acoes",null) || acoesIniciais(),
   espec: LS.get("espec",null) || especIniciais(),
-  regras: LS.get("regras",null) || REGRAS_PADRAO,
+  regras: REGRAS_PADRAO.map(r=>Object.assign({},r,(LS.get("regras",[])||[]).find(x=>x.id===r.id)||{})),
   log: LS.get("log",[]),
   uc: LS.get("uc","")
-};
+};}catch(e){try{Object.keys(localStorage).filter(k=>k.startsWith("sisgap:")).forEach(k=>localStorage.removeItem(k))}catch(_){}location.reload()}
 if(!S.enviados){S.enviados={};UCS.forEach(u=>{S.enviados[u.s]=[];for(let m=0;m<FECHADOS;m++) if(completude(u.s,m)===1) S.enviados[u.s].push(m)})}
 function save(){["lanc","enviados","acoes","espec","regras","log","uc","user"].forEach(k=>LS.set(k,S[k]))}
 
@@ -145,7 +147,7 @@ function stackRows(rows){
 
 // ---------- alertas ----------
 function gerarAlertas(){
-  const out=[], on=id=>S.regras.find(r=>r.id===id).on;
+  const out=[], on=id=>{const r=S.regras.find(x=>x.id===id);return r?r.on!==false:true};
   S.acoes.forEach(a=>{
     const st=status(a),n=dias(a.prazo),r=userById(a.resp);
     if(st==="atr"&&on("atr"))out.push({tipo:"atr",sev:"critical",uc:a.uc,para:r,acao:a,txt:`Atrasada há ${-n} dia${-n===1?"":"s"}`});
@@ -181,9 +183,9 @@ function renderUcSel(){
 }
 $("#ucSel").onchange=e=>{S.uc=e.target.value;save();const r=location.hash.slice(1).split("/")[0];if(r==="uc"&&S.uc)location.hash="uc/"+S.uc;else if(r==="painel"&&S.uc)location.hash="uc/"+S.uc;else route()};
 function sair(){S.user=null;save();history.replaceState(null,"",location.pathname);showLogin()}
-$("#userBtn").onclick=sair;
+if($("#userBtn"))$("#userBtn").onclick=sair;
 function irInicio(e){if(e)e.preventDefault();const h=isAdmin()?"painel":"uc/"+user().uc;if(isAdmin()){S.uc="";save()}if(location.hash==="#"+h)route();else location.hash=h}
-$("#btnHome").onclick=e=>{e.preventDefault();sair()};$("#logoHome").onclick=()=>sair();
+if($("#btnHome"))$("#btnHome").onclick=e=>{e.preventDefault();sair()};if($("#logoHome"))$("#logoHome").onclick=()=>sair();
 
 // ---------- cargos e contas (dinâmicos) ----------
 const CARGOS={
@@ -206,7 +208,7 @@ UCS.forEach(u=>{if(!USERS.some(x=>x.uc===u.s&&x.papel==="gestor"))contaPara("uc"
 // reabre sessão de conta gerada
 (function(){if(S.user&&!USERS.find(x=>x.id===S.user)){const [cg,uc]=S.user.split("-");if(uc==="GGUC")contaPara("gguc",null,"ana");else if(ucObj(uc)&&CARGOS.uc.some(c=>c[0]===cg))contaPara("uc",uc,cg);else S.user=null}})();
 
-let LG={tipo:"uc",uc:"",cargo:"gestor",q:""};
+let LG={tipo:"uc",uc:"APAGO",cargo:"gestor",q:""};
 const semAcento=t=>t.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 function showLogin(){
   $("#app").classList.add("hidden");$("#login").classList.remove("hidden");
