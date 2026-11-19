@@ -323,3 +323,85 @@ function relatorioProprietario(nome){
   w.innerHTML=`<select id="fProp" class="btn sm" style="max-width:220px"><option value="">Exportar por proprietário…</option>${nomes.map(n=>`<option>${esc(n)}</option>`).join("")}</select><button class="btn sm" id="fPropGo">⬇ PDF</button>`;
   csv.parentNode.insertBefore(w,csv);
   $("#fPropGo").onclick=()=>{const n=$("#fProp").value;if(!n){toast("Escolha o proprietário");return}toast("Na janela de impressão, escolha “Salvar como PDF”");relatorioProprietario(n)}};}
+
+// ======================= RELATÓRIOS DO PLANO DE AÇÃO =======================
+function gMapaPts(uc,pts,{w=380,h=260}={}){
+  const f=limiteDe(uc);if(!f)return "";const b=bbox(f.geometry),k=Math.cos((b[1]+b[3])/2*Math.PI/180),sx=(b[2]-b[0])*k,sy=b[3]-b[1],sc=Math.min((w-20)/sx,(h-20)/sy),ox=(w-sx*sc)/2,oy=(h-sy*sc)/2;
+  const P=([lon,lat])=>[(ox+(lon-b[0])*k*sc).toFixed(1),(oy+(b[3]-lat)*sc).toFixed(1)];
+  const path=g=>(g.type==="Polygon"?[g.coordinates]:g.coordinates).map(pl=>pl.map(r=>"M"+r.map(c=>P(c).join(",")).join("L")+"Z").join("")).join("");
+  const CM=typeof CAMADAS!=="undefined"?CAMADAS[uc]:null;
+  let s=`<svg viewBox="0 0 ${w} ${h}" width="100%"><rect width="${w}" height="${h}" fill="#f3f6f1" rx="8"/>`;
+  if(CM&&CM.zoneamento)CM.zoneamento.features.forEach(z=>s+=`<path d="${path(z.geometry)}" fill="${ZON_COR[z.properties.zona]||"#ccc"}" fill-opacity=".3"/>`);
+  s+=`<path d="${path(f.geometry)}" fill="#e6f0ea" fill-opacity="${CM&&CM.zoneamento?0:.6}" stroke="#1f5c3f" stroke-width="2"/>`;
+  pts.forEach((p,i)=>{const [x,y]=P([p.lon,p.lat]);s+=`<circle cx="${x}" cy="${y}" r="8" fill="${p.cor||"#2a78d6"}" stroke="#fff" stroke-width="2"/><text x="${x}" y="${+y+3.5}" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">${i+1}</text>`});
+  return s+`<text x="${w-10}" y="18" font-size="11" font-weight="700" text-anchor="end">N ↑</text></svg>`;
+}
+function blocoAcao(a,{completo=false}={}){
+  const st=status(a), n=dias(a.prazo), E=(S.evid||[]).filter(e=>e.acao===a.id), pts=E.filter(e=>e.lat!==null);
+  const u=ucObj(a.uc);
+  return `<div class="rp-c rp-acao" style="${completo?"":"border:0;padding:0"}">
+    <div class="rp-ch" style="border-color:${SC[st]}"><span style="background:${SC[st]}"></span>${esc(a.ativ)}</div>
+    <div class="rp-g2" style="grid-template-columns:1.25fr 1fr;margin:0">
+      <table class="rp-t"><tbody>
+        <tr><td style="width:34%"><b>Unidade</b></td><td>${esc(u.n)} (${a.uc})</td></tr>
+        <tr><td><b>Programa</b></td><td>${esc(a.prog)}</td></tr>
+        <tr><td><b>Meta (plano de manejo)</b></td><td>${esc(a.meta)}</td></tr>
+        <tr><td><b>Indicador de verificação</b></td><td>${esc(a.ind)}</td></tr>
+        <tr><td><b>Responsável</b></td><td>${esc(userById(a.resp).nome)} · ${esc(userById(a.resp).email)}</td></tr>
+        <tr><td><b>Situação</b></td><td><span class="rp-st" style="background:${SC[st]}">${ST[st]}</span></td></tr>
+        <tr><td><b>Prazo</b></td><td>${fmtD(a.prazo)}${st==="conc"?"":n<0?` · <b style="color:#d03b3b">${-n} dias de atraso</b>`:` · faltam ${n} dias`}</td></tr>
+        <tr><td><b>Progresso</b></td><td><div style="display:flex;gap:8px;align-items:center"><div style="flex:1;height:10px;background:#eef0ec;border-radius:5px;overflow:hidden"><div style="width:${a.pct}%;height:100%;background:${SC[st]}"></div></div><b>${a.pct}%</b></div></td></tr>
+        <tr><td><b>Fonte no plano</b></td><td>${esc(a.fonte)}${PLANOS[a.uc]?" · "+esc(PLANOS[a.uc].doc):""}</td></tr>
+        <tr><td><b>Evidência / comentário</b></td><td>${esc(a.obs||"—")}</td></tr>
+      </tbody></table>
+      <div>${pts.length?gMapaPts(a.uc,pts.map(p=>({lat:p.lat,lon:p.lon,cor:SC[st]})))+`<div class="rp-note">Pontos numerados = evidências georreferenciadas (ver fotos).</div>`:`<div class="rp-note" style="padding:20px;text-align:center;border:1px dashed #d5dad3;border-radius:8px">Sem evidências georreferenciadas.</div>`}</div>
+    </div>
+    <h2 style="margin:8px 0 4px">Evidências (${E.length})</h2>
+    ${E.length?`<div class="rp-fotos">${E.map((e,i)=>`<div class="rp-foto">${e.thumb?`<img src="${e.thumb}">`:`<div class="rp-sem">${e.tipo==="pdf"?"📄 documento":"📍 registro de campo"}${e.origem==="simulado"?"<br><small>(simulado)</small>":""}</div>`}
+      <div class="rp-cap"><b>${pts.indexOf(e)>=0?(pts.indexOf(e)+1)+". ":""}${esc(e.nome)}</b><br>${fmtD(e.data)}${e.lat!==null?` · ${e.lat.toFixed(5)}, ${e.lon.toFixed(5)}${e.prec?" (±"+e.prec+" m)":""}`:""}<br>${e.origem==="exif"?"GPS da foto":e.origem==="manual"?"local marcado no mapa":e.origem==="simulado"?"simulado":"sem local"}${e.lat!==null&&dentroUC(a.uc,e.lat,e.lon)===false?' · <b style="color:#d03b3b">fora do limite</b>':""}</div></div>`).join("")}</div>`:`<div class="rp-note">Nenhuma evidência registrada para esta ação.</div>`}
+    ${a.hist&&a.hist.length?`<h2 style="margin:8px 0 4px">Histórico</h2><table class="rp-t"><tbody>${a.hist.slice(0,12).map(h=>`<tr><td style="width:22%">${new Date(h.q).toLocaleString("pt-BR")}</td><td>${esc(h.t)}</td></tr>`).join("")}</tbody></table>`:""}
+  </div>`;
+}
+function imprimir(html,nome){
+  let el=document.getElementById("printArea");if(!el){el=document.createElement("div");el.id="printArea";document.body.appendChild(el)}
+  el.innerHTML=html;const t=document.title;document.title=nome;
+  setTimeout(()=>{try{window.print()}catch(e){toast("Use Ctrl+P / Cmd+P e escolha “Salvar como PDF”")}document.title=t},400);
+}
+const cabecalho=(sis,tit,sub)=>`<div class="rp-banner"><img src="iema-branco.png" alt="IEMA"><div><div class="rp-sis">${sis}</div><h1>${tit}</h1><div class="rp-sub">${sub}</div></div><div class="rp-tag">VERSÃO DE TESTE<br><small>dados simulados</small></div></div>`;
+function relatorioAcao(id){
+  const a=S.acoes.find(x=>x.id===id);if(!a)return;
+  imprimir(`<section class="rp-page">${cabecalho("SisGAP-ES · Relatório de ação do plano de manejo",esc(a.ativ),`${esc(ucObj(a.uc).n)} (${a.uc}) · ${esc(a.prog)} · emitido em ${new Date().toLocaleDateString("pt-BR")} por ${esc(user().nome)}`)}
+    <div style="margin-top:10px">${blocoAcao(a)}</div>
+    <div class="rp-foot">SisGAP-ES · IEMA/GGUC · Gerado em ${new Date().toLocaleString("pt-BR")}.</div></section>`,`SisGAP-ES_acao_${a.uc}_${a.id}`);
+}
+function relatorioPlano(lista){
+  const ucs=[...new Set(lista.map(a=>a.uc))], c=contaSt(lista), progs=[...new Set(lista.map(a=>a.prog))];
+  const nEv=lista.reduce((t,a)=>t+(S.evid||[]).filter(e=>e.acao===a.id).length,0), nFo=lista.reduce((t,a)=>t+(S.evid||[]).filter(e=>e.acao===a.id&&e.thumb).length,0);
+  const kpi=(cor,val,lb)=>`<div class="rp-k" style="background:${cor}"><b>${val}</b><span>${lb}</span></div>`;
+  const tit=ucs.length===1?`Plano de ação — ${esc(ucObj(ucs[0]).n)}`:`Plano de ação — ${ucs.length} UCs`;
+  const capa=`<section class="rp-page">${cabecalho("SisGAP-ES · Relatório completo do plano de ação",tit,`${lista.length} ações · ${ucs.join(", ")} · emitido em ${new Date().toLocaleDateString("pt-BR")} por ${esc(user().nome)}${(FA.prog||FA.st||FA.resp||FA.q)?" · filtros aplicados na lista":""}`)}
+    <div class="rp-kpis" style="grid-template-columns:repeat(7,1fr)">${kpi("#1f5c3f",lista.length,"ações")}${kpi("#0ca30c",c.conc,"concluídas")}${kpi("#2a78d6",c.and,"em andamento")}${kpi("#eda100",c.venc,"vencem em 15 dias")}${kpi("#d03b3b",c.atr,"atrasadas")}${kpi("#7c877f",c.nao,"não iniciadas")}${kpi("#6250d6",nEv,`evidências · ${nFo} fotos`)}</div>
+    <div class="rp-g2">
+      <div class="rp-c"><div class="rp-ch" style="border-color:#0ca30c"><span style="background:#0ca30c"></span>Execução</div><div style="display:flex;gap:16px;align-items:center">${gDonut(["conc","and","venc","atr","nao"].map(k=>({v:c[k],cor:SC[k]})),{centro:Math.round(c.conc/Math.max(1,lista.length)*100)+"%",sub:"concluídas"})}<div style="flex:1">${["conc","and","venc","atr","nao"].map(k=>`<div class="rp-row"><i style="background:${SC[k]}"></i>${ST[k]}<b>${c[k]}</b></div>`).join("")}</div></div></div>
+      <div class="rp-c"><div class="rp-ch" style="border-color:#2a78d6"><span style="background:#2a78d6"></span>Por programa</div>${progs.map(p=>{const k=contaSt(lista.filter(a=>a.prog===p)),t=Object.values(k).reduce((x,y)=>x+y,0);return `<div class="rp-pr"><span>${esc(p)}</span><div>${["conc","and","venc","atr","nao"].filter(s=>k[s]).map(s=>`<i style="width:${k[s]/t*100}%;background:${SC[s]}"></i>`).join("")}</div><b>${k.conc}/${t}</b></div>`}).join("")}${legenda(["conc","and","venc","atr","nao"].map(k=>[ST[k],SC[k]]))}</div>
+    </div>
+    <div class="rp-c"><div class="rp-ch" style="border-color:#1f5c3f"><span style="background:#1f5c3f"></span>Sumário das ações</div><table class="rp-t"><thead><tr><th>#</th>${ucs.length>1?"<th>UC</th>":""}<th>Ação</th><th>Programa</th><th>Responsável</th><th>Prazo</th><th>Situação</th><th>%</th><th>Evid.</th></tr></thead><tbody>
+      ${lista.map((a,i)=>`<tr><td>${i+1}</td>${ucs.length>1?`<td>${a.uc}</td>`:""}<td>${esc(a.ativ)}</td><td>${esc(a.prog)}</td><td>${esc(userById(a.resp).nome)}</td><td>${fmtD(a.prazo)}</td><td><span class="rp-st" style="background:${SC[status(a)]}">${ST[status(a)]}</span></td><td>${a.pct}</td><td>${(S.evid||[]).filter(e=>e.acao===a.id).length}</td></tr>`).join("")}</tbody></table></div></section>`;
+  const fichas=lista.map((a,i)=>`<section class="rp-page"><div class="rp-mini"><b>Ação ${i+1} de ${lista.length}</b> · ${a.uc} · ${esc(a.prog)}</div>${blocoAcao(a,{completo:true})}</section>`).join("");
+  imprimir(capa+fichas+`<div class="rp-foot">SisGAP-ES · IEMA/GGUC · Gerado em ${new Date().toLocaleString("pt-BR")} · Versão de teste.</div>`,`SisGAP-ES_plano_de_acao_${ucs.length===1?ucs[0]:"UCs"}_${new Date().toISOString().slice(0,10)}`);
+}
+// botões na lista do plano de ação e na ficha da ação
+let _listaAcoes=[];
+{const _va=vAcoes; vAcoes=function(){_va();
+  const tb=document.querySelector("#view table");if(!tb)return;
+  const hr=tb.querySelector("thead tr");if(hr){const th=document.createElement("th");th.textContent="Relatório";hr.appendChild(th)}
+  _listaAcoes=[];
+  tb.querySelectorAll("tbody tr").forEach(tr=>{const m=(tr.getAttribute("onclick")||"").match(/editarAcao\('([^']+)'\)/);if(!m)return;_listaAcoes.push(m[1]);
+    const td=document.createElement("td");td.innerHTML=`<button class="btn sm" title="Exportar relatório desta ação (PDF)">⬇ PDF</button>`;
+    td.querySelector("button").onclick=e=>{e.stopPropagation();toast("Na janela de impressão, escolha “Salvar como PDF”");relatorioAcao(m[1])};tr.appendChild(td)});
+  const fl=document.querySelector("#view .filters");
+  if(fl&&_listaAcoes.length){const b=document.createElement("button");b.className="btn primary";b.style.background="#173f2c";b.innerHTML="⬇ Relatório completo (com fotos)";
+    b.title="Todas as ações da lista (respeita os filtros), com fotos e evidências";
+    b.onclick=()=>{toast("Montando o relatório… na janela de impressão, escolha “Salvar como PDF”");relatorioPlano(_listaAcoes.map(id=>S.acoes.find(a=>a.id===id)).filter(Boolean))};fl.appendChild(b)}};}
+{const _ea=editarAcao; editarAcao=function(id){_ea(id);if(!id)return;const bx=document.querySelector(".drawer #eMail");
+  if(bx){const b=document.createElement("button");b.className="btn";b.textContent="⬇ Relatório desta ação (PDF)";b.onclick=()=>{toast("Na janela de impressão, escolha “Salvar como PDF”");relatorioAcao(id)};bx.parentNode.appendChild(b)}};}
