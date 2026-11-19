@@ -181,9 +181,9 @@ function renderUcSel(){
 }
 $("#ucSel").onchange=e=>{S.uc=e.target.value;save();const r=location.hash.slice(1).split("/")[0];if(r==="uc"&&S.uc)location.hash="uc/"+S.uc;else if(r==="painel"&&S.uc)location.hash="uc/"+S.uc;else route()};
 function sair(){S.user=null;save();history.replaceState(null,"",location.pathname);showLogin()}
-$("#userBtn").onclick=sair;$("#btnSair").onclick=sair;
+$("#userBtn").onclick=sair;
 function irInicio(e){if(e)e.preventDefault();const h=isAdmin()?"painel":"uc/"+user().uc;if(isAdmin()){S.uc="";save()}if(location.hash==="#"+h)route();else location.hash=h}
-$("#btnHome").onclick=irInicio;$("#logoHome").onclick=irInicio;
+$("#btnHome").onclick=e=>{e.preventDefault();sair()};$("#logoHome").onclick=()=>sair();
 
 // ---------- cargos e contas (dinâmicos) ----------
 const CARGOS={
