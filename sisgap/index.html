@@ -55,6 +55,10 @@ aside nav a.on{background:rgba(255,255,255,.14);color:#fff}
 aside nav a .ic{width:18px;text-align:center;opacity:.85}
 aside nav a .badge{margin-left:auto;background:var(--critical);color:#fff;border-radius:999px;font-size:11px;padding:1px 7px;font-weight:700}
 aside .sec{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;opacity:.55;padding:14px 10px 6px}
+.home-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 2px 8px;padding:9px;border-radius:8px;background:#fff;color:#173f2c;font-weight:700;text-decoration:none}
+.home-btn:hover{background:#e6f0ea}
+.sair-btn{margin:14px 2px 0;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:none;color:#dfeae3;cursor:pointer;font-weight:500}
+.sair-btn:hover{background:rgba(255,255,255,.08)}
 aside .foot{margin-top:auto;font-size:11px;opacity:.65;padding:10px;line-height:1.4}
 main{min-width:0}
 .topbar{position:sticky;top:0;z-index:5;background:rgba(244,245,242,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 28px;display:flex;align-items:center;gap:14px}
@@ -194,8 +198,10 @@ svg text{font-family:Inter,system-ui,sans-serif}
 <!-- APP -->
 <div id="app" class="hidden">
   <aside>
-    <div class="logo"><b>SisGAP-ES</b><span>Sistema Integrado de Gestão de Áreas Protegidas do ES</span></div>
+    <div class="logo" id="logoHome" style="cursor:pointer" title="Voltar ao início"><b>SisGAP-ES</b><span>Sistema Integrado de Gestão de Áreas Protegidas do ES</span></div>
+    <a href="#" id="btnHome" class="home-btn">⌂ Início</a>
     <nav id="nav"></nav>
+    <button id="btnSair" class="sair-btn">⎋ Sair / trocar perfil</button>
     <div class="foot">Protótipo de validação · dados simulados.<br>Ações e indicadores específicos extraídos dos planos de manejo.</div>
   </aside>
   <main>

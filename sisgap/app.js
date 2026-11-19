@@ -180,7 +180,10 @@ function renderUcSel(){
   }
 }
 $("#ucSel").onchange=e=>{S.uc=e.target.value;save();const r=location.hash.slice(1).split("/")[0];if(r==="uc"&&S.uc)location.hash="uc/"+S.uc;else if(r==="painel"&&S.uc)location.hash="uc/"+S.uc;else route()};
-$("#userBtn").onclick=()=>{S.user=null;save();showLogin()};
+function sair(){S.user=null;save();history.replaceState(null,"",location.pathname);showLogin()}
+$("#userBtn").onclick=sair;$("#btnSair").onclick=sair;
+function irInicio(e){if(e)e.preventDefault();const h=isAdmin()?"painel":"uc/"+user().uc;if(isAdmin()){S.uc="";save()}if(location.hash==="#"+h)route();else location.hash=h}
+$("#btnHome").onclick=irInicio;$("#logoHome").onclick=irInicio;
 
 function showLogin(){
   $("#app").classList.add("hidden");$("#login").classList.remove("hidden");
