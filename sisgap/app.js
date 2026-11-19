@@ -12,7 +12,7 @@ const ST_COLOR = {conc:"var(--good)",and:"var(--prog)",venc:"var(--warning)",atr
 const ST_ORDER = ["conc","and","venc","atr","nao"];
 
 // ---------- persistência ----------
-const DATA_VER="2026-11-19b";
+const DATA_VER="2026-11-19c";
 try{if(localStorage.getItem("sisgap:ver")!==JSON.stringify(DATA_VER)){Object.keys(localStorage).filter(k=>k.startsWith("sisgap:")).forEach(k=>localStorage.removeItem(k));localStorage.setItem("sisgap:ver",JSON.stringify(DATA_VER))}}catch(e){}
 const LS = {
   get(k,d){try{const v=localStorage.getItem("sisgap:"+k);return v?JSON.parse(v):d}catch(e){return d}},
@@ -164,6 +164,7 @@ function alertasVisiveis(){const a=gerarAlertas();return isAdmin()?a:a.filter(x=
 // ---------- shell ----------
 const ROTAS=[
   ["painel","▦","Painel geral",true],["uc","◉","Painel da UC"],["lancar","✎","Lançamento mensal"],["acoes","⚑","Plano de ação"],
+  ["fundiario","⌖","Fundiário (CAR)"],["biodiversidade","❦","Biodiversidade"],
   ["alertas","✉","Alertas e e-mails"],["indicadores","☰","Catálogo de indicadores"],["usuarios","👥","Usuários e papéis",true]
 ];
 function renderNav(){
@@ -263,7 +264,7 @@ function route(){
   if(r==="uc"&&!isAdmin()&&arg!==user().uc){location.hash="uc/"+user().uc;return}
   if(r==="uc"&&isAdmin()&&S.uc!==arg){S.uc=arg;save()}
   renderNav();renderUcSel();
-  const V={painel:vPainel,uc:()=>vUC(arg),lancar:vLancar,acoes:vAcoes,alertas:vAlertas,indicadores:vIndicadores,usuarios:vUsuarios}[r]||vPainel;
+  const V={painel:vPainel,uc:()=>vUC(arg),lancar:vLancar,acoes:vAcoes,alertas:vAlertas,indicadores:vIndicadores,usuarios:vUsuarios,fundiario:vFundiario,biodiversidade:vBio}[r]||vPainel;
   V();window.scrollTo(0,0);
 }
 window.addEventListener("hashchange",route);
