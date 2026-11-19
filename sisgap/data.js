@@ -3,25 +3,25 @@
 // Valores numéricos, responsáveis e status são SIMULADOS para validação.
 
 const UCS = [
-  {s:"PECF",n:"Parque Estadual Cachoeira da Fumaça",cat:"Parque",g:"PI"},
-  {s:"PEFG",n:"Parque Estadual Forno Grande",cat:"Parque",g:"PI",piloto:true},
+  {s:"PECF",n:"Parque Estadual da Cachoeira da Fumaça",cat:"Parque",g:"PI"},
+  {s:"PEFG",n:"Parque Estadual de Forno Grande",cat:"Parque",g:"PI",piloto:true},
   {s:"PEI",n:"Parque Estadual de Itaúnas",cat:"Parque",g:"PI",piloto:true},
-  {s:"PEMF",n:"Parque Estadual Mata das Flores",cat:"Parque",g:"PI"},
+  {s:"PEMF",n:"Parque Estadual de Mata das Flores",cat:"Parque",g:"PI"},
   {s:"PEPCV",n:"Parque Estadual Paulo César Vinha",cat:"Parque",g:"PI"},
-  {s:"PEPAZ",n:"Parque Estadual da Pedra Azul",cat:"Parque",g:"PI"},
-  {s:"PESA",n:"Parque Estadual — PESA",cat:"Parque",g:"PI"},
-  {s:"MONAFF",n:"Monumento Natural O Frade e a Freira",cat:"Monumento Natural",g:"PI"},
+  {s:"PEPAZ",n:"Parque Estadual de Pedra Azul",cat:"Parque",g:"PI"},
+  {s:"PESA",n:"Parque Estadual Saíra Apunhalada",cat:"Parque",g:"PI"},
+  {s:"MONAFF",n:"Monumento Natural o Frade e a Freira",cat:"Monumento Natural",g:"PI"},
   {s:"MONAST",n:"Monumento Natural Serra das Torres",cat:"Monumento Natural",g:"PI"},
-  {s:"MONACP",n:"Monumento Natural — MONACP",cat:"Monumento Natural",g:"PI"},
-  {s:"REBIODB",n:"Reserva Biológica de Duas Bocas",cat:"Reserva Biológica",g:"PI"},
+  {s:"MONACP",n:"Monumento Natural Cinco Pontões",cat:"Monumento Natural",g:"PI"},
+  {s:"REBIODB",n:"Reserva Biológica Duas Bocas",cat:"Reserva Biológica",g:"PI"},
   {s:"APACB",n:"APA de Conceição da Barra",cat:"APA",g:"US"},
   {s:"APASE",n:"APA de Setiba",cat:"APA",g:"US"},
   {s:"APAGO",n:"APA do Pico do Goiapaba-Açu",cat:"APA",g:"US",piloto:true},
-  {s:"APAGUA",n:"APA de Guanandy",cat:"APA",g:"US"},
-  {s:"APAPE",n:"APA da Pedra do Elefante",cat:"APA",g:"US"},
-  {s:"APAPM",n:"APA de Praia Mole",cat:"APA",g:"US"},
+  {s:"APAGUA",n:"APA Guanandy",cat:"APA",g:"US"},
+  {s:"APAPE",n:"APA Pedra do Elefante",cat:"APA",g:"US"},
+  {s:"APAPM",n:"APA Praia Mole",cat:"APA",g:"US"},
   {s:"ARIEMV",n:"ARIE do Morro da Vargem",cat:"ARIE",g:"US",piloto:true},
-  {s:"RDSCO",n:"RDS Concha d'Ostra",cat:"RDS",g:"US"}
+  {s:"RDSCO",n:"RDS Concha D'Ostra",cat:"RDS",g:"US"}
 ];
 
 const PLANOS = {

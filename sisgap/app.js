@@ -294,6 +294,7 @@ function vPainel(){
       ${stackRows(UCS.filter(u=>u.piloto).map(u=>({l:u.s+" — "+u.n.replace(/^(Parque Estadual|APA|ARIE)( do| de| da)? ?/,""),c:contaSt(acoesDe(u.s)),link:"uc/"+u.s,w:200})))}
       <div class="info" style="margin-top:14px">As outras 15 UCs entram no plano de ação à medida que seus planos de manejo forem cadastrados.</div></div>
   </div>
+  ${geoCard(null)}
   <div class="grid g12" style="margin-top:16px">
     <div class="card"><h3>Pressões registradas por tipo</h3><p class="sub">Ocorrências em ${ANO}, todas as UCs</p>
       ${hbars(PRESSAO.map(id=>({l:IND_LIST.find(i=>i[0]===id)[1],v:UCS.reduce((t,u)=>t+soma(u.s,id),0)})),{unit:"ocorrências"})}</div>
@@ -310,6 +311,7 @@ function vPainel(){
   const drawLc=()=>{const id=$("#lcSel").value,ind=IND_LIST.find(i=>i[0]===id);$("#lcT").textContent=ind[1]+" — "+ANO;
     $("#lc").innerHTML=lineChart(MES,MES.map((_,i)=>i<FECHADOS?UCS.reduce((t,u)=>t+(num(S.lanc[u.s][id][i])||0),0):null),{unit:ind[2]})};
   $("#lcSel").onchange=drawLc;drawLc();
+  geoMount(null);
 }
 function heatGrid(){
   const col=v=>v===1?"#1f6b45":v>=.7?"#6fae8a":v>0?"#c9e2d3":"#eef0eb";
@@ -360,10 +362,11 @@ function vUC(s){
     <div class="card"><div class="card-h"><div><h3 id="ucT"></h3><p class="sub">Lançamentos mensais da UC</p></div>
       <select id="ucInd" class="btn sm">${IND_LIST.map(i=>`<option value="${i[0]}">${i[1]}</option>`).join("")}</select></div><div id="ucLc"></div></div>
     ${ac.length?`<div class="card"><h3>Execução por programa</h3><p class="sub">Status das ações do plano de manejo</p>${stackRows(progs.map(p=>({l:p,c:contaSt(ac.filter(a=>a.prog===p)),w:220})))}</div>`:""}
-  </div>`;
+  </div>${geoCard(s)}`;
   const draw=()=>{const id=$("#ucInd").value,ind=IND_LIST.find(i=>i[0]===id);$("#ucT").textContent=ind[1];
     $("#ucLc").innerHTML=lineChart(MES,MES.map((_,i)=>i<FECHADOS?num(S.lanc[s][id][i]):null),{unit:ind[2]})};
   $("#ucInd").onchange=draw;draw();
+  geoMount(s);
 }
 
 // ---------- VIEW: lançamento ----------
@@ -467,15 +470,17 @@ function editarAcao(id){
     </div>
     <div class="fld"><label>Evidência / comentário</label><textarea id="eObs" placeholder="Ex.: link da ata no E-Docs, nº do processo, fotos…">${esc(a.obs)}</textarea></div>
     ${a.hist.length?`<div class="fld"><label>Histórico</label>${a.hist.slice(0,6).map(h=>`<div class="small" style="padding:4px 0;border-bottom:1px solid var(--line)"><span class="muted">${new Date(h.q).toLocaleString("pt-BR")}</span> · ${esc(h.t)}</div>`).join("")}</div>`:""}
+    <div id="evidBox"></div>
     <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
       ${pode?`<button class="btn primary" id="eSave">Salvar</button>`:""}
       ${!nova?`<button class="btn" id="eMail">✉ Lembrar responsável por e-mail</button>`:""}
     </div>
     <p class="small muted" style="margin-top:14px">Ao mudar o responsável ou o prazo, o sistema avisa o novo responsável por e-mail.</p>
   </div></div>`;
-  const close=()=>$("#drawerRoot").innerHTML="";
+  const close=()=>{if(typeof _miniMap!=="undefined"&&_miniMap){_miniMap.remove();_miniMap=null}_pendente=null;$("#drawerRoot").innerHTML=""};
   $("#dX").onclick=close;$("#dbg").onclick=e=>{if(e.target.id==="dbg")close()};
   $("#ePct").oninput=e=>$("#ePv").textContent=e.target.value+"%";
+  geoEvid(a);
   if($("#eSave"))$("#eSave").onclick=()=>{
     if(nova){a.ativ=$("#eAtiv").value.trim();a.prog=$("#eProg").value.trim()||"Outras ações";a.meta=$("#eMeta").value;a.ind=$("#eInd").value;if(!a.ativ){toast("Descreva a ação");return}}
     const mud=[];const nr=$("#eResp").value,np=$("#ePrazo").value,ns=$("#eSt").value,npc=+$("#ePct").value;
