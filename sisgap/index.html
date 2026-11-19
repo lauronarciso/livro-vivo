@@ -26,7 +26,7 @@ a{color:var(--brand-2)}
 #login .hero{background:linear-gradient(160deg,#173f2c 0%,#1f5c3f 55%,#2c7a54 100%);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:space-between}
 #login .hero h1{font-size:44px;margin:0;letter-spacing:-.02em}
 #login .hero h2{font-size:18px;font-weight:500;opacity:.85;margin:8px 0 0;max-width:460px;line-height:1.4}
-#login .hero ul{list-style:none;padding:0;margin:40px 0 0;display:grid;gap:14px;max-width:460px}
+#login .hero ul{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:14px;max-width:460px}
 #login .hero li{display:flex;gap:12px;align-items:flex-start;opacity:.92;line-height:1.4}
 #login .hero li b{display:block}
 #login .hero .dot{flex:0 0 28px;height:28px;border-radius:8px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:14px}
@@ -41,6 +41,15 @@ a{color:var(--brand-2)}
 .gbtn .t b{display:block}
 .gbtn .t span{color:var(--muted);font-size:12.5px}
 .gbtn .role{font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+.hero-ucs{margin-top:34px;max-width:520px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:16px 18px}
+.hu-t{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.85;margin-bottom:10px}
+.hu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hu{background:rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;cursor:pointer;transition:background .15s}
+.hu:hover{background:rgba(255,255,255,.2)}
+.hu b{display:block;font-size:15px}
+.hu span{font-size:12px;opacity:.85;line-height:1.3;display:block}
+.hu em{display:block;font-style:normal;font-size:11px;opacity:.7;margin-top:4px}
+.hu-n{font-size:12px;opacity:.7;margin-top:10px;line-height:1.4}
 .demo-flag{display:inline-flex;gap:6px;align-items:center;background:#fff6dd;border:1px solid #f1d98a;color:#7a5a00;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
 
 /* ---------- shell ---------- */
@@ -176,7 +185,7 @@ svg text{font-family:Inter,system-ui,sans-serif}
 <section id="login">
   <div class="hero">
     <div>
-      <span class="demo-flag">● Protótipo para validação — dados simulados</span>
+      <span class="demo-flag">● Versão de teste — protótipo para validação · dados simulados</span>
       <h1 style="margin-top:28px">SisGAP-ES</h1>
       <h2>Sistema Integrado de Gestão de Áreas Protegidas do Espírito Santo</h2>
       <ul>
@@ -185,6 +194,11 @@ svg text{font-family:Inter,system-ui,sans-serif}
         <li><span class="dot">⚑</span><div><b>Plano de ação</b>Responsáveis, prazos, evidências e status de cada ação do plano de manejo.</div></li>
         <li><span class="dot">✉</span><div><b>Alertas por e-mail</b>Prazos próximos, ações atrasadas e lançamentos pendentes.</div></li>
       </ul>
+      <div class="hero-ucs">
+        <div class="hu-t">Versão de teste · UCs com planejamento a partir do plano de manejo</div>
+        <div id="heroUcs" class="hu-grid"></div>
+        <div class="hu-n">Plano de ação (atividades, metas, prazos e responsáveis) e indicadores específicos extraídos do plano de manejo de cada uma. As outras 15 UCs entram por enquanto só com os indicadores comuns.</div>
+      </div>
     </div>
     <small>IEMA · Gerência de Gestão de Unidades de Conservação (GGUC)</small>
   </div>

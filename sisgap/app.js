@@ -185,18 +185,71 @@ $("#userBtn").onclick=sair;$("#btnSair").onclick=sair;
 function irInicio(e){if(e)e.preventDefault();const h=isAdmin()?"painel":"uc/"+user().uc;if(isAdmin()){S.uc="";save()}if(location.hash==="#"+h)route();else location.hash=h}
 $("#btnHome").onclick=irInicio;$("#logoHome").onclick=irInicio;
 
+// ---------- cargos e contas (dinâmicos) ----------
+const CARGOS={
+  gguc:[["ger","Gerente / Coordenação da GGUC","admin"],["ana","Analista da GGUC","admin"]],
+  uc:[["gestor","Gestor(a) da UC","gestor"],["tec","Analista / Técnico(a)","tecnico"],["gp","Guarda-parque / Fiscal","tecnico"],["est","Estagiário(a) / Voluntário(a)","tecnico"]]
+};
+function cargoDe(u){if(u.cargo)return u.cargo;return u.papel==="admin"?"Gerente / Coordenação da GGUC":u.papel==="gestor"?"Gestor(a) da UC":"Analista / Técnico(a)"}
+// conta de demonstração para (tipo, uc, cargo) — reutiliza as pessoas fictícias das UCs piloto
+function contaPara(tipo,uc,cg){
+  if(tipo==="gguc"){const c=CARGOS.gguc.find(x=>x[0]===cg);if(cg==="ger")return Object.assign(USERS[0],{cargo:c[1]});return ensureUser("ana-GGUC",{nome:"Analista GGUC",email:"analista.gguc@exemplo.org",papel:"admin",uc:null,cargo:c[1]})}
+  const c=CARGOS.uc.find(x=>x[0]===cg), low=uc.toLowerCase();
+  if(cg==="gestor"){const g=USERS.find(x=>x.uc===uc&&x.papel==="gestor");if(g){g.cargo=c[1];return g}}
+  if(cg==="tec"){const t=USERS.find(x=>x.uc===uc&&x.papel==="tecnico"&&!x.id.includes("-"));if(t){t.cargo=c[1];return t}}
+  const pref={gestor:"gestor",tec:"tecnico",gp:"guardaparque",est:"estagiario"}[cg];
+  return ensureUser(cg+"-"+uc,{nome:c[1].split(" /")[0].replace(/\(a\)/,"(a)")+" "+uc,email:pref+"."+low+"@exemplo.org",papel:c[2],uc,cargo:c[1]});
+}
+function ensureUser(id,dados){let u=USERS.find(x=>x.id===id);if(!u){u=Object.assign({id},dados);USERS.push(u)}return u}
+// gestor de toda UC (usado nos alertas de lançamento)
+UCS.forEach(u=>{if(!USERS.some(x=>x.uc===u.s&&x.papel==="gestor"))contaPara("uc",u.s,"gestor")});
+// reabre sessão de conta gerada
+(function(){if(S.user&&!USERS.find(x=>x.id===S.user)){const [cg,uc]=S.user.split("-");if(uc==="GGUC")contaPara("gguc",null,"ana");else if(ucObj(uc)&&CARGOS.uc.some(c=>c[0]===cg))contaPara("uc",uc,cg);else S.user=null}})();
+
+let LG={tipo:"uc",uc:"",cargo:"gestor",q:""};
+const semAcento=t=>t.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 function showLogin(){
   $("#app").classList.add("hidden");$("#login").classList.remove("hidden");
-  const papel={admin:"GGUC · administrador",gestor:"Gestor(a) da UC",tecnico:"Técnico(a)"};
-  $("#loginList").innerHTML=USERS.filter(u=>["u0","u1","u3","u5","u7","u2"].includes(u.id)).map(u=>`<button class="gbtn" data-u="${u.id}"><span class="av" style="background:${u.papel==="admin"?"#173f2c":u.papel==="gestor"?"#2c7a54":"#5b8a72"}">${u.nome[0]}</span><span class="t"><b>${esc(u.nome)}</b><span>${u.email}</span></span><span class="role">${papel[u.papel]}${u.uc?" · "+u.uc:""}</span></button>`).join("")
-   +`<p class="small muted" style="margin-top:14px">Os perfis, nomes e e-mails são fictícios. Alterações feitas no protótipo ficam salvas só neste navegador.</p>
-     <button class="btn sm" onclick="resetDemo()">Restaurar dados de demonstração</button>`;
-  document.querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{S.user=b.dataset.u;S.uc=isAdmin()?"":user().uc;save();startApp()});
+  $("#heroUcs").innerHTML=UCS.filter(u=>u.piloto).map(u=>`<div class="hu" data-hu="${u.s}" title="Entrar como gestor(a) desta UC"><b>${u.s}</b><span>${esc(u.n)}</span><em>Plano de manejo 2025 · ${S.acoes.filter(a=>a.uc===u.s).length} ações · ${ESPECIFICOS[u.s].length} indicadores específicos</em></div>`).join("");
+  document.querySelectorAll("[data-hu]").forEach(d=>d.onclick=()=>{LG={tipo:"uc",uc:d.dataset.hu,cargo:"gestor",q:""};showLogin()});
+  const cats=[...new Set(UCS.map(u=>u.cat))];
+  const draw=()=>{
+    if(!CARGOS[LG.tipo].some(c=>c[0]===LG.cargo))LG.cargo=CARGOS[LG.tipo][0][0];
+    const pronto=LG.tipo==="gguc"||LG.uc;
+    const c=pronto?contaPara(LG.tipo,LG.uc,LG.cargo):null;
+    const passo=(n,t,on)=>`<label style="display:flex;align-items:center;gap:8px"><span style="width:20px;height:20px;border-radius:50%;background:${on?"var(--brand)":"#cfd5cf"};color:#fff;display:grid;place-items:center;font-size:11px">${n}</span>${t}</label>`;
+    $("#loginList").innerHTML=`
+    <div class="fld">${passo(1,"Tipo de acesso",true)}
+      <div class="seg" style="width:100%;display:flex">${[["gguc","GGUC — gestão da rede"],["uc","Unidade de conservação"]].map(([k,t])=>`<button style="flex:1;padding:10px" class="${LG.tipo===k?"on":""}" data-t="${k}">${t}</button>`).join("")}</div></div>
+    ${LG.tipo==="uc"?`<div class="fld">${passo(2,"Unidade de conservação",true)}
+      <input id="lgBusca" value="${esc(LG.q)}" placeholder="Digite a sigla ou o nome (ex.: Itaúnas, Morro da Vargem)" autocomplete="off" style="margin-bottom:6px">
+      <select id="lgUc" size="7" style="width:100%">${(()=>{const L=UCS.filter(u=>semAcento(u.s+" "+u.n).includes(semAcento(LG.q)));return L.length?cats.map(ct=>{const g=L.filter(u=>u.cat===ct);return g.length?`<optgroup label="${ct}">${g.map(u=>`<option value="${u.s}" ${LG.uc===u.s?"selected":""}>${u.s} — ${esc(u.n)}${u.piloto?"  ★":""}</option>`).join("")}</optgroup>`:""}).join(""):`<option disabled>Nenhuma UC encontrada</option>`})()}</select>
+      <div class="small muted" style="margin-top:4px">★ UC piloto: plano de ação e indicadores específicos já cadastrados.</div></div>`:""}
+    <div class="fld">${passo(LG.tipo==="uc"?3:2,"Cargo",!!pronto)}
+      <select id="lgCargo" ${pronto?"":"disabled"}>${CARGOS[LG.tipo].map(([k,t])=>`<option value="${k}" ${LG.cargo===k?"selected":""}>${t}</option>`).join("")}</select>
+      <div class="small muted" style="margin-top:4px">${{admin:"Vê e edita todas as UCs, regras de e-mail e usuários.",gestor:"Vê a própria UC, lança, envia à GGUC e atribui responsáveis e prazos.",tecnico:"Vê a própria UC, lança indicadores e atualiza as ações sob sua responsabilidade."}[CARGOS[LG.tipo].find(x=>x[0]===LG.cargo)[2]]}</div></div>
+    ${c?`<div class="gbtn" style="cursor:default"><span class="av">${esc(c.nome[0])}</span><span class="t"><b>${esc(c.nome)}</b><span>${c.email}</span></span><span class="role">${c.uc||"todas as UCs"}</span></div>`:""}
+    <button class="btn primary" id="lgEntrar" style="width:100%;padding:12px;font-size:15px" ${c?"":"disabled"}>${c?"Entrar com Google (simulado)":"Escolha a unidade de conservação"}</button>
+    <p class="small muted" style="margin-top:14px">No sistema real, tipo de acesso, UC e cargo vêm do cadastro do e-mail feito pela GGUC: a pessoa só clica em “Entrar com Google”. Aqui os nomes e e-mails são fictícios e as alterações ficam salvas só neste navegador.</p>
+    <button class="btn sm" onclick="resetDemo()">Restaurar dados de demonstração</button>`;
+    document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{LG.tipo=b.dataset.t;draw()});
+    $("#lgCargo").onchange=e=>{LG.cargo=e.target.value;draw()};
+    const sel=$("#lgUc");
+    if(sel){
+      sel.onchange=()=>{LG.uc=sel.value;draw()};
+      sel.ondblclick=()=>$("#lgEntrar").click();
+      const busca=$("#lgBusca");
+      busca.oninput=()=>{LG.q=busca.value;const m=UCS.find(u=>semAcento(u.s+" "+u.n).includes(semAcento(LG.q)));LG.uc=m?m.s:"";draw();const b2=$("#lgBusca");b2.focus();b2.setSelectionRange(b2.value.length,b2.value.length)};
+      busca.onkeydown=e=>{if(e.key==="Enter"&&!$("#lgEntrar").disabled)$("#lgEntrar").click()};
+    }
+    $("#lgEntrar").onclick=()=>{if(!c)return;S.user=c.id;S.uc=isAdmin()?"":user().uc;save();startApp()};
+  };
+  draw();
 }
 function resetDemo(){["lanc","enviados","acoes","espec","regras","log","uc"].forEach(k=>{try{localStorage.removeItem("sisgap:"+k)}catch(e){}});location.reload()}
 function startApp(){
   $("#login").classList.add("hidden");$("#app").classList.remove("hidden");
-  const u=user();$("#uAv").textContent=u.nome[0];$("#uName").textContent=u.nome;
+  const u=user();$("#uAv").textContent=u.nome[0];$("#uName").innerHTML=esc(u.nome)+`<span class="muted" style="display:block;font-size:11px">${esc(cargoDe(u))}${u.uc?" · "+u.uc:""}</span>`;
   renderUcSel();
   if(!location.hash||location.hash==="#")location.hash=isAdmin()?"painel":"uc/"+u.uc; else route();
 }
@@ -525,8 +578,8 @@ function vUsuarios(){
   title("Usuários e papéis","Quem acessa o quê · login com conta Google");
   const pap={admin:"Administrador(a) GGUC",gestor:"Gestor(a) da UC",tecnico:"Técnico(a) / equipe"};
   $("#view").innerHTML=`<div class="grid g21">
-  <div class="card" style="padding:0"><div class="tbl-wrap" style="border:0"><table><thead><tr><th>Nome</th><th>E-mail (conta Google)</th><th>Papel</th><th>UC</th><th class="num">Ações</th><th class="num">Atrasadas</th></tr></thead><tbody>
-  ${USERS.map(u=>{const a=S.acoes.filter(x=>x.resp===u.id),at=a.filter(x=>status(x)==="atr").length;return `<tr><td><b>${esc(u.nome)}</b></td><td class="small">${u.email}</td><td><span class="pill">${pap[u.papel]}</span></td><td>${u.uc||"Todas"}</td><td class="num">${a.length}</td><td class="num">${at?`<b style="color:#9b2424">${at}</b>`:"0"}</td></tr>`}).join("")}
+  <div class="card" style="padding:0"><div class="tbl-wrap" style="border:0"><table><thead><tr><th>Nome</th><th>E-mail (conta Google)</th><th>Cargo</th><th>Permissão</th><th>UC</th><th class="num">Ações</th><th class="num">Atrasadas</th></tr></thead><tbody>
+  ${USERS.map(u=>{const a=S.acoes.filter(x=>x.resp===u.id),at=a.filter(x=>status(x)==="atr").length;return `<tr><td><b>${esc(u.nome)}</b></td><td class="small">${u.email}</td><td class="small">${esc(cargoDe(u))}</td><td><span class="pill">${pap[u.papel]}</span></td><td>${u.uc||"Todas"}</td><td class="num">${a.length}</td><td class="num">${at?`<b style="color:#9b2424">${at}</b>`:"0"}</td></tr>`}).join("")}
   </tbody></table></div><div style="padding:12px 16px"><button class="btn" onclick="toast('No sistema real: cadastro por e-mail, com papel e UC')">+ Convidar usuário</button></div></div>
   <div class="card"><h3>Permissões por papel</h3><p class="sub">Proposta para validação</p><table><thead><tr><th></th><th>GGUC</th><th>Gestor</th><th>Técnico</th></tr></thead><tbody>
   ${[["Ver painel geral (19 UCs)",1,0,0],["Ver painel da própria UC",1,1,1],["Lançar indicadores mensais",1,1,1],["Enviar lançamento à GGUC",1,1,0],["Atribuir responsável e prazo",1,1,0],["Atualizar situação das próprias ações",1,1,1],["Cadastrar plano de manejo e ações",1,0,0],["Configurar regras de e-mail",1,0,0],["Gerenciar usuários",1,0,0]]
