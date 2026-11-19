@@ -146,8 +146,11 @@ function relatorioUC(uc){
    ${ac.slice().sort((a,b)=>a.prog.localeCompare(b.prog)||a.prazo.localeCompare(b.prazo)).map(a=>`<tr><td>${esc(a.prog)}</td><td>${esc(a.ativ)}</td><td>${esc(a.meta)}</td><td>${esc(userById(a.resp).nome)}</td><td>${fmtD(a.prazo)}</td><td>${ST[status(a)]}</td><td>${a.pct}</td><td>${(S.evid||[]).filter(e=>e.acao===a.id).length}</td><td>${esc(a.fonte)}</td></tr>`).join("")}</tbody></table>`:""}
    ${regs.length?`<h2>A4. Registros de evidência dos indicadores</h2><table class="rp-t"><thead><tr><th>Data</th><th>Indicador</th><th>Registro</th><th>Anexos</th><th>Local</th><th>Responsável</th></tr></thead><tbody>
    ${regs.map(x=>`<tr><td>${fmtD(x.data)}</td><td>${esc(nomeInd(x.ind))}</td><td>${esc(resumoReg(x.ind,x))}</td><td>${x.anexos.length}</td><td>${x.lat!==null?x.lat.toFixed(4)+", "+x.lon.toFixed(4):"—"}</td><td>${esc(userById(x.autor).nome)}</td></tr>`).join("")}</tbody></table>`:""}
-   ${r?`<h2>A5. Imóveis do CAR na UC</h2><table class="rp-t"><thead><tr><th>Código do imóvel</th><th>Proprietário(a)</th><th>Município</th><th>Análise do CAR</th><th>Área (ha)</th><th>Na UC (ha)</th><th>Processo / etapa</th></tr></thead><tbody>
-   ${CAR.imoveis.features.filter(f=>f.properties.uc===uc).sort((a,b)=>b.properties.a_dentro-a.properties.a_dentro).map(f=>{const p=f.properties,pr=procDe(uc,p.cod);return `<tr><td style="font-size:6.8pt">${p.cod}</td><td>${veProprietario()?esc(proprietario(p.cod))+" (fictício)":"restrito"}</td><td>${esc(p.mun)}</td><td>${condInfo(p.cond)[1]}</td><td>${fmtN(p.a_imovel,1)}</td><td>${fmtN(p.a_dentro,1)}</td><td>${pr?esc(pr.tipo)+" — "+ETAPAS[grupoUC(uc)][pr.etapa]:"—"}</td></tr>`}).join("")}</tbody></table>`:""}
+   ${r?`<h2>A5. ${grupoUC(uc)==="PI"?"Regularização fundiária — imóveis do CAR dentro dos limites":"Imóveis do CAR na UC"}</h2><table class="rp-t"><thead><tr><th>Código do imóvel</th><th>Proprietário(a)</th><th>Município</th><th>Análise do CAR</th><th>Área (ha)</th><th>Na UC (ha)</th><th>Nº processo adm.</th><th>Etapa</th><th>Último andamento</th></tr></thead><tbody>
+   ${CAR.imoveis.features.filter(f=>f.properties.uc===uc).sort((a,b)=>b.properties.a_dentro-a.properties.a_dentro).map(f=>{const p=f.properties,pr=procDe(uc,p.cod);return `<tr><td style="font-size:6.8pt">${p.cod}</td><td>${veProprietario()?esc(proprietario(p.cod))+" (fictício)":"restrito"}</td><td>${esc(p.mun)}</td><td>${condInfo(p.cond)[1]}</td><td>${fmtN(p.a_imovel,1)}</td><td>${fmtN(p.a_dentro,1)}</td><td>${pr&&pr.edocs?esc(pr.edocs):"—"}</td><td>${pr?ETAPAS[grupoUC(uc)][pr.etapa]:"—"}</td><td>${(()=>{const a=ultAnd(pr);return a?fmtD(a.data)+" — "+esc(a.tipo):"—"})()}</td></tr>`}).join("")}</tbody></table>
+   ${(()=>{const P=CAR.imoveis.features.filter(f=>f.properties.uc===uc).map(f=>({f,p:procDe(uc,f.properties.cod)})).filter(x=>x.p&&x.p.and&&x.p.and.length);
+     return P.length?`<h2>A5b. ${grupoUC(uc)==="PI"?"Regularização fundiária — ":""}andamentos dos processos administrativos</h2><table class="rp-t"><thead><tr><th>Nº processo</th><th>Imóvel</th><th>Data</th><th>Andamento</th><th>Documento</th><th>Descrição</th></tr></thead><tbody>
+     ${P.flatMap(({f,p})=>p.and.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(a=>`<tr><td>${esc(p.edocs||"—")}</td><td style="font-size:6.8pt">${curto(f.properties.cod)}</td><td>${fmtD(a.data)}</td><td>${esc(a.tipo)}</td><td>${esc(a.doc||"")}</td><td>${esc(a.desc||"")}</td></tr>`)).join("")}</tbody></table>`:""})()}`:""}
    ${sp.length?`<h2>A6. Espécies ameaçadas</h2><table class="rp-t"><thead><tr><th>Grupo</th><th>Família</th><th>Espécie</th><th>Nome popular</th><th>ES</th><th>Brasil</th><th>Evidência</th></tr></thead><tbody>
    ${sp.filter(ehAmea).sort((a,b)=>a.g.localeCompare(b.g)||a.s.localeCompare(b.s)).map(x=>`<tr><td>${x.g}</td><td>${esc(x.f)}</td><td><i>${esc(x.s)}</i></td><td>${esc(x.p)}</td><td>${x.es||"—"}</td><td>${x.br||"—"}</td><td>${x.ev.join(", ")}</td></tr>`).join("")}</tbody></table>
    <p class="rp-note">A lista completa de espécies (${sp.length}) pode ser baixada em planilha no módulo Biodiversidade. Coordenadas de ocorrência não constam neste relatório.</p>`:""}
@@ -250,3 +253,68 @@ function relatorioRede(){
   const bar=document.createElement("div");bar.style.cssText="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;align-items:center";
   bar.innerHTML=`<span class="small muted">Dashboard colorido da rede + anexo com dados brutos (A4 deitado)</span><button class="btn primary" id="btnPdfRede">⬇ Exportar PDF do painel geral</button>`;
   $("#view").prepend(bar);$("#btnPdfRede").onclick=()=>{toast("Na janela de impressão, escolha “Salvar como PDF”");relatorioRede()}};}
+
+// ======================= FICHA POR PROPRIETÁRIO =======================
+function gMapaImovel(uc,cod,{w=420,h=300}={}){
+  const f=limiteDe(uc);if(!f)return "";const b=bbox(f.geometry),k=Math.cos((b[1]+b[3])/2*Math.PI/180),sx=(b[2]-b[0])*k,sy=b[3]-b[1],sc=Math.min((w-20)/sx,(h-20)/sy),ox=(w-sx*sc)/2,oy=(h-sy*sc)/2;
+  const P=([lon,lat])=>[(ox+(lon-b[0])*k*sc).toFixed(1),(oy+(b[3]-lat)*sc).toFixed(1)];
+  const path=g=>(g.type==="Polygon"?[g.coordinates]:g.coordinates).map(pl=>pl.map(r=>"M"+r.map(c=>P(c).join(",")).join("L")+"Z").join("")).join("");
+  let s=`<svg viewBox="0 0 ${w} ${h}" width="100%"><rect width="${w}" height="${h}" fill="#f3f6f1" rx="8"/>`;
+  CAR.imoveis.features.filter(x=>x.properties.uc===uc).forEach(x=>{const me=x.properties.cod===cod;s+=`<path d="${path(x.geometry)}" fill="${me?"#d03b3b":"#d9dcd6"}" fill-opacity="${me?.9:.6}" stroke="${me?"#7a1010":"#fff"}" stroke-width="${me?1.6:.5}"/>`});
+  s+=`<path d="${path(f.geometry)}" fill="none" stroke="#1f5c3f" stroke-width="2.2"/>`;
+  return s+`<text x="${w-12}" y="20" font-size="12" font-weight="700" text-anchor="end">N ↑</text></svg>`;
+}
+function relatorioProprietario(nome){
+  if(!veProprietario()){toast("Seu cargo não tem acesso aos dados de proprietários");return}
+  const im=CAR.imoveis.features.filter(f=>proprietario(f.properties.cod)===nome);
+  if(!im.length){toast("Nenhum imóvel encontrado");return}
+  const procs=im.map(f=>procDe(f.properties.uc,f.properties.cod)).filter(Boolean);
+  const kpi=(cor,val,lb)=>`<div class="rp-k" style="background:${cor}"><b>${val}</b><span>${lb}</span></div>`;
+  const html=`<section class="rp-page">
+   <div class="rp-banner"><img src="iema-branco.png" alt="IEMA"><div><div class="rp-sis">SisGAP-ES · Regularização fundiária · Ficha do proprietário</div><h1>${esc(nome)}</h1>
+     <div class="rp-sub">Nome fictício (versão de teste) · Emitido em ${new Date().toLocaleDateString("pt-BR")} por ${esc(user().nome)} · Documento de uso interno — contém dados pessoais (LGPD)</div></div>
+     <div class="rp-tag">USO INTERNO<br><small>dados pessoais</small></div></div>
+   <div class="rp-kpis" style="grid-template-columns:repeat(5,1fr)">
+     ${kpi("#1f5c3f",im.length,"imóvel(is) do CAR em UC")}${kpi("#2a78d6",fmtN(im.reduce((t,f)=>t+f.properties.a_imovel,0),1)+" ha","área total declarada")}
+     ${kpi("#d03b3b",fmtN(im.reduce((t,f)=>t+f.properties.a_dentro,0),1)+" ha","área dentro de UC")}${kpi("#eb6834",procs.length,"processo(s) administrativo(s)")}
+     ${kpi("#6250d6",procs.reduce((t,p)=>t+(p.and||[]).length,0),"andamentos registrados")}</div>
+   ${im.map(f=>{const p=f.properties,uc=p.uc,u=ucObj(uc),pr=procDe(uc,p.cod),gp=grupoUC(uc);
+     return `<div class="rp-c" style="break-inside:avoid"><div class="rp-ch" style="border-color:${gp==="PI"?"#9b2424":"#1f5c3f"}"><span style="background:${gp==="PI"?"#9b2424":"#1f5c3f"}"></span>${gp==="PI"?"REGULARIZAÇÃO FUNDIÁRIA · ":""}${esc(u.n)} (${uc})</div>
+      <div class="rp-g2" style="grid-template-columns:1fr 1.3fr;margin:0">
+       <div>${gMapaImovel(uc,p.cod)}<div class="rp-leg"><span><i style="background:#d03b3b"></i>Imóvel (parte dentro da UC)</span><span><i style="background:#d9dcd6"></i>Outros imóveis do CAR</span><span><i style="background:#fff;border:2px solid #1f5c3f"></i>Limite da UC</span></div></div>
+       <div><table class="rp-t"><tbody>
+        <tr><td style="width:38%"><b>Código do imóvel (CAR)</b></td><td style="font-size:7pt">${p.cod}</td></tr>
+        <tr><td><b>Município</b></td><td>${esc(p.mun)}</td></tr>
+        <tr><td><b>Situação no SICAR</b></td><td>${p.sit}</td></tr>
+        <tr><td><b>Análise do CAR</b></td><td>${esc(p.cond)}</td></tr>
+        <tr><td><b>Área do imóvel</b></td><td>${fmtN(p.a_imovel,2)} ha</td></tr>
+        <tr><td><b>Área dentro da UC</b></td><td><b>${fmtN(p.a_dentro,2)} ha</b> (${p.pct===null?"—":fmtN(p.pct,1)+"% do imóvel"})</td></tr>
+        <tr><td><b>Regra da categoria</b></td><td>${esc(CAR.resumo[uc]?CAR.resumo[uc].moradores:"")}</td></tr>
+        <tr><td><b>Nº do processo administrativo</b></td><td>${pr&&pr.edocs?esc(pr.edocs):"—"}</td></tr>
+        <tr><td><b>Tipo de processo</b></td><td>${pr?esc(pr.tipo):"sem processo aberto"}</td></tr>
+        <tr><td><b>Etapa atual</b></td><td>${pr?`${pr.etapa+1}. ${ETAPAS[gp][pr.etapa]}`:"—"}</td></tr>
+        <tr><td><b>Responsável · prazo</b></td><td>${pr?esc(userById(pr.resp).nome)+(pr.prazo?" · "+fmtD(pr.prazo):""):"—"}</td></tr>
+        <tr><td><b>Próximos passos</b></td><td>${pr?esc(pr.obs||"—"):"—"}</td></tr></tbody></table>
+       ${pr?`<div style="display:flex;gap:3px;margin:6px 0">${ETAPAS[gp].map((e,i)=>`<div style="flex:1;text-align:center;font-size:6.6pt;padding:4px 2px;border-radius:4px;background:${i<=pr.etapa?etapaCor(gp,i):"#eef0ec"};color:${i<=pr.etapa&&i>0?"#fff":"#4d5a51"}">${i+1}. ${e}</div>`).join("")}</div>`:""}
+       </div></div>
+      ${pr&&pr.and&&pr.and.length?`<h2 style="margin-top:6px">Andamentos do processo</h2><table class="rp-t"><thead><tr><th>Data</th><th>Andamento</th><th>Documento</th><th>Descrição</th><th>Registrado por</th><th>Anexos</th></tr></thead><tbody>
+       ${pr.and.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(a=>`<tr><td>${fmtD(a.data)}</td><td><b>${esc(a.tipo)}</b></td><td>${esc(a.doc||"")}</td><td>${esc(a.desc||"")}</td><td>${esc(userById(a.autor).nome)}</td><td>${(a.anexos||[]).map(x=>esc(x.nome)).join(", ")}</td></tr>`).join("")}</tbody></table>`:'<div class="rp-note">Nenhum andamento registrado.</div>'}
+     </div>`}).join("")}
+   <div class="rp-foot">SisGAP-ES · IEMA/GGUC · CAR: SICAR (consulta pública, nov/2026) × limites IEMA 2026 · Proprietário com nome fictício (versão de teste). Gerado em ${new Date().toLocaleString("pt-BR")}.</div></section>`;
+  let el=document.getElementById("printArea");if(!el){el=document.createElement("div");el.id="printArea";document.body.appendChild(el)}
+  el.innerHTML=html;
+  const t=document.title;document.title=`SisGAP-ES_proprietario_${nome.replace(/[^\wÀ-ú]+/g,"_")}`;
+  setTimeout(()=>{try{window.print()}catch(e){toast("Use Ctrl+P / Cmd+P e escolha “Salvar como PDF”")}document.title=t},350);
+}
+// botões: na ficha do imóvel e na lista (escolher proprietário)
+{const _fi=fichaImovel; fichaImovel=function(uc,cod){_fi(uc,cod);if(!veProprietario())return;
+  const box=document.querySelector(".drawer .fld .ro");if(!box)return;
+  const b=document.createElement("button");b.className="btn sm";b.style.marginTop="6px";b.textContent="⬇ Exportar ficha do proprietário (PDF)";
+  b.onclick=()=>{toast("Na janela de impressão, escolha “Salvar como PDF”");relatorioProprietario(proprietario(cod))};box.parentNode.appendChild(b)};}
+{const _vf=vFundiario; vFundiario=function(){_vf();const uc=ucAtual();if(!uc||!CAR.resumo[uc]||!veProprietario())return;
+  const csv=document.getElementById("fCsv");if(!csv)return;
+  const nomes=[...new Set(CAR.imoveis.features.filter(f=>f.properties.uc===uc).map(f=>proprietario(f.properties.cod)))].sort((a,b)=>a.localeCompare(b));
+  const w=document.createElement("span");w.style.cssText="display:inline-flex;gap:6px;align-items:center";
+  w.innerHTML=`<select id="fProp" class="btn sm" style="max-width:220px"><option value="">Exportar por proprietário…</option>${nomes.map(n=>`<option>${esc(n)}</option>`).join("")}</select><button class="btn sm" id="fPropGo">⬇ PDF</button>`;
+  csv.parentNode.insertBefore(w,csv);
+  $("#fPropGo").onclick=()=>{const n=$("#fProp").value;if(!n){toast("Escolha o proprietário");return}toast("Na janela de impressão, escolha “Salvar como PDF”");relatorioProprietario(n)}};}

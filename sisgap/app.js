@@ -12,7 +12,7 @@ const ST_COLOR = {conc:"var(--good)",and:"var(--prog)",venc:"var(--warning)",atr
 const ST_ORDER = ["conc","and","venc","atr","nao"];
 
 // ---------- persistência ----------
-const DATA_VER="2026-11-19d";
+const DATA_VER="2026-11-19e";
 try{if(localStorage.getItem("sisgap:ver")!==JSON.stringify(DATA_VER)){Object.keys(localStorage).filter(k=>k.startsWith("sisgap:")).forEach(k=>localStorage.removeItem(k));localStorage.setItem("sisgap:ver",JSON.stringify(DATA_VER))}}catch(e){}
 const LS = {
   get(k,d){try{const v=localStorage.getItem("sisgap:"+k);return v?JSON.parse(v):d}catch(e){return d}},

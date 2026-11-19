@@ -16,7 +16,9 @@ const TIPOS = {
   PI:["Regularização fundiária (desapropriação/indenização)","Compensação de reserva legal (doação de área)","Termo de compromisso com ocupante","Acompanhamento"],
   US:["Regularização ambiental (PRA)","Termo de compromisso","Licenciamento / anuência da UC","Acompanhamento"]
 };
-const grupoUC = uc => ucObj(uc).g;            // "PI" | "US"
+const grupoUC = uc => ucObj(uc).g;
+const TIPOS_AND=["Abertura do processo","Despacho","Ofício enviado","Ofício recebido","Notificação do ocupante","Vistoria / levantamento de campo","Certidão de matrícula (cartório)","Laudo de avaliação","Parecer jurídico (PGE)","Proposta de indenização","Acordo / termo assinado","Publicação no Diário Oficial","Pagamento / depósito judicial","Escritura / registro em cartório","Imissão na posse","Ação judicial (desapropriação)","Arquivamento","Outro"];
+const ultAnd = pr => pr&&pr.and&&pr.and.length?pr.and.slice().sort((a,b)=>b.data.localeCompare(a.data))[0]:null;            // "PI" | "US"
 const curto = c => c.replace(/^ES-\d{7}-/,"").slice(0,8)+"…";
 // Proprietário — NOMES FICTÍCIOS para a versão de teste (na versão real vêm do SICAR, com acesso restrito)
 const _NOMES=["Ana","Antônio","Benedita","Carlos","Cláudia","Davi","Elza","Fábio","Geralda","Hélio","Irene","Jorge","Joana","Lúcia","Marcos","Neuza","Osmar","Paula","Raimundo","Rosa","Sebastião","Sônia","Valter","Zilda"];
@@ -33,10 +35,13 @@ function seedFund(){
   const pick=(uc,n)=>CAR.imoveis.features.filter(f=>f.properties.uc===uc&&f.properties.relevante).sort((a,b)=>b.properties.a_dentro-a.properties.a_dentro).slice(0,n);
   const o={}, put=(f,d)=>o[f.properties.cod+"|"+f.properties.uc]=Object.assign({hist:[],simulado:true},d);
   const [p1,p2]=pick("PEI",2), [f1,f2]=pick("PEFG",2), [a1]=pick("APAGO",1), [m1]=pick("ARIEMV",1);
-  if(p1)put(p1,{tipo:TIPOS.PI[0],etapa:2,edocs:"2026-XXXXX (exemplo)",resp:"u7",prazo:"2027-03-31",obs:"Exemplo para validação."});
+  const A=(d,t,doc,desc)=>({id:"an"+d+t.length,data:d,tipo:t,doc,desc,anexos:[],autor:"u7",exemplo:true});
+  if(p1)put(p1,{tipo:TIPOS.PI[0],etapa:2,edocs:"2026-XXXXX (exemplo)",resp:"u7",prazo:"2027-03-31",obs:"Exemplo para validação.",
+    and:[A("2026-02-10","Abertura do processo","Memorando 012/2026","Abertura do processo de regularização fundiária do imóvel."),A("2026-04-03","Certidão de matrícula (cartório)","Matrícula nº 0000 (exemplo)","Certidão de inteiro teor anexada; domínio confirmado."),A("2026-07-22","Notificação do ocupante","Notificação 045/2026","Ocupante notificado sobre a regularização e a vistoria."),A("2026-10-15","Vistoria / levantamento de campo","Relatório de vistoria 18/2026","Vistoria para o laudo de avaliação; benfeitorias levantadas.")]});
   if(p2)put(p2,{tipo:TIPOS.PI[2],etapa:1,edocs:"",resp:"u8",prazo:"2026-12-10",obs:"Exemplo para validação."});
   if(f1)put(f1,{tipo:TIPOS.PI[0],etapa:0,edocs:"",resp:"u5",prazo:"2026-12-31",obs:"Ligado à ação “Enviar levantamento fundiário à instância superior” (PM, Tabela 6)."});
-  if(f2)put(f2,{tipo:TIPOS.PI[1],etapa:3,edocs:"2025-YYYYY (exemplo)",resp:"u5",prazo:"2026-11-20",obs:"Exemplo para validação."});
+  if(f2)put(f2,{tipo:TIPOS.PI[1],etapa:3,edocs:"2025-YYYYY (exemplo)",resp:"u5",prazo:"2026-11-20",obs:"Exemplo para validação.",
+    and:[A("2025-09-01","Abertura do processo","Memorando 101/2025","Proposta de compensação de reserva legal por doação de área."),A("2026-03-18","Laudo de avaliação","Laudo 07/2026","Área avaliada."),A("2026-09-30","Proposta de indenização","Ofício 233/2026","Proposta enviada ao proprietário; prazo de resposta 60 dias.")]});
   if(a1)put(a1,{tipo:TIPOS.US[1],etapa:1,edocs:"",resp:"u2",prazo:"2027-02-28",obs:"Exemplo para validação."});
   if(m1)put(m1,{tipo:TIPOS.US[0],etapa:2,edocs:"",resp:"u4",prazo:"2027-06-30",obs:"Exemplo para validação."});
   return o;
@@ -49,7 +54,8 @@ const procDe = (uc,cod) => S.fund[cod+"|"+uc];
 let FF={cond:"",proc:"",q:"",ord:"a_dentro"}, _fmap=null;
 function vFundiario(){
   const uc=ucAtual();
-  title("Fundiário — imóveis do CAR e processos", uc?`${uc} — ${ucObj(uc).n}`:"UCs da versão de teste");
+  const PIu=uc&&ucObj(uc)&&ucObj(uc).g==="PI";
+  title(PIu?"Regularização fundiária — imóveis do CAR e processos administrativos":"Fundiário — imóveis do CAR e processos", uc?`${uc} — ${ucObj(uc).n}`:"UCs da versão de teste");
   if(!uc||!CAR.resumo[uc]){
     $("#view").innerHTML=`<div class="info" style="margin-bottom:16px">Módulo ativo nas UCs da versão de teste. Escolha uma UC:</div>
     <div class="grid g4">${GEO_UCS.map(s=>{const r=CAR.resumo[s];return `<div class="uc-tile" onclick="S.uc='${s}';save();route()"><b>${s}</b><div class="meta">${esc(ucObj(s).n)}</div>
@@ -70,7 +76,7 @@ function vFundiario(){
     <div class="card kpi"><div class="lbl">Imóveis do CAR na UC</div><div class="val">${r.n_relevante}</div><div class="foot"><b>${r.n_inteiro_dentro}</b> inteiros dentro · ${r.n_at} ativos, ${r.n_pe} pendentes</div></div>
     <div class="card kpi"><div class="lbl">Área declarada dentro da UC</div><div class="val">${fmt(r.area_car_ha)} <span style="font-size:16px;color:var(--muted)">ha</span></div><div class="foot"><b>${fmt(r.pct_uc,1)}%</b> da UC (${fmt(r.area_uc_ha)} ha) · sobreposição entre cadastros ${fmt(r.sobreposicao_cad_ha)} ha</div></div>
     <div class="card kpi"><div class="lbl">População residente (Censo 2022)</div><div class="val">${esc(r.pop_total)}</div><div class="foot">indígenas: <b>${esc(r.pop_indigena)}</b> · quilombolas: <b>${esc(r.pop_quilombola)}</b> · ${fmt(r.dens_hab_km2,1)} hab/km²</div></div>
-    <div class="card kpi"><div class="lbl">Processos cadastrados</div><div class="val">${procs.length}<span style="font-size:18px;color:var(--muted)">/${r.n_relevante}</span></div><div class="foot"><b>${concl}</b> concluídos · ${atras?`<b style="color:#9b2424">${atras} com prazo vencido</b>`:"nenhum com prazo vencido"}</div></div>
+    <div class="card kpi"><div class="lbl">${gp==="PI"?"Processos de regularização fundiária":"Processos cadastrados"}</div><div class="val">${procs.length}<span style="font-size:18px;color:var(--muted)">/${r.n_relevante}</span></div><div class="foot"><b>${concl}</b> concluídos · <b>${procs.reduce((t,p)=>t+((p.and||[]).length),0)}</b> andamentos · ${atras?`<b style="color:#9b2424">${atras} com prazo vencido</b>`:"nenhum vencido"}</div></div>
   </div>
   <div class="grid g2" style="margin-top:16px">
     <div class="card"><h3>Situação da análise do CAR</h3><p class="sub">Pelo órgão ambiental, imóveis com área relevante na UC</p>
@@ -86,7 +92,7 @@ function vFundiario(){
       <label style="display:flex;gap:8px;align-items:center;padding:10px 0 4px"><input type="checkbox" id="fSat"> Imagem de satélite</label>
       <p class="muted" style="line-height:1.45;margin-top:10px">Imóveis com menos de 1 ha e menos de 10% da área dentro da UC aparecem tracejados (sobreposição marginal).</p></div></div></div>
   <div class="card" style="margin-top:16px;padding:0">
-    <div style="padding:14px 16px 0"><h3>Imóveis e processos</h3><p class="sub">${feats.length} recortes de imóveis do CAR · ${esc(CAR.fonte)}</p>
+    <div style="padding:14px 16px 0">${gp==="PI"?`<div style="display:inline-block;background:#9b2424;color:#fff;font-weight:800;letter-spacing:.06em;padding:4px 10px;border-radius:6px;font-size:12px;margin-bottom:6px">REGULARIZAÇÃO FUNDIÁRIA</div><h3>Imóveis do CAR dentro dos limites da UC e processos administrativos</h3>`:`<h3>Imóveis e processos</h3>`}<p class="sub">${feats.length} recortes de imóveis do CAR · ${esc(CAR.fonte)}</p>
     <div class="note" style="margin:8px 0 10px"><b>Proprietários com nomes fictícios</b> nesta versão de teste. No sistema real, o nome vem do SICAR (acesso governamental) e só aparece para GGUC, gestor(a) e analista; guarda-parques e estagiários veem “restrito”, conforme a LGPD.${veProprietario()?"":" <b>Seu cargo não tem acesso a este dado.</b>"}</div>
     <div class="filters"><input id="fq" placeholder="Código, proprietário(a) ou município" value="${esc(FF.q)}" style="width:240px">
       <select id="fc"><option value="">Toda situação do CAR</option>${COND.map(c=>`<option value="${esc(c[0])}" ${FF.cond===c[0]?"selected":""}>${c[1]}</option>`).join("")}</select>
@@ -98,13 +104,16 @@ function vFundiario(){
   const drawTab=()=>{
     let L=feats.filter(f=>{const p=f.properties,pr=procDe(uc,p.cod);return (!FF.cond||p.cond===FF.cond)&&(!FF.proc||(FF.proc==="com"?!!pr:!pr))&&(!FF.q||(p.cod+" "+p.mun+" "+(veProprietario()?proprietario(p.cod):"")).toLowerCase().includes(FF.q.toLowerCase()))});
     L.sort((a,b)=>FF.ord==="prazo"?((procDe(uc,a.properties.cod)||{}).prazo||"9").localeCompare((procDe(uc,b.properties.cod)||{}).prazo||"9"):(b.properties[FF.ord]||0)-(a.properties[FF.ord]||0));
-    $("#fTab").innerHTML=`<table><thead><tr><th>Imóvel (código CAR)</th><th>Proprietário(a)</th><th>Município</th><th>Situação CAR</th><th>Análise</th><th class="num">Área do imóvel (ha)</th><th class="num">Dentro da UC (ha)</th><th class="num">% dentro</th><th>Processo</th><th>Prazo</th></tr></thead><tbody>
+    $("#fTab").innerHTML=`<table><thead><tr><th>Imóvel (código CAR)</th><th>Proprietário(a)</th><th>Município</th><th>Análise do CAR</th><th class="num">Área do imóvel (ha)</th><th class="num">Dentro da UC (ha)</th><th class="num">% dentro</th><th>Nº do processo adm.</th><th>Etapa</th><th>Último andamento</th><th>Prazo</th><th></th></tr></thead><tbody>
     ${L.map(f=>{const p=f.properties,pr=procDe(uc,p.cod),ci=condInfo(p.cond);const venc=pr&&pr.prazo&&dias(pr.prazo)<0&&pr.etapa<ETAPAS[gp].length-1;
       return `<tr style="cursor:pointer" onclick="fichaImovel('${uc}','${p.cod}')"><td><span title="${p.cod}" style="font-family:ui-monospace,monospace;font-size:12px">${curto(p.cod)}</span>${p.relevante?"":' <span class="pill" style="font-size:10px">marginal</span>'}</td>
-      <td class="small">${propCel(p.cod)}</td><td class="small">${esc(p.mun)}</td><td class="small">${p.sit}</td><td><span class="pill"><i style="background:${ci[2]}"></i>${ci[1]}</span></td>
+      <td class="small">${propCel(p.cod)}</td><td class="small">${esc(p.mun)}</td><td><span class="pill"><i style="background:${ci[2]}"></i>${ci[1]}</span><div class="small muted">${p.sit}</div></td>
       <td class="num">${fmt(p.a_imovel,1)}</td><td class="num"><b>${fmt(p.a_dentro,1)}</b></td><td class="num">${p.pct===null?"—":fmt(p.pct,0)+"%"}</td>
-      <td class="small">${pr?`<b>${ETAPAS[gp][pr.etapa]}</b><div class="muted">${esc(pr.tipo)}${pr.simulado?" · exemplo":""}</div>`:'<span class="muted">—</span>'}</td>
-      <td class="small" style="white-space:nowrap">${pr&&pr.prazo?`${fmtD(pr.prazo)}${venc?'<div style="color:#9b2424;font-weight:600">vencido</div>':""}`:""}</td></tr>`}).join("")}</tbody></table>`;
+      <td class="small" style="font-family:ui-monospace,monospace">${pr&&pr.edocs?esc(pr.edocs):'<span class="muted" style="font-family:inherit">—</span>'}</td>
+      <td class="small">${pr?`<b>${ETAPAS[gp][pr.etapa]}</b><div class="muted">${esc(pr.tipo)}${pr.simulado?" · exemplo":""}</div>`:'<span class="muted">sem processo</span>'}</td>
+      <td class="small">${(()=>{const u=ultAnd(pr);return u?`<b>${fmtD(u.data)}</b> · ${esc(u.tipo)}<div class="muted">${(pr.and||[]).length} andamento(s)</div>`:'<span class="muted">—</span>'})()}</td>
+      <td class="small" style="white-space:nowrap">${pr&&pr.prazo?`${fmtD(pr.prazo)}${venc?'<div style="color:#9b2424;font-weight:600">vencido</div>':""}`:""}</td>
+      <td><span class="btn sm" style="white-space:nowrap">${pr?"Andamentos ›":(gp==="PI"?"Abrir processo ›":"Abrir ›")}</span></td></tr>`}).join("")}</tbody></table>`;
   };
   drawTab();
   $("#fq").oninput=e=>{FF.q=e.target.value;drawTab()};
@@ -112,8 +121,8 @@ function vFundiario(){
   $("#fp").onchange=e=>{FF.proc=e.target.value;drawTab()};
   $("#fo").onchange=e=>{FF.ord=e.target.value;drawTab()};
   $("#fCsv").onclick=()=>{
-    const head=["uc","cod_imovel","proprietario_ficticio","municipio","situacao_car","analise_car","area_imovel_ha","area_dentro_uc_ha","pct_dentro","tipo_processo","etapa","num_edocs","responsavel","prazo","observacoes"];
-    const rows=feats.map(f=>{const p=f.properties,pr=procDe(uc,p.cod)||{};return [uc,p.cod,veProprietario()?proprietario(p.cod):"restrito",p.mun,p.sit,p.cond,p.a_imovel,p.a_dentro,p.pct,pr.tipo||"",pr.etapa!=null?ETAPAS[gp][pr.etapa]:"",pr.edocs||"",pr.resp?userById(pr.resp).nome:"",pr.prazo||"",pr.obs||""]});
+    const head=["uc","cod_imovel","proprietario_ficticio","municipio","situacao_car","analise_car","area_imovel_ha","area_dentro_uc_ha","pct_dentro","num_processo_adm","tipo_processo","etapa","n_andamentos","ultimo_andamento_data","ultimo_andamento","responsavel","prazo","observacoes"];
+    const rows=feats.map(f=>{const p=f.properties,pr=procDe(uc,p.cod)||{};const u=ultAnd(pr);return [uc,p.cod,veProprietario()?proprietario(p.cod):"restrito",p.mun,p.sit,p.cond,p.a_imovel,p.a_dentro,p.pct,pr.edocs||"",pr.tipo||"",pr.etapa!=null?ETAPAS[gp][pr.etapa]:"",(pr.and||[]).length,u?u.data:"",u?u.tipo+" — "+(u.desc||""):"",pr.resp?userById(pr.resp).nome:"",pr.prazo||"",pr.obs||""]});
     const csv="﻿"+[head,...rows].map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(";")).join("\n");
     const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=`sisgap_fundiario_${uc}.csv`;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),300);toast("Planilha baixada");
   };
@@ -154,23 +163,59 @@ function fichaImovel(uc,cod){
     </div>
     <div class="fld"><label>Análise do CAR pelo órgão ambiental</label><div class="ro"><span class="pill"><i style="background:${condInfo(p.cond)[2]}"></i>${esc(p.cond)}</span></div></div>
     <p class="small"><a href="https://consultapublica.car.gov.br/publico/imoveis/index" target="_blank" rel="noopener">Consultar no SICAR (consulta pública) ↗</a> · copie o código acima</p>
-    <h3 style="margin:20px 0 4px;font-size:15px">Processo ${gp==="PI"?"de regularização fundiária":"de regularização / acompanhamento"}</h3>
+    ${gp==="PI"?'<div style="display:inline-block;background:#9b2424;color:#fff;font-weight:800;letter-spacing:.06em;padding:3px 9px;border-radius:6px;font-size:11px;margin-top:18px">REGULARIZAÇÃO FUNDIÁRIA</div>':""}
+    <h3 style="margin:${gp==="PI"?"6px":"20px"} 0 4px;font-size:15px">Processo administrativo ${gp==="PI"?"de regularização fundiária":"de regularização / acompanhamento"}</h3>
     ${pr.simulado?'<div class="note" style="margin:6px 0">Processo de exemplo, criado para a validação.</div>':""}
     <div class="fld"><label>Tipo de processo</label><select id="pTipo" ${pode?"":"disabled"}>${TIPOS[gp].map(t=>`<option ${pr.tipo===t?"selected":""}>${t}</option>`).join("")}</select></div>
     <div class="fld"><label>Etapa</label><div style="display:flex;flex-direction:column;gap:4px" id="pEt">${ETAPAS[gp].map((e,i)=>`<label style="display:flex;gap:10px;align-items:center;padding:7px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-weight:${i===pr.etapa?700:400};background:${i===pr.etapa?"var(--brand-soft)":"#fff"};margin:0"><input type="radio" style="width:auto;flex:0 0 auto;margin:0" name="pEt" value="${i}" ${i===pr.etapa?"checked":""} ${pode?"":"disabled"}><span style="width:20px;height:20px;border-radius:50%;background:${i<=pr.etapa?etapaCor(gp,i):"#e3e6df"};color:#fff;font-size:11px;display:grid;place-items:center;flex:0 0 20px">${i+1}</span>${e}</label>`).join("")}</div></div>
     <div class="grid g2" style="gap:12px">
-      <div class="fld"><label>Nº do processo (E-Docs)</label><input id="pEd" value="${esc(pr.edocs)}" placeholder="Ex.: 2026-ABC12" ${pode?"":"disabled"}></div>
+      <div class="fld"><label>Nº do processo administrativo (E-Docs)</label><input id="pEd" value="${esc(pr.edocs)}" placeholder="Ex.: 2026-ABC12" ${pode?"":"disabled"}></div>
       <div class="fld"><label>Prazo da etapa</label><input type="date" id="pPz" value="${pr.prazo||""}" ${pode?"":"disabled"}></div>
     </div>
     <div class="fld"><label>Responsável</label><select id="pRs" ${pode?"":"disabled"}>${equipe.map(u=>`<option value="${u.id}" ${u.id===pr.resp?"selected":""}>${esc(u.nome)}</option>`).join("")}</select></div>
     <div class="fld"><label>Próximos passos / observações</label><textarea id="pOb" placeholder="Ex.: aguardando certidão de inteiro teor; vistoria marcada…" ${pode?"":"disabled"}>${esc(pr.obs)}</textarea></div>
-    ${pr.hist&&pr.hist.length?`<div class="fld"><label>Histórico</label>${pr.hist.slice(0,8).map(h=>`<div class="small" style="padding:4px 0;border-bottom:1px solid var(--line)"><span class="muted">${new Date(h.q).toLocaleString("pt-BR")}</span> · ${esc(h.t)}</div>`).join("")}</div>`:""}
+    <div class="fld"><label style="display:flex;justify-content:space-between;align-items:center">Andamentos do processo (${(pr.and||[]).length})${pode?'<button class="btn primary sm" id="aNovo" type="button">+ Incluir andamento</button>':""}</label>
+      <div id="aForm"></div>
+      <div style="border-left:3px solid var(--brand-soft);margin-left:6px;padding-left:12px">${(pr.and||[]).slice().sort((a,b)=>b.data.localeCompare(a.data)).map(a=>`<div style="position:relative;padding:6px 0 10px">
+        <span style="position:absolute;left:-19px;top:9px;width:11px;height:11px;border-radius:50%;background:var(--brand);border:2px solid #fff"></span>
+        <div class="small"><b>${fmtD(a.data)}</b> · <b style="color:var(--brand)">${esc(a.tipo)}</b>${a.doc?` · <span style="font-family:ui-monospace,monospace">${esc(a.doc)}</span>`:""}${a.exemplo?' <span class="muted">· exemplo</span>':""}</div>
+        ${a.desc?`<div class="small" style="margin-top:2px">${esc(a.desc)}</div>`:""}
+        <div class="small muted">${esc(userById(a.autor).nome)}${a.anexos&&a.anexos.length?` · 📎 ${a.anexos.map(x=>esc(x.nome)).join(", ")}`:""}${a.etapa!=null?` · etapa → ${ETAPAS[gp][a.etapa]}`:""}${pode?` · <a href="#" data-adel="${a.id}" style="color:#9b2424">excluir</a>`:""}</div></div>`).join("")||'<div class="small muted" style="padding:6px 0">Nenhum andamento registrado.</div>'}</div></div>
+    ${pr.hist&&pr.hist.length?`<div class="fld"><label>Histórico de alterações</label>${pr.hist.slice(0,8).map(h=>`<div class="small" style="padding:4px 0;border-bottom:1px solid var(--line)"><span class="muted">${new Date(h.q).toLocaleString("pt-BR")}</span> · ${esc(h.t)}</div>`).join("")}</div>`:""}
     <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">${pode?`<button class="btn primary" id="pSave">${S.fund[k]?"Salvar processo":"Abrir processo"}</button>`:""}${S.fund[k]&&pode?`<button class="btn" id="pDel">Excluir processo</button>`:""}</div>
   </div></div>`;
   const close=()=>$("#drawerRoot").innerHTML="";
   $("#dX").onclick=close;$("#dbg").onclick=e=>{if(e.target.id==="dbg")close()};
+  const procAtual=()=>({tipo:$("#pTipo").value,etapa:+document.querySelector('input[name="pEt"]:checked').value,edocs:$("#pEd").value.trim(),prazo:$("#pPz").value,resp:$("#pRs").value,obs:$("#pOb").value,hist:pr.hist||[],and:pr.and||[],simulado:false});
+  let anexosAnd=[];
+  if($("#aNovo"))$("#aNovo").onclick=()=>{
+    $("#aForm").innerHTML=`<div class="card" style="background:var(--surface-2);margin:8px 0 12px;padding:12px">
+      <div class="grid g2" style="gap:10px"><div class="fld" style="margin:0"><label>Data</label><input type="date" id="aDt" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="fld" style="margin:0"><label>Tipo de andamento</label><select id="aTp">${TIPOS_AND.map(t=>`<option>${t}</option>`).join("")}</select></div></div>
+      <div class="fld" style="margin:10px 0 0"><label>Nº do documento (ofício, despacho, memorando…)</label><input id="aDoc" placeholder="Ex.: Ofício 123/2026"></div>
+      <div class="fld" style="margin:10px 0 0"><label>Descrição</label><textarea id="aDs" placeholder="O que aconteceu e o próximo passo"></textarea></div>
+      <div class="fld" style="margin:10px 0 0"><label>Atualizar a etapa do processo para (opcional)</label><select id="aEt"><option value="">— manter a etapa atual —</option>${ETAPAS[gp].map((e,i)=>`<option value="${i}">${i+1}. ${e}</option>`).join("")}</select></div>
+      <div class="fld" style="margin:10px 0 0"><label>Anexos</label><div id="aAnx" class="small muted">Nenhum anexo.</div>
+        <label class="btn sm" style="display:inline-flex;gap:6px;margin-top:6px;cursor:pointer">📎 Anexar<input type="file" id="aUp" multiple accept="image/*,application/pdf,.doc,.docx,.odt" style="display:none"></label></div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" id="aSave" type="button">Salvar andamento</button><button class="btn" id="aCanc" type="button">Cancelar</button></div></div>`;
+    $("#aCanc").onclick=()=>{$("#aForm").innerHTML="";anexosAnd=[]};
+    $("#aUp").onchange=async e=>{for(const f of e.target.files){const a=await lerArquivo(f);anexosAnd.push({nome:a.nome,tipo:a.tipo,thumb:a.thumb})}$("#aAnx").innerHTML=anexosAnd.map(a=>`📎 ${esc(a.nome)}`).join("<br>")};
+    $("#aSave").onclick=()=>{
+      const dt=$("#aDt").value;if(!dt){toast("Informe a data");return}
+      const novo=procAtual();const et=$("#aEt").value;
+      const an={id:"an"+Date.now(),data:dt,tipo:$("#aTp").value,doc:$("#aDoc").value.trim(),desc:$("#aDs").value.trim(),anexos:anexosAnd,autor:S.user,etapa:et===""?null:+et};
+      novo.and=[...(novo.and||[]),an]; if(et!=="")novo.etapa=+et;
+      novo.hist=[{q:new Date().toISOString(),t:`Andamento: ${an.tipo}${an.doc?" ("+an.doc+")":""}${et!==""?"; etapa → "+ETAPAS[gp][+et]:""} por ${user().nome}`},...(novo.hist||[])];
+      if(!S.fund[k])novo.hist.push({q:new Date().toISOString(),t:"Processo aberto por "+user().nome});
+      S.fund[k]=novo;
+      try{saveFund()}catch(e){toast("Armazenamento cheio");return}
+      if(novo.resp!==S.user)S.log.unshift({quando:new Date().toISOString(),para:userById(novo.resp).email,assunto:`[SisGAP-ES] ${uc}: novo andamento no processo ${novo.edocs||curto(cod)} — ${an.tipo}`,tipo:"Fundiário"});
+      save();toast("Andamento incluído");vFundiario();fichaImovel(uc,cod);
+    };
+  };
+  document.querySelectorAll("[data-adel]").forEach(a=>a.onclick=e=>{e.preventDefault();const x=S.fund[k];if(!x)return;x.and=(x.and||[]).filter(y=>y.id!==a.dataset.adel);saveFund();vFundiario();fichaImovel(uc,cod)});
   if($("#pSave"))$("#pSave").onclick=()=>{
-    const novo={tipo:$("#pTipo").value,etapa:+document.querySelector('input[name="pEt"]:checked').value,edocs:$("#pEd").value.trim(),prazo:$("#pPz").value,resp:$("#pRs").value,obs:$("#pOb").value,hist:pr.hist||[],simulado:false};
+    const novo=procAtual();
     const mud=[];if(!S.fund[k])mud.push("processo aberto");else{if(novo.etapa!==pr.etapa)mud.push("etapa → "+ETAPAS[gp][novo.etapa]);if(novo.resp!==pr.resp)mud.push("responsável → "+userById(novo.resp).nome);if(novo.prazo!==pr.prazo)mud.push("prazo → "+(novo.prazo?fmtD(novo.prazo):"sem prazo"));if(novo.edocs!==pr.edocs)mud.push("E-Docs → "+novo.edocs)}
     novo.hist.unshift({q:new Date().toISOString(),t:(mud.join("; ")||"Atualizado")+" por "+user().nome});
     if(!S.fund[k]||novo.resp!==pr.resp||novo.prazo!==pr.prazo)S.log.unshift({quando:new Date().toISOString(),para:userById(novo.resp).email,assunto:`[SisGAP-ES] ${uc}: processo fundiário do imóvel ${curto(cod)} — ${ETAPAS[gp][novo.etapa]}${novo.prazo?", prazo "+fmtD(novo.prazo):""}`,tipo:"Fundiário"});
@@ -458,3 +503,6 @@ function validarLote(uc,ok){
   const P=S.bioReg.filter(r=>r.uc===uc&&r.st==="pend");P.forEach(r=>{r.st=ok?"val":"rej";r.val={por:S.user,q:new Date().toISOString(),com:"Validação em lote"}});
   atualizaEstoques(uc);saveBioReg();save();toast(`${P.length} registros ${ok?"validados":"não validados"}`);route();
 }
+
+{const _rn=renderNav; renderNav=function(){_rn();const a=document.querySelector('#nav a[href="#fundiario"]');const uc=ucAtual();
+  if(a&&uc&&ucObj(uc)&&ucObj(uc).g==="PI")a.innerHTML=a.innerHTML.replace("Fundiário (CAR)","Regularização fundiária")}}
