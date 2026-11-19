@@ -129,7 +129,7 @@ function gesTiles(uc){
   ].filter(Boolean).join("");
 }
 function gesCard(uc){
-  return `<div class="card" style="margin-top:16px"><div class="card-h"><div><h3>Gestão institucional${uc?" da UC":" da rede"}</h3><p class="sub">Planejamento, parcerias, capacitação, prazos, multas, regularização fundiária e instrumentos legais · clique em um indicador para ver os registros · dados simulados</p></div><button class="btn sm" onclick="location.hash='gestao'">Abrir módulo</button></div>
+  return `<div class="card" style="margin-top:16px"><div class="card-h"><div><h3>Gestão institucional${uc?" da UC":" do SISEUC"}</h3><p class="sub">Planejamento, parcerias, capacitação, prazos, multas, regularização fundiária e instrumentos legais · clique em um indicador para ver os registros · dados simulados</p></div><button class="btn sm" onclick="location.hash='gestao'">Abrir módulo</button></div>
     <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:12px">${gesTiles(uc)}</div>${uc?"":gesTabelaUCs()}</div>`;
 }
 {const _p=vPainel; vPainel=function(){_p();const g4=document.querySelector("#view .grid.g4");if(g4)g4.insertAdjacentHTML("afterend",gesCard(null))};}
@@ -162,13 +162,13 @@ let gTab="geral";
 function vGestao(arg){
   if(arg&&GTABS.some(t=>t[0]===arg))gTab=arg;
   const uc=ucAtual()||null, g=gesInd(uc);
-  title("Gestão institucional",uc?`${uc} — ${ucObj(uc).n}`:"Rede de UCs estaduais · selecione uma UC no topo para ver só ela");
+  title("Gestão institucional",uc?`${uc} — ${ucObj(uc).n}`:"SISEUC — Sistema Estadual de Unidades de Conservação · selecione uma UC no topo para ver só ela");
   const tabs=GTABS.filter(t=>!(uc&&t[0]==="criacao")&&!(uc&&t[0]==="fundiaria"&&ucObj(uc).g!=="PI"));
   if(!tabs.some(t=>t[0]===gTab))gTab="geral";
-  $("#view").innerHTML=`<div class="note"><b>Versão de teste.</b> Todos os registros deste módulo são simulados (marcados “exemplo”). Na versão real, cada UC cadastra os seus e a GGUC cadastra os da rede.</div>
+  $("#view").innerHTML=`<div class="note"><b>Versão de teste.</b> Todos os registros deste módulo são simulados (marcados “exemplo”). Na versão real, cada UC cadastra os seus e a GGUC cadastra os do SISEUC.</div>
    <div class="tabs" style="flex-wrap:wrap">${tabs.map(([k,l])=>`<button data-t="${k}" class="${gTab===k?"on":""}">${l}</button>`).join("")}</div><div id="gx"></div>`;
   document.querySelectorAll(".tabs [data-t]").forEach(b=>b.onclick=()=>{gTab=b.dataset.t;history.replaceState(null,"","#gestao/"+gTab);vGestao()});
-  const X=$("#gx"), ucCell=x=>uc?"":`<td><b>${x.uc||"Rede"}</b></td>`, ucH=uc?"":"<th>UC</th>";
+  const X=$("#gx"), ucCell=x=>uc?"":`<td><b>${x.uc||"SISEUC"}</b></td>`, ucH=uc?"":"<th>UC</th>";
   const add=k=>(uc?podeGes(uc):isAdmin())?`<button class="btn primary sm" onclick="gesForm('${k}')">+ Adicionar</button>`:"";
   const head=(t,s,k)=>`<div class="card-h"><div><h3>${t}</h3><p class="sub">${s}</p></div>${k?add(k):""}</div>`;
   const F=a=>a.filter(x=>uc?x.uc===uc:true);
@@ -203,7 +203,7 @@ function vGestao(arg){
   if(gTab==="capacitacao")tabela("capacitacao",[["Curso",x=>esc(x.curso)],["Instituição",x=>esc(x.inst)],["Modalidade",x=>x.modal],["Data",x=>fmtD(x.data)],["Horas",x=>x.horas,1],["Participantes",x=>x.part,1],["Horas × pessoa",x=>x.horas*x.part,1]],F(S.ges.cap).sort((a,b)=>b.data.localeCompare(a.data)),`${g.cap.length} cursos em ${ANO} · ${fmt(g.capH)} horas (carga × participantes) · ${g.eqT?fmt(g.capH/g.eqT,1):"—"} h por integrante da equipe`);
   if(gTab==="processos")tabela("processos",[["Nº",x=>esc(x.num)],["Tipo",x=>esc(x.tipo)],["Assunto",x=>esc(x.assunto)],["Entrada",x=>fmtD(x.entrada)],["Prazo",x=>x.prazo+" d",1],["Situação",stPrazo],["Resultado",x=>x.res?`<span class="small"><b style="color:${/negada|indeferid/i.test(x.res)?"#9b2424":"#1e4b34"}">${esc(x.res)}</b></span>`:"—"]],F(S.ges.proc).sort((a,b)=>(a.resposta?1:0)-(b.resposta?1:0)||a.entrada.localeCompare(b.entrada)),`${g.prAno.length} entraram em ${ANO} · ${g.respAno.length} respondidos · ${g.pend.length} pendentes (${g.vencidos} vencidos) · ${g.anuEmit.length} anuências emitidas · ${g.pesqAut.length} pesquisas autorizadas · resposta média ${g.tMed??"—"} dias`);
   if(gTab==="multas")tabela("multas",[["Auto",x=>esc(x.auto)],["Data",x=>fmtD(x.data)],["Infração",x=>esc(x.infr)],["Valor",x=>brl(x.valor),1],["Situação",x=>esc(x.sit)],["Recolhido / convertido",x=>x.pago?brl(x.pago):"—",1]],F(S.ges.multa).sort((a,b)=>b.data.localeCompare(a.data)),`${g.mu.length} autos · ${brl(g.muV)} aplicados · ${brl(g.muP)} recolhidos ou convertidos (${g.muV?Math.round(g.muP/g.muV*100):0}%)`);
-  if(gTab==="instrumentos")tabela("instrumentos",[["Tipo",x=>esc(x.tipo)],["Número",x=>esc(x.num)],["Data",x=>fmtD(x.data)],["Ementa",x=>esc(x.ementa)+(x.link?` <a href="${esc(x.link)}" target="_blank" onclick="event.stopPropagation()">↗</a>`:"")],["Situação",x=>`<span class="pill ${x.sit==="Publicado / vigente"?"st-conc":x.sit==="Revogado"?"st-nao":"st-venc"}"><i></i>${x.sit}</span>`]],(uc?S.ges.inst.filter(i=>i.uc===uc):S.ges.inst).sort((a,b)=>b.data.localeCompare(a.data)),`${g.instPub} publicados em ${ANO} · ${g.instElab} em elaboração ou consulta pública${uc?"":" · inclui atos da rede (GGUC)"}`);
+  if(gTab==="instrumentos")tabela("instrumentos",[["Tipo",x=>esc(x.tipo)],["Número",x=>esc(x.num)],["Data",x=>fmtD(x.data)],["Ementa",x=>esc(x.ementa)+(x.link?` <a href="${esc(x.link)}" target="_blank" onclick="event.stopPropagation()">↗</a>`:"")],["Situação",x=>`<span class="pill ${x.sit==="Publicado / vigente"?"st-conc":x.sit==="Revogado"?"st-nao":"st-venc"}"><i></i>${x.sit}</span>`]],(uc?S.ges.inst.filter(i=>i.uc===uc):S.ges.inst).sort((a,b)=>b.data.localeCompare(a.data)),`${g.instPub} publicados em ${ANO} · ${g.instElab} em elaboração ou consulta pública${uc?"":" · inclui atos do SISEUC (GGUC)"}`);
   if(gTab==="criacao"){tabela("criacao",[["Proposta",x=>esc(x.nome)],["Categoria",x=>esc(x.cat)+" ("+x.grupo+")"],["Municípios",x=>esc(x.mun)],["Área (ha)",x=>fmt(x.area),1],["Etapa",x=>`<div style="display:flex;gap:3px;align-items:center">${CRIA_ETAPAS.map((e,i)=>`<i title="${e}" style="width:16px;height:8px;border-radius:3px;background:${i<=x.etapa?"#0ca30c":"#e3e6df"}"></i>`).join("")}<span class="small" style="margin-left:6px">${CRIA_ETAPAS[x.etapa]}</span></div>`],["Início",x=>fmtD(x.inicio)]],S.ges.cria,`${g.criaAnd.length} em andamento · ${fmt(g.criaHa)} ha propostos`);X.querySelectorAll("td:first-child b").forEach(b=>b.remove())}
   if(gTab==="fundiaria"){
     const L=(uc?[ucObj(uc)]:UCS).filter(u=>u.g==="PI");
@@ -216,7 +216,7 @@ function vGestao(arg){
 }
 function gesCsv(k){const s=SCH[k],rows=(k==="instrumentos"||k==="criacao"?S.ges[s.arr]:S.ges[s.arr].filter(x=>ucAtual()?x.uc===ucAtual():true));
   const cols=["uc",...s.f.map(f=>f[0])],csv=[["UC",...s.f.map(f=>f[1])].join(";"),...rows.map(r=>cols.map(c=>`"${String(c==="etapa"?CRIA_ETAPAS[r[c]]:r[c]??"").replace(/"/g,'""')}"`).join(";"))].join("\n");
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv"}));a.download=`SisGAP-ES_${k}_${ucAtual()||"rede"}.csv`;a.click()}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv"}));a.download=`SisGAP-ES_${k}_${ucAtual()||"SISEUC"}.csv`;a.click()}
 function gesForm(k,id){
   const s=SCH[k],uc=ucAtual()||null,arr=S.ges[s.arr],x=id?arr.find(r=>r.id===id):null;
   const ed=x?(x.uc?podeGes(x.uc):isAdmin()):(uc?podeGes(uc):isAdmin());
@@ -226,9 +226,9 @@ function gesForm(k,id){
     if(t==="selIdx")return `<select id="g_${c}" ${dis}>${o.map((z,i)=>`<option value="${i}" ${Number(v)===i?"selected":""}>${z}</option>`).join("")}</select>`;
     return `<input id="g_${c}" type="${t==="num"?"number":t==="date"?"date":"text"}" value="${esc(v)}" ${o?`list="dl_${c}"`:""} ${dis}>${o?`<datalist id="dl_${c}">${o.map(z=>`<option value="${esc(z)}">`).join("")}</datalist>`:""}`};
   $("#drawerRoot").innerHTML=`<div class="drawer-bg" id="dbg"><div class="drawer">
-   <div style="display:flex;justify-content:space-between;gap:10px"><div><div class="small muted">${R.uc||"Rede (GGUC)"} · Gestão institucional</div><h2>${x?s.t:"Novo registro: "+s.t.toLowerCase()}</h2></div><button class="btn sm" id="dX">✕</button></div>
+   <div style="display:flex;justify-content:space-between;gap:10px"><div><div class="small muted">${R.uc||"SISEUC (GGUC)"} · Gestão institucional</div><h2>${x?s.t:"Novo registro: "+s.t.toLowerCase()}</h2></div><button class="btn sm" id="dX">✕</button></div>
    ${s.f.map(f=>`<div class="fld"><label>${f[1]}</label>${inp(f)}</div>`).join("")}
-   ${k==="instrumentos"&&!uc&&ed?`<div class="fld"><label>Abrangência</label><select id="g__uc"><option value="">Rede (todas as UCs)</option>${UCS.map(u=>`<option ${R.uc===u.s?"selected":""}>${u.s}</option>`).join("")}</select></div>`:""}
+   ${k==="instrumentos"&&!uc&&ed?`<div class="fld"><label>Abrangência</label><select id="g__uc"><option value="">SISEUC (todas as UCs)</option>${UCS.map(u=>`<option ${R.uc===u.s?"selected":""}>${u.s}</option>`).join("")}</select></div>`:""}
    <div class="fld"><label>Evidência (documento, foto ou certificado)</label><input type="file" multiple ${ed?"":"disabled"}><div class="small muted" style="margin-top:4px">Na versão real, os anexos ficam guardados com o registro.</div></div>
    <div style="display:flex;gap:8px;margin-top:16px">${ed?`<button class="btn primary" id="gS">Salvar</button>${x?'<button class="btn" id="gD">Excluir</button>':""}`:'<span class="small muted">Somente leitura para o seu cargo.</span>'}</div></div></div>`;
   const close=()=>$("#drawerRoot").innerHTML="";$("#dX").onclick=close;$("#dbg").onclick=e=>{if(e.target.id==="dbg")close()};
@@ -265,7 +265,7 @@ function gesPagina(uc){
   const kpi=(cor,val,lb,sub="")=>`<div class="rp-k" style="background:${cor}"><b>${val}</b><span>${lb}</span>${sub?`<em>${sub}</em>`:""}</div>`;
   const card=(cor,t,body)=>`<div class="rp-c"><div class="rp-ch" style="border-color:${cor}"><span style="background:${cor}"></span>${t}</div>${body}</div>`;
   const tempoTipo=PROC_TIPOS.map(([tp,pz])=>{const r=g.resp.filter(p=>p.tipo===tp);return{l:["Anuência (licenc.)","Pesquisa","Uso / evento / imagem","Ouvidoria","Ofício"][PROC_TIPOS.findIndex(x=>x[0]===tp)],v:r.length?Math.round(r.reduce((t,p)=>t+(parseD(p.resposta)-parseD(p.entrada))/864e5,0)/r.length):0,c:"#eda100"}});
-  return `<section class="rp-page"><div class="rp-mini"><b>${uc||"Rede"}</b> · Gestão institucional</div>
+  return `<section class="rp-page"><div class="rp-mini"><b>${uc||"SISEUC"}</b> · Gestão institucional</div>
    <div class="rp-kpis">
     ${uc?kpi(PM_COR[ui.pm],ui.pm,"plano de manejo",ui.pmVence?(ui.pm==="Aprovado"?"revisão ":"conclusão ")+fmtD(ui.pmVence):""):kpi("#0ca30c",`${g.pmAprov}/${g.n}`,"UCs com plano de manejo",`${g.pmAnd} em elaboração/revisão · ${g.pmVelho} com revisão vencida`)}
     ${uc?kpi(CONS_COR[ui.cons],ui.cons,"conselho gestor",ui.quorum!==null?"quórum médio "+ui.quorum+"%":""):kpi("#2a78d6",`${g.consAt}/${g.n}`,"conselhos ativos",`quórum médio ${g.quorum??"—"}%`)}
@@ -286,13 +286,13 @@ function gesPagina(uc){
      :card("#0ca30c","Plano de manejo e conselho nas 19 UCs",gH(PM_SIT.map(s=>({l:"PM: "+s,v:UCS.filter(u=>S.ges.uc[u.s].pm===s).length,c:PM_COR[s]})).concat(CONS_SIT.map(s=>({l:"Conselho: "+s,v:UCS.filter(u=>S.ges.uc[u.s].cons===s).length,c:CONS_COR[s]}))),{lw:150}))}
    </div>
    ${uc?"":`<div class="rp-g3">${card("#1baf7a","Pesquisas autorizadas por UC",gH(UCS.map(u=>({l:u.s,v:gesInd(u.s).pesqAut.length,c:"#1baf7a"})).sort((x,y)=>y.v-x.v).slice(0,10),{lw:70}))}${card("#2a78d6","Anuências emitidas por UC",gH(UCS.map(u=>({l:u.s,v:gesInd(u.s).anuEmit.length,c:"#2a78d6"})).sort((x,y)=>y.v-x.v).slice(0,10),{lw:70}))}${card("#eda100","Processos que entraram × respondidos, por UC",gH(UCS.map(u=>{const k=gesInd(u.s);return{l:u.s+" ("+k.respAno.length+" resp.)",v:k.prAno.length,c:"#eda100"}}).sort((x,y)=>y.v-x.v).slice(0,10),{lw:100}))}</div>`}
-   ${uc?"":`</section><section class="rp-page"><div class="rp-mini"><b>Rede</b> · Gestão institucional por unidade</div>`}
+   ${uc?"":`</section><section class="rp-page"><div class="rp-mini"><b>SISEUC</b> · Gestão institucional por unidade</div>`}
    <div class="rp-g2">
     ${uc?card("#8a4b1f","Processos pendentes e instrumentos legais",`<table class="rp-t"><thead><tr><th>Processo</th><th>Tipo</th><th>Entrada</th><th>Prazo</th></tr></thead><tbody>${g.pend.slice(0,7).map(p=>`<tr><td>${esc(p.num)}</td><td>${esc(p.tipo)}</td><td>${fmtD(p.entrada)}</td><td>${p.prazo} d</td></tr>`).join("")||'<tr><td colspan="4">Nenhum pendente</td></tr>'}</tbody></table>
       <table class="rp-t" style="margin-top:6px"><thead><tr><th>Instrumento</th><th>Ementa</th><th>Situação</th></tr></thead><tbody>${g.inst.slice(0,5).map(i=>`<tr><td>${esc(i.tipo)} ${esc(i.num)}</td><td>${esc(i.ementa)}</td><td>${esc(i.sit)}</td></tr>`).join("")||'<tr><td colspan="3">—</td></tr>'}</tbody></table>`)
      :card("#6250d6","Por UC: capacitação, prazos e multas",`<table class="rp-t"><thead><tr><th>UC</th><th>PM</th><th>Revisão PM</th><th>Conselho</th><th>Parc.</th><th>Horas cap.</th><th>Proc. entr./resp.</th><th>Anuências</th><th>Pesquisas</th><th>Multas (R$)</th><th>Fund. %</th></tr></thead><tbody>${UCS.map(x=>{const k=gesInd(x.s),i=S.ges.uc[x.s];return `<tr><td><b>${x.s}</b></td><td>${i.pm}</td><td>${i.pmVence?fmtD(i.pmVence):"—"}</td><td>${i.cons}</td><td>${k.parcVig.length}</td><td>${fmtN(k.capH)}</td><td>${k.prAno.length}/${k.respAno.length}</td><td>${k.anuEmit.length}</td><td>${k.pesqAut.length}</td><td>${fmtN(k.muV)}</td><td>${k.fTot?Math.round(k.fReg/k.fTot*100)+"%":"—"}</td></tr>`}).join("")}</tbody></table>`)}
     ${uc?card("#7c877f","Equipe da UC",gH([["Efetivos",ui.eq.ef],["Comissionados",ui.eq.co],["Terceirizados",ui.eq.te],["Brigadistas",ui.eq.br],["Voluntários",ui.eq.vo]].map(([l,v],k)=>({l,v,c:CAT[k]})),{lw:110}))
-     :card("#008300","Criação e ampliação de UCs · instrumentos legais da rede",`<table class="rp-t"><thead><tr><th>Proposta</th><th>Categoria</th><th>Área (ha)</th><th>Etapa</th></tr></thead><tbody>${g.cria.map(c=>`<tr><td>${esc(c.nome)}</td><td>${esc(c.cat)}</td><td>${fmtN(c.area)}</td><td>${CRIA_ETAPAS[c.etapa]}</td></tr>`).join("")}</tbody></table>
+     :card("#008300","Criação e ampliação de UCs · instrumentos legais do SISEUC",`<table class="rp-t"><thead><tr><th>Proposta</th><th>Categoria</th><th>Área (ha)</th><th>Etapa</th></tr></thead><tbody>${g.cria.map(c=>`<tr><td>${esc(c.nome)}</td><td>${esc(c.cat)}</td><td>${fmtN(c.area)}</td><td>${CRIA_ETAPAS[c.etapa]}</td></tr>`).join("")}</tbody></table>
        <table class="rp-t" style="margin-top:6px"><thead><tr><th>Instrumento</th><th>Ementa</th><th>Situação</th></tr></thead><tbody>${S.ges.inst.filter(i=>!i.uc).map(i=>`<tr><td>${esc(i.tipo)} ${esc(i.num)}</td><td>${esc(i.ementa)}</td><td>${esc(i.sit)}</td></tr>`).join("")}</tbody></table>`)}
    </div><div class="rp-note">Indicadores de gestão institucional · registros simulados (marcados “exemplo”) nesta versão de teste.</div></section>`;
 }

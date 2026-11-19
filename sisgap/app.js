@@ -163,7 +163,7 @@ function alertasVisiveis(){const a=gerarAlertas();return isAdmin()?a:a.filter(x=
 
 // ---------- shell ----------
 const ROTAS=[
-  ["painel","▦","Painel geral",true],["uc","◉","Painel da UC"],["lancar","✎","Lançamento mensal"],["acoes","⚑","Plano de ação"],
+  ["painel","▦","Painel geral (SISEUC)",true],["uc","◉","Painel da UC"],["lancar","✎","Lançamento mensal"],["acoes","⚑","Plano de ação"],
   ["fundiario","⌖","Fundiário (CAR)"],["biodiversidade","❦","Biodiversidade"],
   ["alertas","✉","Alertas e e-mails"],["indicadores","☰","Catálogo de indicadores"],["usuarios","👥","Usuários e papéis",true]
 ];
@@ -177,7 +177,7 @@ function renderUcSel(){
   const sel=$("#ucSel");
   if(isAdmin()){
     sel.disabled=false;
-    sel.innerHTML=`<option value="">Todas as UCs (19)</option>`+["PI","US"].map(g=>`<optgroup label="${g==="PI"?"Proteção Integral":"Uso Sustentável"}">${UCS.filter(u=>u.g===g).map(u=>`<option value="${u.s}" ${S.uc===u.s?"selected":""}>${u.s} — ${u.n}${u.piloto?" ★":""}</option>`).join("")}</optgroup>`).join("");
+    sel.innerHTML=`<option value="">SISEUC — todas as UCs (19)</option>`+["PI","US"].map(g=>`<optgroup label="${g==="PI"?"Proteção Integral":"Uso Sustentável"}">${UCS.filter(u=>u.g===g).map(u=>`<option value="${u.s}" ${S.uc===u.s?"selected":""}>${u.s} — ${u.n}${u.piloto?" ★":""}</option>`).join("")}</optgroup>`).join("");
   }else{
     const u=ucObj(user().uc);sel.innerHTML=`<option>${u.s} — ${u.n}</option>`;sel.disabled=true;
   }
@@ -223,7 +223,7 @@ function showLogin(){
     const passo=(n,t,on)=>`<label style="display:flex;align-items:center;gap:8px"><span style="width:20px;height:20px;border-radius:50%;background:${on?"var(--brand)":"#cfd5cf"};color:#fff;display:grid;place-items:center;font-size:11px">${n}</span>${t}</label>`;
     $("#loginList").innerHTML=`
     <div class="fld">${passo(1,"Tipo de acesso",true)}
-      <div class="seg" style="width:100%;display:flex">${[["gguc","GGUC — gestão da rede"],["uc","Unidade de conservação"]].map(([k,t])=>`<button style="flex:1;padding:10px" class="${LG.tipo===k?"on":""}" data-t="${k}">${t}</button>`).join("")}</div></div>
+      <div class="seg" style="width:100%;display:flex">${[["gguc","GGUC — gestão do SISEUC"],["uc","Unidade de conservação"]].map(([k,t])=>`<button style="flex:1;padding:10px" class="${LG.tipo===k?"on":""}" data-t="${k}">${t}</button>`).join("")}</div></div>
     ${LG.tipo==="uc"?`<div class="fld">${passo(2,"Unidade de conservação",true)}
       <input id="lgBusca" value="${esc(LG.q)}" placeholder="Digite a sigla ou o nome (ex.: Itaúnas, Morro da Vargem)" autocomplete="off" style="margin-bottom:6px">
       <select id="lgUc" size="7" style="width:100%">${(()=>{const L=UCS.filter(u=>semAcento(u.s+" "+u.n).includes(semAcento(LG.q)));return L.length?cats.map(ct=>{const g=L.filter(u=>u.cat===ct);return g.length?`<optgroup label="${ct}">${g.map(u=>`<option value="${u.s}" ${LG.uc===u.s?"selected":""}>${u.s} — ${esc(u.n)}${u.piloto?"  ★":""}</option>`).join("")}</optgroup>`:""}).join(""):`<option disabled>Nenhuma UC encontrada</option>`})()}</select>
@@ -272,7 +272,7 @@ function title(t,s){$("#pgTitle").innerHTML=`${t}${s?`<small>${s}</small>`:""}`}
 
 // ---------- VIEW: painel geral ----------
 function vPainel(){
-  title("Painel geral da rede",`19 unidades de conservação estaduais · ${ANO} · dados simulados`);
+  title("Painel geral do SISEUC",`Sistema Estadual de Unidades de Conservação · 19 unidades de conservação estaduais · ${ANO} · dados simulados`);
   const m=FECHADOS-1, enviadas=UCS.filter(u=>S.enviados[u.s].includes(m)).length;
   const vis=UCS.reduce((t,u)=>t+soma(u.s,"vis"),0), pres=UCS.reduce((t,u)=>t+PRESSAO.reduce((a,id)=>a+soma(u.s,id),0),0);
   const inc=UCS.reduce((t,u)=>t+soma(u.s,"inc"),0), c=contaSt(S.acoes);

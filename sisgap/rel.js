@@ -199,12 +199,12 @@ function relatorioRede(){
   const PC=["#e34948","#eb6834","#eda100","#6250d6","#7c877f"], PN=["Caça / pesca / captura","Uso irregular do fogo","Supressão de vegetação","Atividade irregular","Animal doméstico"];
   const nomeCurto=u=>u.n.replace(/^(Parque Estadual|Monumento Natural|Reserva Biológica|APA|ARIE|RDS)( do| de| da| dos)? ?/,"");
   const pg1=`<section class="rp-page">
-   <div class="rp-banner"><img src="iema-branco.png" alt="IEMA"><div><div class="rp-sis">SisGAP-ES · Painel geral da rede de unidades de conservação estaduais</div><h1>Rede de UCs estaduais do Espírito Santo</h1>
+   <div class="rp-banner"><img src="iema-branco.png" alt="IEMA"><div><div class="rp-sis">SisGAP-ES · Painel geral do SISEUC</div><h1>Sistema Estadual de Unidades de Conservação — SISEUC</h1>
      <div class="rp-sub">${UCS.length} unidades · ${UCS.filter(u=>u.g==="PI").length} de proteção integral e ${UCS.filter(u=>u.g==="US").length} de uso sustentável · Período: jan–${MS[ult].toLowerCase()} ${ANO} · Emitido em ${hoje} por ${esc(user().nome)}</div></div>
      <div class="rp-tag">VERSÃO DE TESTE<br><small>dados simulados</small></div></div>
    <div class="rp-kpis">
      ${kpi("#1f5c3f",`${env}/${UCS.length}`,`lançamentos de ${MESL[ult]} enviados`,`completude média ${cpM}%`)}
-     ${kpi("#2a78d6",fmtN(vis),"visitas na rede",`público total ${fmtN(vis+somaR("pev"))}`)}
+     ${kpi("#2a78d6",fmtN(vis),"visitas no SISEUC",`público total ${fmtN(vis+somaR("pev"))}`)}
      ${kpi("#e34948",fmtN(pres),"ocorrências de pressão",`${fmtN(somaR("inc"))} incêndios combatidos`)}
      ${kpi("#6250d6",fmtN(somaR("fis")),"ações de fiscalização",`${fmtN(somaR("aut"))} autuações`)}
      ${kpi("#0ca30c",`${c.conc}/${S.acoes.length}`,"ações dos PMs concluídas",`${c.atr} atrasadas · ${pil.length} UCs com plano`)}
@@ -213,16 +213,16 @@ function relatorioRede(){
      ${spUCs.length?kpi("#008300",fmtN(spUCs.reduce((t,s)=>t+especiesUC(s).length,0)),"espécies listadas (APAGO + ARIEMV)",`${fmtN(spUCs.reduce((t,s)=>t+especiesUC(s).filter(ehAmea).length,0))} ameaçadas, somando as duas UCs`):""}
    </div>
    <div class="rp-g3">
-     ${card("#2a78d6","Visitação mensal na rede",gLine(MS,serie("vis"),{cor:"#2a78d6"}))}
-     ${card("#6250d6","Atividades de gestão por mês (rede)",gStack(MS,[{n:"Fiscalização",cor:"#6250d6",v:serie("fis")},{n:"Monitoramento",cor:"#1baf7a",v:serie("mon")},{n:"Eventos",cor:"#eda100",v:serie("eve")},{n:"Reuniões do conselho",cor:"#2a78d6",v:serie("reu")},{n:"Mídias",cor:"#e87ba4",v:serie("mid")}]))}
-     ${card("#e34948","Pressões registradas por mês (rede)",gStack(MS,PRESSAO.map((id,k)=>({n:PN[k],cor:PC[k],v:serie(id)}))))}
+     ${card("#2a78d6","Visitação mensal no SISEUC",gLine(MS,serie("vis"),{cor:"#2a78d6"}))}
+     ${card("#6250d6","Atividades de gestão por mês (SISEUC)",gStack(MS,[{n:"Fiscalização",cor:"#6250d6",v:serie("fis")},{n:"Monitoramento",cor:"#1baf7a",v:serie("mon")},{n:"Eventos",cor:"#eda100",v:serie("eve")},{n:"Reuniões do conselho",cor:"#2a78d6",v:serie("reu")},{n:"Mídias",cor:"#e87ba4",v:serie("mid")}]))}
+     ${card("#e34948","Pressões registradas por mês (SISEUC)",gStack(MS,PRESSAO.map((id,k)=>({n:PN[k],cor:PC[k],v:serie(id)}))))}
    </div>
    <div class="rp-g3">
      ${card("#2a78d6","Visitas no ano, por UC (10 maiores)",gH(UCS.map(u=>({l:u.s,v:soma(u.s,"vis",0,m)})).sort((a,b)=>b.v-a.v).slice(0,10).map(x=>Object.assign(x,{c:"#2a78d6"})),{lw:70}))}
      ${card("#e34948","Pressões no ano, por UC (10 maiores)",gH(UCS.map(u=>({l:u.s,v:PRESSAO.reduce((a,id)=>a+soma(u.s,id,0,m),0)})).sort((a,b)=>b.v-a.v).slice(0,10).map(x=>Object.assign(x,{c:"#e34948"})),{lw:70}))}
-     ${card("#eb6834","Pressões no ano, por tipo (rede)",gH(PRESSAO.map((id,k)=>({l:PN[k],v:somaR(id),c:PC[k]})),{lw:140})+`<div style="margin-top:6px">${gH([{l:"Incêndios combatidos",v:somaR("inc"),c:"#d03b3b"},{l:"Autuações",v:somaR("aut"),c:"#6250d6"}],{lw:140})}</div>`)}
+     ${card("#eb6834","Pressões no ano, por tipo (SISEUC)",gH(PRESSAO.map((id,k)=>({l:PN[k],v:somaR(id),c:PC[k]})),{lw:140})+`<div style="margin-top:6px">${gH([{l:"Incêndios combatidos",v:somaR("inc"),c:"#d03b3b"},{l:"Autuações",v:somaR("aut"),c:"#6250d6"}],{lw:140})}</div>`)}
    </div></section>`;
-  const pg2=`<section class="rp-page"><div class="rp-mini"><b>Rede</b> · Lançamentos e planos de manejo</div>
+  const pg2=`<section class="rp-page"><div class="rp-mini"><b>SISEUC</b> · Lançamentos e planos de manejo</div>
    <div class="rp-g2">
     ${card("#1f5c3f","Completude dos lançamentos por UC e mês",gHeat())}
     <div>
@@ -231,7 +231,7 @@ function relatorioRede(){
        `<div style="display:flex;gap:16px;align-items:center;margin-top:8px">${gDonut(["conc","and","venc","atr","nao"].map(k=>({v:c[k],cor:SC[k]})),{size:130,centro:S.acoes.length,sub:"ações"})}<div style="flex:1">${["conc","and","venc","atr","nao"].map(k=>`<div class="rp-row"><i style="background:${SC[k]}"></i>${ST[k]}<b>${c[k]}</b></div>`).join("")}</div></div>`)}
      ${card("#eda100","Alertas ativos por UC",gH(Object.entries(al.reduce((o,a)=>(o[a.uc]=(o[a.uc]||0)+1,o),{})).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([s,v])=>({l:s,v,c:"#eda100"})),{lw:70}))}
     </div></div></section>`;
-  const pg3=(carUCs.length||spUCs.length)?`<section class="rp-page"><div class="rp-mini"><b>Rede</b> · Território e biodiversidade (UCs de teste)</div>
+  const pg3=(carUCs.length||spUCs.length)?`<section class="rp-page"><div class="rp-mini"><b>SISEUC</b> · Território e biodiversidade (UCs de teste)</div>
    <div class="rp-g2">
     ${carUCs.length?card("#eb6834","Situação fundiária — imóveis do CAR por UC",gStack(carUCs,COND.map((x,i)=>({n:x[1],cor:x[2],v:carUCs.map(s=>[CAR.resumo[s].cond_aguardando,CAR.resumo[s].cond_em_analise,CAR.resumo[s].cond_analisado_pendente,CAR.resumo[s].cond_conforme][i])})),{h:220})+
       `<table class="rp-t" style="margin-top:8px"><thead><tr><th>UC</th><th>Regra de moradores</th><th>Imóveis</th><th>Área no CAR (ha)</th><th>% da UC</th><th>População 2022</th><th>Processos</th></tr></thead><tbody>${carUCs.map(s=>{const r=CAR.resumo[s];return `<tr><td><b>${s}</b></td><td>${esc(r.moradores)}</td><td>${r.n_relevante}</td><td>${fmtN(r.area_car_ha)}</td><td>${fmtN(r.pct_uc,1)}%</td><td>${esc(r.pop_total)}</td><td>${Object.keys(S.fund).filter(k=>k.endsWith("|"+s)).length}</td></tr>`}).join("")}</tbody></table>`):"<div></div>"}
@@ -239,10 +239,10 @@ function relatorioRede(){
       `<table class="rp-t" style="margin-top:8px"><thead><tr><th>UC</th><th>Espécies</th><th>Fauna</th><th>Flora</th><th>Ameaçadas</th><th>Novas (equipe)</th><th>Pendentes de validação</th></tr></thead><tbody>${spUCs.map(s=>{const sp=especiesUC(s);return `<tr><td><b>${s}</b></td><td>${sp.length}</td><td>${sp.filter(x=>x.g!=="Flora").length}</td><td>${sp.filter(x=>x.g==="Flora").length}</td><td>${sp.filter(ehAmea).length}</td><td>${sp.filter(x=>x.nova).length}</td><td>${(S.bioReg||[]).filter(b=>b.uc===s&&b.st==="pend").length}</td></tr>`}).join("")}</tbody></table>
       <div class="rp-note">PE Forno Grande e PE Itaúnas ainda sem painel de espécies.</div>`):""}
    </div></section>`:"";
-  const anexo=`<section class="rp-page rp-anexo"><div class="rp-anx-h">ANEXO — DADOS BRUTOS · REDE DE UCs ESTADUAIS · ${ANO}</div>
+  const anexo=`<section class="rp-page rp-anexo"><div class="rp-anx-h">ANEXO — DADOS BRUTOS · SISEUC — SISTEMA ESTADUAL DE UNIDADES DE CONSERVAÇÃO · ${ANO}</div>
    <h2>A1. Situação por unidade</h2><table class="rp-t"><thead><tr><th>UC</th><th>Nome</th><th>Categoria</th><th>Completude</th><th>${MES[ult]} enviado</th><th>Visitas</th><th>Público eventos</th><th>Pressões</th><th>Fiscalização</th><th>Autuações</th><th>Incêndios</th><th>Ações PM (concl./total)</th><th>Atrasadas</th></tr></thead><tbody>
    ${UCS.map(u=>{const k=contaSt(acoesDe(u.s)),t=acoesDe(u.s).length;return `<tr><td><b>${u.s}</b></td><td>${esc(u.n)}</td><td>${u.cat}</td><td>${Math.round(cpU(u)*100)}%</td><td>${S.enviados[u.s].includes(ult)?"sim":"não"}</td><td>${u.s==="APAPM"?"N/A":fmtN(soma(u.s,"vis",0,m))}</td><td>${fmtN(soma(u.s,"pev",0,m))}</td><td>${fmtN(PRESSAO.reduce((a,id)=>a+soma(u.s,id,0,m),0))}</td><td>${fmtN(soma(u.s,"fis",0,m))}</td><td>${fmtN(soma(u.s,"aut",0,m))}</td><td>${fmtN(soma(u.s,"inc",0,m))}</td><td>${t?k.conc+"/"+t:"—"}</td><td>${t?k.atr:"—"}</td></tr>`}).join("")}</tbody></table>
-   <h2>A2. Indicadores comuns — totais mensais da rede</h2><table class="rp-t"><thead><tr><th>Indicador</th>${MS.map(x=>`<th>${x}</th>`).join("")}<th>Ano</th></tr></thead><tbody>
+   <h2>A2. Indicadores comuns — totais mensais do SISEUC</h2><table class="rp-t"><thead><tr><th>Indicador</th>${MS.map(x=>`<th>${x}</th>`).join("")}<th>Ano</th></tr></thead><tbody>
    ${COMUNS.map(([p,inds])=>`<tr class="rp-sec"><td colspan="${m+2}">${p}</td></tr>`+inds.map(([id,nm,un,rg])=>`<tr><td>${nm} <span class="rp-un">(${un}${rg==="Último"?", soma dos estoques das UCs":""})</span></td>${MS.map((_,i)=>`<td>${fmtN(tot(id,i))}</td>`).join("")}<td><b>${rg==="Último"?fmtN(UCS.reduce((t,u)=>t+(ultimo(u.s,id)||0),0)):fmtN(somaR(id))}</b></td></tr>`).join("")).join("")}</tbody></table>
    <h2>A3. Ações atrasadas e a vencer (15 dias)</h2><table class="rp-t"><thead><tr><th>UC</th><th>Ação</th><th>Programa</th><th>Responsável</th><th>Prazo</th><th>Situação</th></tr></thead><tbody>
    ${S.acoes.filter(a=>["atr","venc"].includes(status(a))).sort((a,b)=>a.prazo.localeCompare(b.prazo)).map(a=>`<tr><td><b>${a.uc}</b></td><td>${esc(a.ativ)}</td><td>${esc(a.prog)}</td><td>${esc(userById(a.resp).nome)}</td><td>${fmtD(a.prazo)}</td><td>${ST[status(a)]}</td></tr>`).join("")}</tbody></table>
@@ -251,12 +251,12 @@ function relatorioRede(){
    <div class="rp-foot">SisGAP-ES · IEMA/GGUC · Limites: IEMA 2026 · Gerado em ${new Date().toLocaleString("pt-BR")} · Versão de teste: valores de lançamento, responsáveis e processos são simulados ou fictícios.</div></section>`;
   let el=document.getElementById("printArea");if(!el){el=document.createElement("div");el.id="printArea";document.body.appendChild(el)}
   el.innerHTML=pg1+pg2+pg3+anexo;
-  const t=document.title;document.title=`SisGAP-ES_painel_rede_${new Date().toISOString().slice(0,10)}`;
+  const t=document.title;document.title=`SisGAP-ES_painel_SISEUC_${new Date().toISOString().slice(0,10)}`;
   setTimeout(()=>{try{window.print()}catch(e){toast("Use Ctrl+P / Cmd+P e escolha “Salvar como PDF”")}document.title=t},350);
 }
 {const _p=vPainel; vPainel=function(){_p();
   const bar=document.createElement("div");bar.style.cssText="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;align-items:center";
-  bar.innerHTML=`<span class="small muted">Dashboard colorido da rede + anexo com dados brutos (A4 deitado)</span><button class="btn primary" id="btnPdfRede">⬇ Exportar PDF do painel geral</button>`;
+  bar.innerHTML=`<span class="small muted">Dashboard colorido do SISEUC + anexo com dados brutos (A4 deitado)</span><button class="btn primary" id="btnPdfRede">⬇ Exportar PDF do painel geral</button>`;
   $("#view").prepend(bar);$("#btnPdfRede").onclick=()=>{toast("Na janela de impressão, escolha “Salvar como PDF”");relatorioRede()}};}
 
 // ======================= FICHA POR PROPRIETÁRIO =======================
