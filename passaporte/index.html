@@ -69,6 +69,27 @@
   .teste .linha{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .teste button{border:1px solid #d9b48a;background:#fff;border-radius:9px;padding:7px 10px;font:600 12.5px system-ui;color:#7a4a12;cursor:pointer}
   .teste button.on{background:#d9822b;color:#fff;border-color:#d9822b}
+  /* câmera */
+  .camera{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column;color:#fff}
+  .camera.on{display:flex}
+  .camera .barra{display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
+  .camera .barra button{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:20px;padding:9px 14px;font:600 14px system-ui;cursor:pointer}
+  #quadro{position:relative;flex:1;overflow:hidden;touch-action:none}
+  #quadro video,#quadro .previa img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  #camCarimbo{position:absolute;transform:translate(-50%,-50%);aspect-ratio:1;opacity:.93;cursor:grab;touch-action:none;filter:drop-shadow(0 0 1px rgba(255,255,255,.5))}
+  #camCarimbo svg{width:100%;height:100%;display:block;pointer-events:none}
+  #camAviso{position:absolute;left:20px;right:20px;top:40%;text-align:center;font-size:15px;line-height:1.5}
+  #camAviso button{margin-top:10px;border:0;background:#fff;color:var(--azul);border-radius:12px;padding:11px 16px;font:700 14px system-ui}
+  .camera .dica{position:absolute;left:0;right:0;top:10px;text-align:center;font-size:12.5px;opacity:.85;pointer-events:none;text-shadow:0 1px 3px #000}
+  .camera .baixo{display:flex;align-items:center;justify-content:space-around;padding:16px 20px calc(18px + env(safe-area-inset-bottom))}
+  .obturador{width:74px;height:74px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25);cursor:pointer}
+  .obturador:active{background:#fff}
+  .camera .lado{width:56px;border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:50%;height:56px;font-size:22px;cursor:pointer}
+  .camera .acoes{display:flex;gap:10px;padding:14px 16px calc(18px + env(safe-area-inset-bottom))}
+  .camera .acoes button{flex:1;border:0;border-radius:14px;padding:14px;font:700 15px system-ui;cursor:pointer}
+  #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+  #flash.on{animation:flash .35s}
+  @keyframes flash{0%{opacity:.9}100%{opacity:0}}
   footer{margin-top:28px;font-size:11.5px;color:var(--suave);text-align:center;line-height:1.5}
 </style>
 </head>
@@ -99,6 +120,17 @@
 
 <div class="veu" id="veu"><div class="folha" id="folha"></div></div>
 
+<div class="camera" id="camera">
+  <div class="barra"><button onclick="fecharCamera()">✕ Fechar</button><span style="font:600 14px system-ui">Foto com o carimbo</span><span style="width:70px"></span></div>
+  <div id="quadro">
+    <div id="visor"><video id="video" playsinline muted autoplay></video><div class="dica">Arraste o carimbo · use dois dedos para mudar o tamanho</div></div>
+    <div id="previa" class="previa" style="display:none"><img id="previaImg" alt="Sua foto com o carimbo"></div>
+    <div id="camCarimbo"></div><div id="camAviso"></div><div id="flash"></div>
+  </div>
+  <div class="baixo" id="botoesVisor"><span style="width:56px"></span><button class="obturador" onclick="disparar()" aria-label="Tirar foto"></button><button class="lado" onclick="virarCamera()" aria-label="Trocar câmera">⟲</button></div>
+  <div class="acoes" id="botoesPrevia" style="display:none"><button style="background:rgba(255,255,255,.16);color:#fff" onclick="outraFoto()">Tirar outra</button><button style="background:#fff;color:#1e4575" onclick="salvarFoto()">Salvar / compartilhar</button></div>
+  <input type="file" id="arquivo" accept="image/*" capture="environment" hidden onchange="arquivoEscolhido(this)">
+</div>
 <script src="apago.js"></script>
 <script>
 /* ===================== CONFIGURAÇÃO ===================== */
@@ -265,7 +297,7 @@ function mostrarCarimbo(uc,c,reg,novo){
    <div class="palco"><div class="marca" style="--r:0deg">${svgCarimbo(uc,c,reg)}</div></div>
    <p class="parabens">${novo?`<b>Carimbado!</b>${todos?'Você completou todos os carimbos da '+uc.curto+'!':'Seu passaporte ganhou mais um carimbo.'}`
      :'Carimbado em '+new Date(reg.data).toLocaleDateString('pt-BR')}</p>
-   <button class="btn" onclick="baixar('${uc.id}','${c.id}')">Salvar imagem do carimbo</button>
+   <button class="btn" onclick="tirarFoto('${uc.id}','${c.id}')">📷 Tirar foto com o carimbo</button>
    <button class="btn sec" onclick="${novo?'telaPontos()':'fechar()'}">${novo?'Voltar aos carimbos':'Fechar'}</button>`;
   const m=folha.querySelector('.marca');
   if(novo){ requestAnimationFrame(()=>m.classList.add('bate')); if(navigator.vibrate) setTimeout(()=>navigator.vibrate(60),300); somBatida(); }
@@ -279,19 +311,77 @@ function somBatida(){try{const A=new (window.AudioContext||window.webkitAudioCon
   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.6,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.18);
   o.connect(g).connect(A.destination);o.start(t);o.stop(t+.2)}catch(e){}}
 
-function baixar(ucId,cId){
+/* ===================== CÂMERA COM O CARIMBO ===================== */
+let cam={stream:null,img:null,nome:'',frente:false,x:.66,y:.70,w:.40};
+function svgParaImagem(svg){return new Promise(ok=>{const i=new Image();
+  i.onload=()=>ok(i);i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.replace('<svg ','<svg width="800" height="800" '))})}
+async function tirarFoto(ucId,cId){
   const uc=UCS.find(u=>u.id===ucId),c=uc.carimbos.find(x=>x.id===cId),reg=dados.carimbos[ucId+'-'+cId];
-  const svg=svgCarimbo(uc,c,reg).replace('<svg ','<svg width="900" height="900" ');
-  const img=new Image(),url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
-  img.onload=()=>{const cv=document.createElement('canvas');cv.width=1080;cv.height=1080;const x=cv.getContext('2d');
-    x.fillStyle='#f6f3ec';x.fillRect(0,0,1080,1080);x.drawImage(img,90,70,900,900);
-    x.fillStyle='#1e4575';x.font='600 30px system-ui,sans-serif';x.textAlign='center';x.fillText('Meu passaporte · Preservando o Nosso Quintal',540,1035);
-    URL.revokeObjectURL(url);
-    cv.toBlob(async b=>{const nome=`carimbo-${ucId}-${cId}.png`,f=new File([b],nome,{type:'image/png'});
-      if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Meu carimbo'});return}catch(e){if(e.name==='AbortError')return}}
-      const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;a.click()},'image/png')};
-  img.src=url;
+  const svg=svgCarimbo(uc,c,reg);
+  cam.img=await svgParaImagem(svg); cam.nome=`passaporte-${ucId}-${cId}`;
+  const el=document.getElementById('camera'); el.classList.add('on');
+  document.getElementById('camCarimbo').innerHTML=svg;
+  posicionar(); mostrarVisor();
+  await abrirCamera();
 }
+async function abrirCamera(){
+  pararCamera(); const v=document.getElementById('video'), aviso=document.getElementById('camAviso');
+  aviso.textContent='';
+  try{
+    cam.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:cam.frente?'user':{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});
+    v.srcObject=cam.stream; v.style.transform=cam.frente?'scaleX(-1)':''; await v.play();
+  }catch(e){
+    aviso.innerHTML='Não consegui abrir a câmera aqui.<br><button onclick="document.getElementById(\'arquivo\').click()">Usar a câmera do celular</button>';
+  }
+}
+function pararCamera(){if(cam.stream){cam.stream.getTracks().forEach(t=>t.stop());cam.stream=null}}
+function fecharCamera(){pararCamera();document.getElementById('camera').classList.remove('on')}
+function virarCamera(){cam.frente=!cam.frente;abrirCamera()}
+function posicionar(){const e=document.getElementById('camCarimbo');
+  e.style.left=(cam.x*100)+'%';e.style.top=(cam.y*100)+'%';e.style.width=(cam.w*100)+'%'}
+function mostrarVisor(){vis(true)}
+function vis(v){const d=(id,on)=>document.getElementById(id).style.display=on?'':'none';d('visor',v);d('camCarimbo',v);d('botoesVisor',v);d('previa',!v);d('botoesPrevia',!v)}
+// arrastar o carimbo com o dedo; aumentar/diminuir com dois dedos
+(function(){
+  const area=()=>document.getElementById('quadro').getBoundingClientRect(); const toques=new Map(); let ini=null;
+  document.addEventListener('pointerdown',e=>{if(!e.target.closest('#camCarimbo'))return;e.preventDefault();
+    toques.set(e.pointerId,{x:e.clientX,y:e.clientY});ini={x:cam.x,y:cam.y,w:cam.w,p:[...toques.values()].map(t=>({...t}))}},{passive:false});
+  document.addEventListener('pointermove',e=>{if(!toques.has(e.pointerId))return;toques.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    const r=area(),p=[...toques.values()];
+    if(p.length===1&&ini.p.length===1){cam.x=Math.min(.95,Math.max(.05,ini.x+(p[0].x-ini.p[0].x)/r.width));cam.y=Math.min(.95,Math.max(.05,ini.y+(p[0].y-ini.p[0].y)/r.height))}
+    else if(p.length>=2&&ini.p.length>=2){const d0=Math.hypot(ini.p[0].x-ini.p[1].x,ini.p[0].y-ini.p[1].y),d1=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+      cam.w=Math.min(.9,Math.max(.18,ini.w*d1/d0))}
+    posicionar()});
+  const fim=e=>{if(!toques.delete(e.pointerId))return;ini={x:cam.x,y:cam.y,w:cam.w,p:[...toques.values()].map(t=>({...t}))}};
+  document.addEventListener('pointerup',fim);document.addEventListener('pointercancel',fim);
+})();
+function compor(fonte,fw,fh,espelhar){
+  // recorta a fonte como "cover" no formato do quadro visível e desenha o carimbo na mesma posição
+  const r=document.getElementById('quadro').getBoundingClientRect(), asp=r.width/r.height;
+  let sw=fw,sh=fw/asp; if(sh>fh){sh=fh;sw=fh*asp} const sx=(fw-sw)/2,sy=(fh-sh)/2;
+  const W=Math.min(1600,Math.round(sw)),H=Math.round(W/asp), cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+  if(espelhar){x.translate(W,0);x.scale(-1,1)} x.drawImage(fonte,sx,sy,sw,sh,0,0,W,H); x.setTransform(1,0,0,1,0,0);
+  const t=cam.w*W; x.globalAlpha=.93; x.drawImage(cam.img,cam.x*W-t/2,cam.y*H-t/2,t,t); x.globalAlpha=1;
+  return cv;
+}
+function mostrarPrevia(cv){
+  pararCamera(); cam.ultima=cv;
+  document.getElementById('previaImg').src=cv.toDataURL('image/jpeg',.9);
+  vis(false);
+}
+function disparar(){
+  const v=document.getElementById('video'); if(!v.videoWidth) return;
+  const f=document.getElementById('flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');
+  mostrarPrevia(compor(v,v.videoWidth,v.videoHeight,cam.frente));
+}
+function arquivoEscolhido(inp){const fl=inp.files&&inp.files[0];if(!fl)return;const i=new Image();
+  i.onload=()=>mostrarPrevia(compor(i,i.naturalWidth,i.naturalHeight,false));i.src=URL.createObjectURL(fl);inp.value=''}
+function salvarFoto(){
+  cam.ultima.toBlob(async b=>{const nome=cam.nome+'.jpg',f=new File([b],nome,{type:'image/jpeg'});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Meu passaporte · Preservando o Nosso Quintal'});return}catch(e){if(e.name==='AbortError')return}}
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;a.click()},'image/jpeg',.92);
+}
+function outraFoto(){mostrarVisor();abrirCamera()}
 
 /* ===================== MODO TESTE (?teste=1) ===================== */
 function painelTeste(){
