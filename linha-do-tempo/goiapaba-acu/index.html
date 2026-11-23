@@ -33,6 +33,10 @@
   .trilho input{width:100%;accent-color:var(--azul)}
   .marcas{display:flex;justify-content:space-between;font-size:11px;color:var(--suave);padding:0 2px}
   .opcoes{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .modo{display:inline-flex;border:1.5px solid var(--azul);border-radius:20px;overflow:hidden}
+  .modo button{border:0;background:#fff;color:var(--azul);padding:8px 14px;font:700 13px system-ui;cursor:pointer}
+  .modo button.on{background:var(--azul);color:#fff}
+  .sat img{image-rendering:auto}
   .chip{border:1.5px solid var(--linha);background:#fff;border-radius:20px;padding:8px 13px;font:600 13px system-ui;color:var(--azul);cursor:pointer}
   .chip.on{background:var(--azul);border-color:var(--azul);color:#fff}
   /* destaque */
@@ -82,6 +86,7 @@
           <div class="marcas"><span>1985</span><span>1995</span><span>2005</span><span>2015</span><span>2025</span></div></div>
       </div>
       <div class="opcoes">
+        <div class="modo"><button class="on" id="mMapa">Mapa</button><button id="mSat">Satélite</button></div>
         <button class="chip" id="btnComparar">Comparar com 1985</button>
         <button class="chip on" id="btnFora">Destacar a APA</button>
       </div>
@@ -93,18 +98,18 @@
         <h2 id="tituloLeg">Dentro da APA em 2025</h2>
         <ul class="leg" id="leg"></ul>
         <div class="grafico"><h2>Como mudou (hectares)</h2><svg id="graf" viewBox="0 0 400 190"></svg><div class="gleg" id="grafLeg"></div></div>
-        <p class="nota">Cada quadradinho do mapa tem 30 m de lado e mostra o que os satélites viram naquele ano. Toque numa classe da legenda para ver só ela no mapa.</p>
+        <p class="nota">No modo <b>Mapa</b>, cada quadradinho tem 30 m de lado e mostra a classe de uso da terra daquele ano; toque numa classe da legenda para ver só ela. No modo <b>Satélite</b>, você vê a paisagem como o satélite Landsat a fotografou (cores reais, mosaico do período seco de cada ano).</p>
       </div>
     </div>
   </div>
 
-  <footer>Fonte dos dados: Projeto MapBiomas – Coleção 11 da Série Anual de Mapas de Cobertura e Uso da Terra do Brasil (30 m, 1985–2025). Limite da APA: IEMA.<br>Série Preservando o Nosso Quintal · Editora Naturalistas</footer>
+  <footer>Fonte dos dados: Projeto MapBiomas – Coleção 11 da Série Anual de Mapas de Cobertura e Uso da Terra do Brasil (30 m, 1985–2025). Imagens: Landsat 5, 7, 8 e 9 (USGS/NASA), Coleção 2, processadas no Google Earth Engine. Limite da APA: IEMA.<br>Série Preservando o Nosso Quintal · Editora Naturalistas</footer>
 </div>
 
 <script>
 const ORDEM=[3,12,29,11,9,46,48,21,15,24,25,33];
 const PRINCIPAIS=[3,15,46,21,9];
-let D, ano=2025, comparar=false, foco=true, so=null, timer=null, corte=.5;
+let D, sat=false, ano=2025, comparar=false, foco=true, so=null, timer=null, corte=.5;
 const $=id=>document.getElementById(id);
 const fmt=n=>Math.round(n).toLocaleString('pt-BR');
 
@@ -117,6 +122,9 @@ function iniciar(){
   $('slider').oninput=e=>{parar();ano=+e.target.value;atualizar()};
   $('play').onclick=()=>timer?parar():tocar();
   $('btnComparar').onclick=()=>{comparar=!comparar;$('btnComparar').classList.toggle('on',comparar);$('mapa').classList.toggle('comparando',comparar);atualizar()};
+  const modo=v=>{sat=v;$('mSat').classList.toggle('on',v);$('mMapa').classList.toggle('on',!v);$('mapa').classList.toggle('sat',v);so=null;
+    if(v&&!window._preSat){window._preSat=1;for(let y=1985;y<=2025;y++){const i=new Image();i.src='satelite/'+y+'.jpg'}}atualizar()};
+  $('mMapa').onclick=()=>modo(false);$('mSat').onclick=()=>modo(true);
   $('btnFora').onclick=()=>{foco=!foco;$('btnFora').classList.toggle('on',foco);desenharSobre()};
   // divisor arrastável
   const m=$('mapa');let arr=false;
@@ -145,8 +153,9 @@ function desenharSobre(){
 
 function atualizar(){
   $('slider').value=ano; $('ano').textContent=ano;
-  $('imgAgora').src='anos/'+ano+'.png';
-  $('imgAntes').src='anos/1985.png'; $('imgAntes').style.display=comparar?'':'none';
+  const src=y=>sat?'satelite/'+y+'.jpg':'anos/'+y+'.png';
+  $('imgAgora').src=src(ano);
+  $('imgAntes').src=src(1985); $('imgAntes').style.display=comparar?'':'none';
   $('anoAntes').style.display=comparar?'':'none'; $('ano').className='ano'+(comparar?' esq':''); $('anoAntes').className='ano';
   filtro();
   const s=D.anos[ano], s0=D.anos[1985], tot=Object.values(s).reduce((a,b)=>a+b,0);
@@ -160,9 +169,9 @@ function atualizar(){
   $('destaques').innerHTML=card(3,'Floresta')+card(15,'Pastagem');
   cursor();
 }
-function sozinha(k){so=so===k?null:k;atualizar()}
+function sozinha(k){if(sat)return;so=so===k?null:k;atualizar()}
 function filtro(){ // mostra só a classe escolhida, apagando as demais
-  if(!so) return;
+  if(!so||sat) return;
   const cor=D.classes[so].cor,r=parseInt(cor.slice(1,3),16),g=parseInt(cor.slice(3,5),16),b=parseInt(cor.slice(5,7),16);
   [['imgAgora',ano],['imgAntes',1985]].forEach(([id,y])=>{
     const c=document.createElement('canvas');c.width=D.w;c.height=D.h;const x=c.getContext('2d'),im=new Image();
