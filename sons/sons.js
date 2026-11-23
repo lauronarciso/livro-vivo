@@ -48,12 +48,16 @@
       <div class="onda" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     </div>`).join('')}
     <footer>Gravações do acervo <a href="https://xeno-canto.org" target="_blank" rel="noopener">xeno-canto.org</a>, usadas conforme a licença de cada autor.<br>Série Preservando o Nosso Quintal · Editora Naturalistas</footer></div>`;
-  const audio = new Audio(); audio.preload = 'none'; let atual = -1;
+  const audio = new Audio(); audio.preload = 'auto';
+  // se o arquivo local faltar, toca direto do xeno-canto
+  audio.addEventListener('error',()=>{ if(atual>=0 && !audio.src.includes('xeno-canto')){ audio.src=`https://xeno-canto.org/${P.especies[atual].xc}/download`; audio.play().catch(()=>{}); } }); let atual = -1;
   window.tocar = i => {
     if (atual === i && !audio.paused) { audio.pause(); return; }
-    if (atual !== i) { audio.src = `https://xeno-canto.org/${P.especies[i].xc}/download`; atual = i; }
+    if (atual !== i) { audio.src = `../audio/xc${P.especies[i].xc}.mp3`; atual = i; }
     audio.play().catch(()=>{});
   };
+  // pré-carrega os trechos curtos para tocar na hora
+  P.especies.forEach(e=>{const l=document.createElement('link');l.rel='prefetch';l.href=`../audio/xc${e.xc}.mp3`;document.head.appendChild(l)});
   const marca = () => document.querySelectorAll('.ave').forEach((el,k)=>{
     const on = k===atual && !audio.paused; el.classList.toggle('tocando',on);
     el.querySelector('.play').textContent = on ? '❚❚' : '▶'; });
