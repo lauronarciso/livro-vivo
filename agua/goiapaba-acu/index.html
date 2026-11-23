@@ -44,6 +44,7 @@
   <img src="../../passaporte/logo.png" alt="Preservando o Nosso Quintal">
   <div><small>Preservando o Nosso Quintal</small><h1>De onde vem a água?</h1><p>APA do Pico do Goiapaba-Açu</p></div>
 </header>
+<div class="dica">Gire e aproxime com os dedos</div>
 <div id="rotulos"></div>
 <div class="cartao">
   <div class="passo" id="nPasso">Passo 1 de 5</div>
@@ -55,6 +56,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* ---------- textos ---------- */
 const PASSOS=[
@@ -75,12 +77,14 @@ const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(38,1,0.01,10);
 // câmera fixa: uma única perspectiva, sempre enquadrando a maquete inteira
 const ALVO=new THREE.Vector3(0,0.015,0.03), DIR=new THREE.Vector3(0.05,0.78,0.98).normalize();
+const controls=new OrbitControls(camera,canvas); controls.enableDamping=true; controls.minDistance=.3; controls.maxDistance=3.5;
+controls.maxPolarAngle=Math.PI*0.47; controls.target.copy(ALVO);
 scene.add(new THREE.HemisphereLight(0xffffff,0x9a8f7a,1.4));
 const sol=new THREE.DirectionalLight(0xffffff,1.6); sol.position.set(-1,1.4,0.6); scene.add(sol);
 function tamanho(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=36;
   const vf=THREE.MathUtils.degToRad(camera.fov)/2, hf=Math.atan(Math.tan(vf)*camera.aspect);
   const d=Math.max(0.38/Math.tan(hf), 0.30/Math.tan(vf));
-  camera.position.copy(ALVO).addScaledVector(DIR,d); camera.lookAt(ALVO);
+  if(!tamanho.feito||tamanho.ori!==(w<h)){tamanho.feito=1;tamanho.ori=(w<h);camera.position.copy(ALVO).addScaledVector(DIR,d);controls.target.copy(ALVO)}
   // sobe a imagem para sobrar espaço acima do cartão de texto
   camera.setViewOffset(w,h,0,h*(w<h?-0.03:0.1),w,h); camera.updateProjectionMatrix()}
 addEventListener('resize',tamanho); tamanho();
@@ -195,7 +199,7 @@ document.getElementById('ant').onclick=()=>mostrar(passo-1);
 const relogio=new THREE.Clock(), tmp=new THREE.Vector3();
 function animar(){
   requestAnimationFrame(animar);
-  const dt=Math.min(relogio.getDelta(),0.05);
+  const dt=Math.min(relogio.getDelta(),0.05); controls.update();
   // chuva
   const escorre=passo>=1;
   for(let k=0;k<NG;k++){const s=est[k];
