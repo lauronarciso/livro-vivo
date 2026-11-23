@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Funga Capixaba — Mycena em 3D</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0b0d0c;color:#f2efe8;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  body{display:flex;flex-direction:column}
+  header{padding:14px 16px 6px;display:flex;justify-content:center}
+  .logo{background:#fff;border-radius:12px;padding:6px 10px;line-height:0}
+  .logo img{height:88px;width:auto}
+  .wm{display:none;font-size:24px;font-weight:800;color:#2a97d6}
+  .wm span{color:#ef9bbd}
+  model-viewer{flex:1;width:100%;min-height:360px;background:#0b0d0c;--poster-color:#0b0d0c}
+  .hint{text-align:center;font-size:13px;opacity:.75;padding:6px 16px 0}
+  footer{text-align:center;font-size:12px;opacity:.55;padding:8px 12px 14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><img src="https://static.inaturalist.org/projects/89537-cover.jpg?1695837190" alt="Funga Capixaba"
+    onerror="this.parentNode.style.display='none';document.getElementById('wm').style.display='block'"></div>
+  <div id="wm" class="wm">Funga <span>Capixaba</span></div>
+</header>
+<model-viewer src="mycena.glb?v=1" alt="Modelo 3D de dois cogumelos Mycena sobre serapilheira"
+  camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="1500" rotation-per-second="18deg"
+  camera-orbit="0deg 75deg auto" shadow-intensity="1" shadow-softness="0.8" exposure="0.95"
+  environment-image="neutral"></model-viewer>
+<p class="hint">Gire com um dedo, aproxime com dois.</p>
+<footer><i>Mycena</i> sp. · Funga Capixaba · modelo ampliado cerca de 5×</footer>
+</body>
+</html>
