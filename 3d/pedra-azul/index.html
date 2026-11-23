@@ -104,8 +104,8 @@
   const aviso = document.getElementById('aviso');
   const W = 3072, H = 3072;
   const ordem = ['rios', 'trilhas'];      // sobreposições, de baixo para cima
-  const arquivos = { base:'camadas/base.jpg', orto:'camadas/orto.jpg', limite:'camadas/limite.webp',
-    rios:'camadas/rios.webp', trilhas:'camadas/trilhas.webp' };
+  const arquivos = { base:'camadas/base.jpg?v=2', orto:'camadas/orto.jpg?v=2', limite:'camadas/limite.webp?v=2',
+    rios:'camadas/rios.webp?v=2', trilhas:'camadas/trilhas.webp?v=2' };
   const ativo = { orto:false, rios:false, trilhas:true };
   const cache = {};
   const carregar = n => cache[n] || (cache[n] = new Promise((ok, erro) => {
