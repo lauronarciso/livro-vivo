@@ -54,12 +54,10 @@
   .ponto button{border:0;border-radius:11px;padding:10px 13px;font:700 13.5px system-ui;background:var(--verde);color:#fff;cursor:pointer;white-space:nowrap}
   .ponto button:disabled{background:#d8d1c1;color:#8d8470}
   .ponto .feito{font-size:12.5px;font-weight:700;color:var(--verde)}
-  .desafio p{font-size:16px;line-height:1.4;font-weight:600;margin:16px 0 6px}
-  .desafio .dica{font-size:13px;color:var(--suave);font-weight:400;min-height:1.2em}
-  .op{display:block;width:100%;text-align:left;border:1.5px solid var(--linha);background:var(--papel);border-radius:13px;padding:13px 14px;
+
+
       font:600 15px system-ui;color:var(--azul);margin-top:8px;cursor:pointer}
-  .op.errada{border-color:#d9822b;background:#fff4e8;animation:treme .3s}
-  @keyframes treme{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
   .palco{position:relative;height:300px;display:flex;align-items:center;justify-content:center;margin-top:8px}
   .palco .marca{width:270px;height:270px;opacity:0}
   .palco .marca.bate{animation:bate .55s cubic-bezier(.3,1.6,.5,1) forwards}
@@ -113,20 +111,11 @@ const UCS = [{
   bbox:[-40.4943,-19.9374,-40.43266,-19.86455],
   carimbos:[
     { id:'apa', titulo:'APA', rotulo:'Dentro da APA', tipo:'area', cor:'#18965f', icone:'serra',
-      ajuda:'Em qualquer lugar dentro da APA',
-      pergunta:'Em qual bioma fica a APA do Pico do Goiapaba-Açu?',
-      opcoes:['Mata Atlântica','Cerrado','Caatinga'], certa:0,
-      dica:'É o bioma que acompanha quase todo o litoral do Brasil.' },
+      ajuda:'Em qualquer lugar dentro da APA'  },
     { id:'mirante', titulo:'MIRANTE', rotulo:'Mirante do Goiapaba-Açu', tipo:'ponto', cor:'#1e4575', icone:'mirante',
-      lon:-40.4722, lat:-19.9152, raio:150, ajuda:'No mirante',
-      pergunta:'Olhe o horizonte. Para que lado fica o mar?',
-      opcoes:['Leste','Oeste','Sul'], certa:0,
-      dica:'Procure o lado onde o sol nasce.' },
+      lon:-40.4722, lat:-19.9152, raio:150, ajuda:'No mirante'  },
     { id:'pico', titulo:'PICO', rotulo:'Pico do Goiapaba-Açu', tipo:'ponto', cor:'#127fa6', icone:'pico',
-      lon:-40.4761, lat:-19.9142, raio:120, ajuda:'No alto do pico',
-      pergunta:'A APA fica em quais municípios?',
-      opcoes:['Fundão e Santa Teresa','Vitória e Serra','Linhares e Aracruz'], certa:0,
-      dica:'Um deles é famoso pelos beija-flores; o outro tem praia e montanha.' }
+      lon:-40.4761, lat:-19.9142, raio:120, ajuda:'No alto do pico'  }
   ]
 }];
 const CHAVE='pnq-passaporte-v1';
@@ -259,19 +248,12 @@ function telaPontos(){
    <div class="mapa">${miniMapa(uc)}<div class="estado">${est}</div></div>
    <div class="lista">${uc.carimbos.map(c=>{const f=dados.carimbos[uc.id+'-'+c.id],s=situacao(uc,c);
      return `<div class="ponto"><div><b>${c.rotulo}</b><small>${f?'Carimbado em '+new Date(f.data).toLocaleDateString('pt-BR'):s.txt}</small></div>
-     ${f?'<span class="feito">✓ Feito</span>':`<button ${s.ok&&!fraco?'':'disabled'} onclick="desafio('${c.id}')">Carimbar</button>`}</div>`}).join('')}</div>`;
+     ${f?'<span class="feito">✓ Feito</span>':`<button ${s.ok&&!fraco?'':'disabled'} onclick="carimbar('${c.id}')">Carimbar</button>`}</div>`}).join('')}</div>`;
 }
 
-/* ===================== DESAFIO + CARIMBADA ===================== */
-function desafio(cId){
-  const uc=ucAberta,c=uc.carimbos.find(x=>x.id===cId); emDesafio=true;
-  folha.innerHTML=`<div class="topo"><h2>${c.rotulo}</h2><button class="x" onclick="telaPontos()" aria-label="Voltar">×</button></div>
-   <div class="desafio"><p>${c.pergunta}</p><div class="dica" id="dica"></div>
-   ${c.opcoes.map((o,i)=>`<button class="op" onclick="responder(this,'${cId}',${i})">${o}</button>`).join('')}</div>`;
-}
-function responder(el,cId,i){
+/* ===================== CARIMBADA ===================== */
+function carimbar(cId){
   const uc=ucAberta,c=uc.carimbos.find(x=>x.id===cId);
-  if(i!==c.certa){el.classList.remove('errada');void el.offsetWidth;el.classList.add('errada');document.getElementById('dica').textContent='Quase! Dica: '+c.dica;return}
   const reg={data:Date.now(),rot:Math.round(Math.random()*24-12),seed:1+Math.floor(Math.random()*90),teste:!!simulado};
   dados.carimbos[uc.id+'-'+c.id]=reg; salvar();
   mostrarCarimbo(uc,c,reg,true); desenhar();
