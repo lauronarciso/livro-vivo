@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Linha do tempo da paisagem · APA do Pico do Goiapaba-Açu</title>
+<meta name="theme-color" content="#1e4575">
+<style>
+  :root{--azul:#1e4575;--verde:#18965f;--ceu:#1cbaec;--fundo:#f6f3ec;--papel:#fffdf8;--linha:#e3dccd;--suave:#5b6a88}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--fundo);color:var(--azul);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .app{max-width:980px;margin:0 auto;padding:16px 16px 40px}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  header img{width:66px}
+  header small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--verde);font-weight:700}
+  header h1{margin:2px 0 0;font-size:24px;line-height:1.1;font-weight:800}
+  header p{margin:3px 0 0;font-size:14px;color:#3a4a6b}
+  .grade{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:16px;align-items:start}
+  @media (max-width:820px){.grade{grid-template-columns:1fr}.ano{font-size:28px}}
+  .cartao{background:var(--papel);border:1px solid var(--linha);border-radius:18px;padding:14px}
+  /* mapa */
+  .mapa{position:relative;width:100%;aspect-ratio:var(--asp);border-radius:12px;overflow:hidden;background:#e9e3d6;touch-action:pan-y}
+  .mapa img,.mapa svg.sobre{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+  .mapa .antes{clip-path:inset(0 calc(100% - var(--corte)) 0 0)}
+  .ano{position:absolute;left:12px;top:10px;font:800 40px/1 system-ui;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.45);pointer-events:none}
+  .ano.esq{left:auto;right:12px}
+  .divisor{position:absolute;top:0;bottom:0;left:var(--corte);width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 6px rgba(0,0,0,.4);display:none;cursor:ew-resize}
+  .divisor::after{content:"◀ ▶";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:var(--azul);border-radius:16px;padding:6px 8px;font:700 11px system-ui;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .comparando .divisor{display:block}
+  .controles{display:flex;align-items:center;gap:12px;margin-top:12px}
+  .play{flex:none;width:48px;height:48px;border-radius:50%;border:0;background:var(--azul);color:#fff;font-size:18px;cursor:pointer}
+  .trilho{flex:1}
+  .trilho input{width:100%;accent-color:var(--azul)}
+  .marcas{display:flex;justify-content:space-between;font-size:11px;color:var(--suave);padding:0 2px}
+  .opcoes{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .chip{border:1.5px solid var(--linha);background:#fff;border-radius:20px;padding:8px 13px;font:600 13px system-ui;color:var(--azul);cursor:pointer}
+  .chip.on{background:var(--azul);border-color:var(--azul);color:#fff}
+  /* destaque */
+  .destaques{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .dest{background:var(--papel);border:1px solid var(--linha);border-radius:14px;padding:12px}
+  .dest b{display:block;font-size:24px;line-height:1.1}
+  .dest span{font-size:12.5px;color:var(--suave)}
+  .dest .var{font-size:12.5px;font-weight:700;margin-top:4px;display:block}
+  .sobe,.desce{color:#3a4a6b}
+  h2{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--suave);margin:0 0 10px}
+  /* legenda */
+  .leg{list-style:none;margin:0;padding:0}
+  .leg li{display:grid;grid-template-columns:16px 1fr auto auto;gap:9px;align-items:center;padding:6px 0;border-bottom:1px solid #efe9dc;font-size:13.5px;cursor:pointer}
+  .leg li:last-child{border-bottom:0}
+  .leg i{width:16px;height:16px;border-radius:4px;border:1px solid rgba(0,0,0,.12)}
+  .leg .ha{font-variant-numeric:tabular-nums;text-align:right;color:#3a4a6b}
+  .leg .dif{font-variant-numeric:tabular-nums;font-size:12px;font-weight:700;min-width:58px;text-align:right}
+  .leg li.apagado{opacity:.35}
+  .grafico{margin-top:16px}
+  .grafico svg{width:100%;height:auto;display:block;cursor:pointer}
+  .gleg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:#3a4a6b;margin-top:6px}
+  .gleg i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+  .nota{font-size:12px;color:var(--suave);line-height:1.5;margin-top:12px}
+  footer{margin-top:22px;font-size:11.5px;color:var(--suave);line-height:1.55;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <img src="../../passaporte/logo.png" alt="Preservando o Nosso Quintal">
+    <div><small>Preservando o Nosso Quintal</small><h1>Linha do tempo da paisagem</h1><p>APA do Pico do Goiapaba-Açu · 1985 a 2025</p></div>
+  </header>
+
+  <div class="grade">
+    <div class="cartao">
+      <div class="mapa" id="mapa">
+        <img id="imgAntes" class="antes" alt="">
+        <img id="imgAgora" alt="Mapa de cobertura e uso da terra">
+        <svg class="sobre" id="sobre" preserveAspectRatio="none"></svg>
+        <div class="ano esq" id="anoAntes" style="display:none">1985</div>
+        <div class="ano" id="ano">2025</div>
+        <div class="divisor" id="divisor"></div>
+      </div>
+      <div class="controles">
+        <button class="play" id="play" aria-label="Animar">▶</button>
+        <div class="trilho"><input type="range" id="slider" min="1985" max="2025" value="2025" aria-label="Ano">
+          <div class="marcas"><span>1985</span><span>1995</span><span>2005</span><span>2015</span><span>2025</span></div></div>
+      </div>
+      <div class="opcoes">
+        <button class="chip" id="btnComparar">Comparar com 1985</button>
+        <button class="chip on" id="btnFora">Destacar a APA</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="destaques" id="destaques"></div>
+      <div class="cartao">
+        <h2 id="tituloLeg">Dentro da APA em 2025</h2>
+        <ul class="leg" id="leg"></ul>
+        <div class="grafico"><h2>Como mudou (hectares)</h2><svg id="graf" viewBox="0 0 400 190"></svg><div class="gleg" id="grafLeg"></div></div>
+        <p class="nota">Cada quadradinho do mapa tem 30 m de lado e mostra o que os satélites viram naquele ano. Toque numa classe da legenda para ver só ela no mapa.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>Fonte dos dados: Projeto MapBiomas – Coleção 11 da Série Anual de Mapas de Cobertura e Uso da Terra do Brasil (30 m, 1985–2025). Limite da APA: IEMA.<br>Série Preservando o Nosso Quintal · Editora Naturalistas</footer>
+</div>
+
+<script>
+const ORDEM=[3,12,29,11,9,46,48,21,15,24,25,33];
+const PRINCIPAIS=[3,15,46,21,9];
+let D, ano=2025, comparar=false, foco=true, so=null, timer=null, corte=.5;
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString('pt-BR');
+
+fetch('dados.json').then(r=>r.json()).then(d=>{D=d;iniciar()});
+
+function iniciar(){
+  $('mapa').style.setProperty('--asp',D.w+'/'+D.h);
+  for(let y=1985;y<=2025;y++){const i=new Image();i.src='anos/'+y+'.png'} // pré-carrega
+  desenharSobre(); grafico(); atualizar();
+  $('slider').oninput=e=>{parar();ano=+e.target.value;atualizar()};
+  $('play').onclick=()=>timer?parar():tocar();
+  $('btnComparar').onclick=()=>{comparar=!comparar;$('btnComparar').classList.toggle('on',comparar);$('mapa').classList.toggle('comparando',comparar);atualizar()};
+  $('btnFora').onclick=()=>{foco=!foco;$('btnFora').classList.toggle('on',foco);desenharSobre()};
+  // divisor arrastável
+  const m=$('mapa');let arr=false;
+  const mover=x=>{const r=m.getBoundingClientRect();corte=Math.min(.98,Math.max(.02,(x-r.left)/r.width));m.style.setProperty('--corte',corte*100+'%')};
+  m.style.setProperty('--corte','50%');
+  m.addEventListener('pointerdown',e=>{if(!comparar)return;arr=true;m.setPointerCapture(e.pointerId);mover(e.clientX)});
+  m.addEventListener('pointermove',e=>{if(arr)mover(e.clientX)});
+  m.addEventListener('pointerup',()=>arr=false);
+}
+function tocar(){ if(ano>=2025) ano=1984; $('play').textContent='❚❚';
+  timer=setInterval(()=>{ano++;atualizar();if(ano>=2025)parar()},420)}
+function parar(){clearInterval(timer);timer=null;$('play').textContent='▶'}
+
+function desenharSobre(){
+  const [x0,y0,x1,y1]=D.bbox, P=([x,y])=>[((x-x0)/(x1-x0)*D.w).toFixed(2),((y1-y)/(y1-y0)*D.h).toFixed(2)];
+  const d='M'+D.limite.map(p=>P(p).join(',')).join('L')+'Z';
+  const pico=P([-40.4761,-19.9142]);
+  $('sobre').setAttribute('viewBox',`0 0 ${D.w} ${D.h}`);
+  $('sobre').innerHTML=(foco?`<path d="M0 0H${D.w}V${D.h}H0Z ${d}" fill="#f6f3ec" fill-opacity=".62" fill-rule="evenodd"/>`:'')+
+   `<path d="${d}" fill="none" stroke="#1e4575" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+    <g transform="translate(${pico[0]},${pico[1]})"><path d="M0 -7 L6 4 H-6Z" fill="#7a4f2a" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke"/></g>
+    <text x="${+pico[0]+8}" y="${+pico[1]+4}" font-size="9.5" font-weight="700" fill="#3d2a14" stroke="#fff" stroke-width="2.6" paint-order="stroke" style="font-family:system-ui">Pico do Goiapaba-Açu</text>
+    <g transform="translate(${D.w-30},${D.h-42})" font-family="system-ui" font-weight="700"><path d="M0 -12 L6 4 L0 0 L-6 4Z" fill="#1e4575"/><text y="16" text-anchor="middle" font-size="10" fill="#1e4575">N</text></g>
+    <g transform="translate(10,${D.h-14})" font-family="system-ui"><rect width="${(1000/((x1-x0)/D.w*111320*Math.cos(19.9*Math.PI/180))).toFixed(1)}" height="4" fill="#1e4575"/><text y="-4" font-size="9" font-weight="700" fill="#1e4575">1 km</text></g>`;
+}
+
+function atualizar(){
+  $('slider').value=ano; $('ano').textContent=ano;
+  $('imgAgora').src='anos/'+ano+'.png';
+  $('imgAntes').src='anos/1985.png'; $('imgAntes').style.display=comparar?'':'none';
+  $('anoAntes').style.display=comparar?'':'none'; $('ano').className='ano'+(comparar?' esq':''); $('anoAntes').className='ano';
+  filtro();
+  const s=D.anos[ano], s0=D.anos[1985], tot=Object.values(s).reduce((a,b)=>a+b,0);
+  $('tituloLeg').textContent='Dentro da APA em '+ano;
+  $('leg').innerHTML=ORDEM.filter(k=>(s[k]||0)>=0.5||(s0[k]||0)>=0.5).map(k=>{const c=D.classes[k],v=s[k]||0,dv=v-(s0[k]||0);
+    const dif=ano===1985||Math.abs(dv)<1?'':`<span class="dif ${dv>0?'sobe':'desce'}">${dv>0?'▲':'▼'} ${fmt(Math.abs(dv))}</span>`;
+    return `<li class="${so&&so!==k?'apagado':''}" onclick="sozinha(${k})"><i style="background:${c.cor}"></i><span>${c.nome}</span><span class="ha">${fmt(v)} ha · ${(v/tot*100).toFixed(0)}%</span>${dif||'<span class="dif"></span>'}</li>`}).join('');
+  const card=(k,rot)=>{const v=s[k]||0,v0=s0[k]||0,dv=v-v0;
+    return `<div class="dest"><span>${rot} em ${ano}</span><b style="color:${k===15?'#9a8530':D.classes[k].cor}">${(v/tot*100).toFixed(0)}%</b><span>${fmt(v)} ha da APA</span>
+      ${ano>1985?`<span class="var ${dv>=0?'sobe':'desce'}">${dv>=0?'▲ +':'▼ −'}${fmt(Math.abs(dv))} ha desde 1985</span>`:'<span class="var">ponto de partida</span>'}</div>`};
+  $('destaques').innerHTML=card(3,'Floresta')+card(15,'Pastagem');
+  cursor();
+}
+function sozinha(k){so=so===k?null:k;atualizar()}
+function filtro(){ // mostra só a classe escolhida, desbotando as demais
+  if(!so) return;
+  // desenha a classe escolhida por cima, a partir do PNG do ano
+  const c=document.createElement('canvas');c.width=D.w;c.height=D.h;const x=c.getContext('2d');
+  const im=new Image();im.onload=()=>{x.drawImage(im,0,0);const px=x.getImageData(0,0,D.w,D.h),dd=px.data,cor=D.classes[so].cor,r=parseInt(cor.slice(1,3),16),g=parseInt(cor.slice(3,5),16),b=parseInt(cor.slice(5,7),16);
+    for(let i=0;i<dd.length;i+=4){if(dd[i]===r&&dd[i+1]===g&&dd[i+2]===b)continue;dd[i]=dd[i+1]=dd[i+2]=235;dd[i+3]=255}
+    x.putImageData(px,0,0);$('imgAgora').src=c.toDataURL()};
+  im.src='anos/'+ano+'.png';
+}
+
+let GX,GY;
+function grafico(){
+  const W=400,H=190,L=38,R=16,T=10,B=24, anos=Object.keys(D.anos).map(Number);
+  let max=0;anos.forEach(y=>PRINCIPAIS.forEach(k=>max=Math.max(max,D.anos[y][k]||0)));max=Math.ceil(max/500)*500;
+  GX=y=>L+(y-1985)/40*(W-L-R); GY=v=>T+(1-v/max)*(H-T-B);
+  let g='';for(let v=0;v<=max;v+=500)g+=`<line x1="${L}" x2="${W-R}" y1="${GY(v)}" y2="${GY(v)}" stroke="#ece5d6"/><text x="${L-5}" y="${GY(v)+3.5}" font-size="10" text-anchor="end" fill="#5b6a88">${fmt(v)}</text>`;
+  [1985,1995,2005,2015,2025].forEach(y=>g+=`<text x="${GX(y)}" y="${H-6}" font-size="10" text-anchor="middle" fill="#5b6a88">${y}</text>`);
+  PRINCIPAIS.forEach(k=>{const cor=k===15?'#c9b44e':k===21?'#d9c690':D.classes[k].cor;
+    g+=`<polyline fill="none" stroke="${cor}" stroke-width="2.6" stroke-linejoin="round" points="${anos.map(y=>GX(y).toFixed(1)+','+GY(D.anos[y][k]||0).toFixed(1)).join(' ')}"/>`;
+  });
+  $('grafLeg').innerHTML=PRINCIPAIS.map(k=>`<span><i style="background:${k===15?'#c9b44e':k===21?'#d9c690':D.classes[k].cor}"></i>${D.classes[k].nome.replace(' (plantio de árvores)','')}</span>`).join('');
+  g+=`<line id="cur" y1="${T}" y2="${H-B}" stroke="#1e4575" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+  $('graf').innerHTML=g;
+  $('graf').onclick=e=>{const r=$('graf').getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W;parar();ano=Math.round(Math.min(2025,Math.max(1985,1985+(x-L)/(W-L-R)*40)));atualizar()};
+}
+function cursor(){const c=$('cur');if(c){c.setAttribute('x1',GX(ano));c.setAttribute('x2',GX(ano))}}
+</script>
+</body>
+</html>
