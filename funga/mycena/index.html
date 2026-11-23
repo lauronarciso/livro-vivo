@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mycena em 2.5D e 3D — teste</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js"></script>
+<style>
+  :root{--navy:#1b2a4e}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0b0d0c;color:#f2efe8;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  header{padding:14px 16px 8px;text-align:center}
+  h1{font-size:18px;margin:0 0 2px;font-weight:600}
+  .sub{font-size:13px;opacity:.7;margin:0}
+  .tabs{display:flex;justify-content:center;gap:8px;padding:8px}
+  .tabs button{border:0;border-radius:999px;padding:9px 16px;font-size:14px;font-weight:600;background:#e8e6df;color:var(--navy);cursor:pointer}
+  .tabs button.on{background:var(--navy);color:#fff}
+  .stage{position:relative;width:min(100vw,560px);margin:0 auto;aspect-ratio:1179/1308;max-height:calc(100vh - 190px)}
+  .stage canvas, .stage model-viewer{position:absolute;inset:0;width:100%;height:100%;border-radius:10px;touch-action:none;background:#0b0d0c}
+  .hide{display:none!important}
+  .hint{text-align:center;font-size:13px;opacity:.75;padding:10px 16px 0;max-width:560px;margin:0 auto}
+  footer{text-align:center;font-size:12px;opacity:.55;padding:12px}
+  model-viewer{--poster-color:#0b0d0c}
+  .ar-btn{position:absolute;right:12px;bottom:12px;background:#1b2a4e;color:#fff;border:0;border-radius:20px;padding:9px 15px;font:600 13.5px system-ui;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+  .mov{display:block;margin:8px auto 0;border:1px solid #e8e6df;background:transparent;color:#e8e6df;border-radius:999px;padding:7px 14px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Teste: foto de <i>Mycena</i> com profundidade</h1>
+  <p class="sub">Duas abordagens a partir de uma única foto</p>
+</header>
+<div class="tabs">
+  <button id="b25" class="on">Foto 2.5D</button>
+  <button id="b3d">Modelo 3D</button>
+</div>
+<div class="stage" id="stage">
+  <canvas id="gl"></canvas>
+  <model-viewer id="mv" class="hide" src="mycena.glb?v=1" alt="Modelo 3D de dois cogumelos Mycena sobre serapilheira"
+    camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="1500" rotation-per-second="18deg"
+    camera-orbit="0deg 75deg auto" shadow-intensity="1" shadow-softness="0.8" exposure="0.95"
+    environment-image="neutral" ar ar-modes="scene-viewer quick-look" ar-scale="auto">
+    <button slot="ar-button" class="ar-btn">Ver na mesa (RA)</button></model-viewer>
+</div>
+<button class="mov" id="mov">Mover com o celular</button>
+<p class="hint" id="hint">Arraste o dedo (ou o mouse) sobre a foto. Parado, ela se move sozinha.</p>
+<footer>Funga Capixaba · teste de visualização</footer>
+
+<script>
+(function(){
+const cv=document.getElementById('gl');
+const gl=cv.getContext('webgl',{antialias:true,premultipliedAlpha:false});
+const vs=`attribute vec2 p;varying vec2 uv;void main(){uv=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0,1);}`;
+const fs=`precision highp float;varying vec2 uv;
+uniform sampler2D bg,fg,dp;uniform vec2 t;
+void main(){
+  vec2 c=(uv-.5)*0.92+.5;           // leve zoom para esconder bordas
+  // fundo: paralaxe por profundidade (iterações)
+  vec2 b=c;
+  for(int i=0;i<5;i++){float d=texture2D(dp,b).r; b=c+t*(0.55-0.5*d)*0.06;}
+  vec3 col=texture2D(bg,b).rgb;
+  // cogumelos: plano da frente, movem para o lado oposto
+  vec4 f=texture2D(fg,c-t*0.022);
+  col=mix(col,f.rgb,f.a);
+  float v=smoothstep(.95,.35,length(uv-.5));
+  gl_FragColor=vec4(col*(.55+.45*v),1.);
+}`;
+function sh(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s}
+const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);gl.useProgram(pr);
+const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+const names=['bg','fg','dp'],files=['bg.jpg','fg.webp','bgdepth.png'];let ready=0;
+files.forEach((f,i)=>{const im=new Image();im.onload=()=>{const tx=gl.createTexture();gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,tx);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im);gl.uniform1i(gl.getUniformLocation(pr,names[i]),i);ready++;};im.src=f;});
+const ut=gl.getUniformLocation(pr,'t');
+let tx=0,ty=0,gx=0,gy=0,last=-1e9;
+function setFrom(e){const r=cv.getBoundingClientRect();gx=((e.clientX-r.left)/r.width-.5)*2;gy=((e.clientY-r.top)/r.height-.5)*2;last=performance.now();}
+cv.addEventListener('pointermove',setFrom);cv.addEventListener('pointerdown',setFrom);
+try{window.addEventListener('deviceorientation',e=>{if(e.gamma==null)return;gx=Math.max(-1,Math.min(1,e.gamma/25));gy=Math.max(-1,Math.min(1,(e.beta-45)/25));last=performance.now();});}catch(_){}
+function frame(now){
+  const w=cv.clientWidth*devicePixelRatio,h=cv.clientHeight*devicePixelRatio;
+  if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;gl.viewport(0,0,w,h);}
+  if(now-last>2500){const s=now/1000;gx=Math.sin(s*.7)*.9;gy=Math.sin(s*.45)*.5;}
+  tx+=(gx-tx)*.08;ty+=(gy-ty)*.08;
+  if(ready===3){gl.uniform2f(ut,tx,ty);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+const mov=document.getElementById('mov');
+if(!('DeviceOrientationEvent' in window)) mov.classList.add('hide');
+mov.onclick=async()=>{try{if(typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')return;}mov.textContent='Incline o celular';}catch(e){mov.textContent='Movimento indisponível';}};
+const b25=document.getElementById('b25'),b3d=document.getElementById('b3d'),mv=document.getElementById('mv'),hint=document.getElementById('hint');
+b25.onclick=()=>{b25.classList.add('on');b3d.classList.remove('on');cv.classList.remove('hide');mv.classList.add('hide');mov.classList.remove('hide');hint.textContent='Arraste o dedo (ou o mouse) sobre a foto. Parado, ela se move sozinha.';};
+b3d.onclick=()=>{b3d.classList.add('on');b25.classList.remove('on');mv.classList.remove('hide');cv.classList.add('hide');mov.classList.add('hide');hint.textContent='Gire com um dedo, aproxime com dois. Modelo ampliado cerca de 5×. Toque em “Ver na mesa” para a RA.';};
+})();
+</script>
+</body>
+</html>
