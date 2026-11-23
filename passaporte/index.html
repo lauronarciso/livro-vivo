@@ -84,7 +84,13 @@
   .camera .baixo{display:flex;align-items:center;justify-content:space-around;padding:16px 20px calc(18px + env(safe-area-inset-bottom))}
   .obturador{width:74px;height:74px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25);cursor:pointer}
   .obturador:active{background:#fff}
-  .camera .lado{width:56px;border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:50%;height:56px;font-size:22px;cursor:pointer}
+  .camera .lado{width:68px;height:68px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:50%;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+  .camera .lado small{font:600 11px system-ui}
+  .camera .lado:active{background:rgba(255,255,255,.35)}
+  .camera .lado.vazio{background:none}
+  .tamanho{display:flex;align-items:center;gap:12px;padding:12px 18px 0}
+  .tamanho button{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font:600 24px system-ui;line-height:1;cursor:pointer}
+  .tamanho input{flex:1;accent-color:#fff;height:30px}
   .camera .acoes{display:flex;gap:10px;padding:14px 16px calc(18px + env(safe-area-inset-bottom))}
   .camera .acoes button{flex:1;border:0;border-radius:14px;padding:14px;font:700 15px system-ui;cursor:pointer}
   #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
@@ -123,11 +129,17 @@
 <div class="camera" id="camera">
   <div class="barra"><button onclick="fecharCamera()">✕ Fechar</button><span style="font:600 14px system-ui">Foto com o carimbo</span><span style="width:70px"></span></div>
   <div id="quadro">
-    <div id="visor"><video id="video" playsinline muted autoplay></video><div class="dica">Arraste o carimbo · use dois dedos para mudar o tamanho</div></div>
+    <div id="visor"><video id="video" playsinline muted autoplay></video><div class="dica">Arraste para mover · use dois dedos para o tamanho</div></div>
     <div id="previa" class="previa" style="display:none"><img id="previaImg" alt="Sua foto com o carimbo"></div>
     <div id="camCarimbo"></div><div id="camAviso"></div><div id="flash"></div>
   </div>
-  <div class="baixo" id="botoesVisor"><span style="width:56px"></span><button class="obturador" onclick="disparar()" aria-label="Tirar foto"></button><button class="lado" onclick="virarCamera()" aria-label="Trocar câmera">⟲</button></div>
+  <div id="botoesVisor">
+    <div class="tamanho"><button onclick="tamanho(cam.w-.06)" aria-label="Carimbo menor">−</button>
+      <input type="range" id="tam" min="15" max="90" value="40" oninput="tamanho(this.value/100)" aria-label="Tamanho do carimbo">
+      <button onclick="tamanho(cam.w+.06)" aria-label="Carimbo maior">+</button></div>
+    <div class="baixo"><span class="lado vazio"></span><button class="obturador" onclick="disparar()" aria-label="Tirar foto"></button>
+      <button class="lado" onclick="virarCamera()" aria-label="Virar a câmera"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z"/><path d="M8.6 12.6a3.5 3.5 0 0 1 6.1-1.4M15.4 14.4a3.5 3.5 0 0 1-6.1 1.4"/><path d="M14.9 9.6v1.8h-1.8M9.1 17.4v-1.8h1.8"/></svg><small>Virar</small></button></div>
+  </div>
   <div class="acoes" id="botoesPrevia" style="display:none"><button style="background:rgba(255,255,255,.16);color:#fff" onclick="outraFoto()">Tirar outra</button><button style="background:#fff;color:#1e4575" onclick="salvarFoto()">Salvar / compartilhar</button></div>
   <input type="file" id="arquivo" accept="image/*" capture="environment" hidden onchange="arquivoEscolhido(this)">
 </div>
@@ -323,13 +335,14 @@ async function tirarFoto(ucId,cId){
   cam.img=await svgParaImagem(svg); cam.nome=`passaporte-${ucId}-${cId}`;
   const el=document.getElementById('camera'); el.classList.add('on');
   document.getElementById('camCarimbo').innerHTML=svg;
-  posicionar(); mostrarVisor();
+  tamanho(cam.w); mostrarVisor();
   await abrirCamera();
 }
 async function abrirCamera(){
   pararCamera(); const v=document.getElementById('video'), aviso=document.getElementById('camAviso');
   aviso.textContent='';
   try{
+    document.querySelector('.camera .lado:not(.vazio)').style.visibility='';
     cam.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:cam.frente?'user':{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});
     v.srcObject=cam.stream; v.style.transform=cam.frente?'scaleX(-1)':''; await v.play();
   }catch(e){
@@ -339,6 +352,7 @@ async function abrirCamera(){
 function pararCamera(){if(cam.stream){cam.stream.getTracks().forEach(t=>t.stop());cam.stream=null}}
 function fecharCamera(){pararCamera();document.getElementById('camera').classList.remove('on')}
 function virarCamera(){cam.frente=!cam.frente;abrirCamera()}
+function tamanho(w){cam.w=Math.min(.9,Math.max(.15,w));const r=document.getElementById('tam');if(r)r.value=Math.round(cam.w*100);posicionar()}
 function posicionar(){const e=document.getElementById('camCarimbo');
   e.style.left=(cam.x*100)+'%';e.style.top=(cam.y*100)+'%';e.style.width=(cam.w*100)+'%'}
 function mostrarVisor(){vis(true)}
@@ -346,14 +360,15 @@ function vis(v){const d=(id,on)=>document.getElementById(id).style.display=on?''
 // arrastar o carimbo com o dedo; aumentar/diminuir com dois dedos
 (function(){
   const area=()=>document.getElementById('quadro').getBoundingClientRect(); const toques=new Map(); let ini=null;
-  document.addEventListener('pointerdown',e=>{if(!e.target.closest('#camCarimbo'))return;e.preventDefault();
+  document.addEventListener('pointerdown',e=>{if(!e.target.closest('#quadro')||document.getElementById('visor').style.display==='none'||e.target.closest('button'))return;e.preventDefault();
     toques.set(e.pointerId,{x:e.clientX,y:e.clientY});ini={x:cam.x,y:cam.y,w:cam.w,p:[...toques.values()].map(t=>({...t}))}},{passive:false});
   document.addEventListener('pointermove',e=>{if(!toques.has(e.pointerId))return;toques.set(e.pointerId,{x:e.clientX,y:e.clientY});
     const r=area(),p=[...toques.values()];
     if(p.length===1&&ini.p.length===1){cam.x=Math.min(.95,Math.max(.05,ini.x+(p[0].x-ini.p[0].x)/r.width));cam.y=Math.min(.95,Math.max(.05,ini.y+(p[0].y-ini.p[0].y)/r.height))}
     else if(p.length>=2&&ini.p.length>=2){const d0=Math.hypot(ini.p[0].x-ini.p[1].x,ini.p[0].y-ini.p[1].y),d1=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
-      cam.w=Math.min(.9,Math.max(.18,ini.w*d1/d0))}
+      tamanho(ini.w*d1/d0)}
     posicionar()});
+  document.addEventListener('wheel',e=>{if(!e.target.closest('#quadro'))return;e.preventDefault();tamanho(cam.w*(e.deltaY<0?1.06:.94))},{passive:false});
   const fim=e=>{if(!toques.delete(e.pointerId))return;ini={x:cam.x,y:cam.y,w:cam.w,p:[...toques.values()].map(t=>({...t}))}};
   document.addEventListener('pointerup',fim);document.addEventListener('pointercancel',fim);
 })();
