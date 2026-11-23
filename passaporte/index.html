@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Passaporte · Preservando o Nosso Quintal</title>
+<meta name="theme-color" content="#1e4575">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+  :root{--azul:#1e4575;--verde:#18965f;--ceu:#1cbaec;--fundo:#f6f3ec;--papel:#fffdf8;--linha:#e3dccd;--suave:#5b6a88}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--fundo);color:var(--azul);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .app{max-width:560px;margin:0 auto;padding:18px 16px 40px}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  header img{width:74px;height:auto}
+  header small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--verde);font-weight:700}
+  header h1{margin:2px 0 0;font-size:25px;line-height:1.05;font-weight:800}
+  .intro{font-size:14.5px;line-height:1.45;color:#3a4a6b;margin:0 0 18px}
+  .uc{background:var(--papel);border:1px solid var(--linha);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 1px 0 rgba(30,69,117,.05)}
+  .uc h2{margin:0;font-size:18px;line-height:1.2}
+  .uc .mun{font-size:12.5px;color:var(--suave);margin-top:3px}
+  .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .slot{aspect-ratio:1;border-radius:50%;border:2px dashed #cfc6b3;display:flex;align-items:center;justify-content:center;
+        text-align:center;font-size:10.5px;color:#a39a86;padding:10px;line-height:1.2;position:relative;background:none;cursor:pointer;font-family:inherit}
+  .slot.ok{border:0;padding:0}
+  .slot svg{width:100%;height:100%}
+  .slot span b{display:block;font-size:12px;color:#8d8470;margin-bottom:2px}
+  .btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font:700 15.5px system-ui,sans-serif;cursor:pointer;
+       background:var(--azul);color:#fff;margin-top:14px}
+  .btn.sec{background:#e9e3d6;color:var(--azul)}
+  .btn:disabled{opacity:.45;cursor:default}
+  .breve{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .breve div{background:var(--papel);border:1px dashed #d6ceba;border-radius:14px;padding:12px;font-size:13px;color:#8d8470;line-height:1.25}
+  .breve div b{display:block;color:#6c6553;font-size:13.5px}
+  h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--suave);margin:26px 0 10px}
+  /* folha de carimbar */
+  .veu{position:fixed;inset:0;background:rgba(20,32,58,.55);display:none;align-items:flex-end;justify-content:center;z-index:10}
+  .veu.on{display:flex}
+  .folha{background:var(--fundo);width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom))}
+  .folha .topo{display:flex;justify-content:space-between;align-items:center}
+  .folha h2{margin:0;font-size:19px}
+  .x{border:0;background:#e9e3d6;color:var(--azul);width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer}
+  .mapa{display:flex;gap:14px;align-items:center;margin:14px 0 4px}
+  .mapa svg{width:46%;flex:none;background:var(--papel);border:1px solid var(--linha);border-radius:14px}
+  .estado{font-size:14px;line-height:1.45}
+  .estado .grande{font-size:17px;font-weight:800;display:block;margin-bottom:4px}
+  .estado .prec{font-size:12px;color:var(--suave)}
+  .lista{margin-top:10px}
+  .ponto{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--papel);border:1px solid var(--linha);border-radius:14px;padding:11px 13px;margin-top:8px}
+  .ponto b{font-size:14.5px}.ponto small{display:block;color:var(--suave);font-size:12px;margin-top:2px}
+  .ponto button{border:0;border-radius:11px;padding:10px 13px;font:700 13.5px system-ui;background:var(--verde);color:#fff;cursor:pointer;white-space:nowrap}
+  .ponto button:disabled{background:#d8d1c1;color:#8d8470}
+  .ponto .feito{font-size:12.5px;font-weight:700;color:var(--verde)}
+  .desafio p{font-size:16px;line-height:1.4;font-weight:600;margin:16px 0 6px}
+  .desafio .dica{font-size:13px;color:var(--suave);font-weight:400;min-height:1.2em}
+  .op{display:block;width:100%;text-align:left;border:1.5px solid var(--linha);background:var(--papel);border-radius:13px;padding:13px 14px;
+      font:600 15px system-ui;color:var(--azul);margin-top:8px;cursor:pointer}
+  .op.errada{border-color:#d9822b;background:#fff4e8;animation:treme .3s}
+  @keyframes treme{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .palco{position:relative;height:300px;display:flex;align-items:center;justify-content:center;margin-top:8px}
+  .palco .marca{width:270px;height:270px;opacity:0}
+  .palco .marca.bate{animation:bate .55s cubic-bezier(.3,1.6,.5,1) forwards}
+  @keyframes bate{0%{opacity:0;transform:scale(1.9) rotate(var(--r))}60%{opacity:1;transform:scale(.94) rotate(var(--r))}100%{opacity:1;transform:scale(1) rotate(var(--r))}}
+  .parabens{text-align:center;font-size:15px;line-height:1.4;margin:4px 0 0}
+  .parabens b{display:block;font-size:20px}
+  .teste{margin-top:26px;border:1.5px dashed #d9822b;border-radius:14px;padding:12px;background:#fff8ef;font-size:13px}
+  .teste b{color:#a35a12}
+  .teste .linha{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .teste button{border:1px solid #d9b48a;background:#fff;border-radius:9px;padding:7px 10px;font:600 12.5px system-ui;color:#7a4a12;cursor:pointer}
+  .teste button.on{background:#d9822b;color:#fff;border-color:#d9822b}
+  footer{margin-top:28px;font-size:11.5px;color:var(--suave);text-align:center;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <img src="logo.png" alt="Programa Preservando o Nosso Quintal">
+    <div><small>Preservando o Nosso Quintal</small><h1>Meu passaporte<br>das UCs</h1></div>
+  </header>
+  <p class="intro">Visite as unidades de conservação da série e carimbe seu passaporte. O carimbo só aparece quando você está lá de verdade: o celular confere pelo GPS.</p>
+
+  <div id="ucs"></div>
+
+  <h3>Próximos carimbos</h3>
+  <div class="breve">
+    <div><b>Parque Estadual de Itaúnas</b>Em breve</div>
+    <div><b>Parque Estadual da Pedra Azul</b>Em breve</div>
+    <div><b>Parque Estadual de Forno Grande</b>Em breve</div>
+    <div><b>Monumento Natural O Frade e a Freira</b>Em breve</div>
+    <div><b>Monumento Natural Serra das Torres</b>Em breve</div>
+    <div><b>Reserva Biológica de Duas Bocas</b>Em breve</div>
+    <div><b>Parque Estadual Paulo César Vinha</b>Em breve</div>
+  </div>
+
+  <div id="painelTeste"></div>
+  <footer>Série Preservando o Nosso Quintal · Editora Naturalistas<br>Sua localização é usada só neste aparelho e não é enviada a ninguém.</footer>
+</div>
+
+<div class="veu" id="veu"><div class="folha" id="folha"></div></div>
+
+<script src="apago.js"></script>
+<script>
+/* ===================== CONFIGURAÇÃO ===================== */
+const UCS = [{
+  id:'apago',
+  nome:'APA do Pico do Goiapaba-Açu',
+  curto:'Goiapaba-Açu',
+  mun:'Fundão e Santa Teresa · ES',
+  limite: LIMITE_APAGO[0],                // anel [lon,lat]
+  bbox:[-40.4943,-19.9374,-40.43266,-19.86455],
+  carimbos:[
+    { id:'apa', titulo:'APA', rotulo:'Dentro da APA', tipo:'area', cor:'#18965f', icone:'serra',
+      ajuda:'Em qualquer lugar dentro da APA',
+      pergunta:'Em qual bioma fica a APA do Pico do Goiapaba-Açu?',
+      opcoes:['Mata Atlântica','Cerrado','Caatinga'], certa:0,
+      dica:'É o bioma que acompanha quase todo o litoral do Brasil.' },
+    { id:'mirante', titulo:'MIRANTE', rotulo:'Mirante do Goiapaba-Açu', tipo:'ponto', cor:'#1e4575', icone:'mirante',
+      lon:-40.4722, lat:-19.9152, raio:150, ajuda:'No mirante',
+      pergunta:'Olhe o horizonte. Para que lado fica o mar?',
+      opcoes:['Leste','Oeste','Sul'], certa:0,
+      dica:'Procure o lado onde o sol nasce.' },
+    { id:'pico', titulo:'PICO', rotulo:'Pico do Goiapaba-Açu', tipo:'ponto', cor:'#127fa6', icone:'pico',
+      lon:-40.4761, lat:-19.9142, raio:120, ajuda:'No alto do pico',
+      pergunta:'A APA fica em quais municípios?',
+      opcoes:['Fundão e Santa Teresa','Vitória e Serra','Linhares e Aracruz'], certa:0,
+      dica:'Um deles é famoso pelos beija-flores; o outro tem praia e montanha.' }
+  ]
+}];
+const CHAVE='pnq-passaporte-v1';
+const TESTE=/[?&]teste=1/.test(location.search);
+
+/* ===================== ESTADO ===================== */
+let dados={carimbos:{}};
+try{ dados=JSON.parse(localStorage.getItem(CHAVE))||dados }catch(e){}
+function salvar(){ try{ localStorage.setItem(CHAVE,JSON.stringify(dados)) }catch(e){} }
+let pos=null;          // {lon,lat,acc}
+let simulado=null;     // nome da simulação ativa
+let vigia=null, ucAberta=null;
+
+/* ===================== GEOMETRIA ===================== */
+const R=6371000, rad=Math.PI/180;
+function dist(a,b){const dLa=(b.lat-a.lat)*rad,dLo=(b.lon-a.lon)*rad;
+  const h=Math.sin(dLa/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+function dentro(p,anel){let d=false;for(let i=0,j=anel.length-1;i<anel.length;j=i++){const[xi,yi]=anel[i],[xj,yj]=anel[j];
+  if((yi>p.lat)!==(yj>p.lat)&&p.lon<(xj-xi)*(p.lat-yi)/(yj-yi)+xi)d=!d}return d}
+function distBorda(p,anel){ // metros, aproximação plana local
+  const kx=111320*Math.cos(p.lat*rad),ky=110540;let m=Infinity;
+  for(let i=0;i<anel.length-1;i++){const ax=(anel[i][0]-p.lon)*kx,ay=(anel[i][1]-p.lat)*ky,bx=(anel[i+1][0]-p.lon)*kx,by=(anel[i+1][1]-p.lat)*ky;
+    const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,-(ax*dx+ay*dy)/(dx*dx+dy*dy||1)));m=Math.min(m,Math.hypot(ax+t*dx,ay+t*dy))}return m}
+function situacao(uc,c){
+  if(!pos) return {ok:false,txt:'Aguardando localização'};
+  const folga=Math.min(pos.acc||0,50);
+  if(c.tipo==='area'){
+    if(dentro(pos,uc.limite)) return {ok:true,txt:'Você está dentro da APA'};
+    const d=distBorda(pos,uc.limite); if(d<=20+folga) return {ok:true,txt:'Você está no limite da APA'};
+    return {ok:false,txt:'Faltam '+fmt(d)+' até a APA'};
+  }
+  const d=dist(pos,c); if(d<=c.raio+folga) return {ok:true,txt:'Você chegou!'};
+  return {ok:false,txt:'Faltam '+fmt(d-c.raio)};
+}
+const fmt=m=>m<1000?Math.round(m/10)*10+' m':(m/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+' km';
+
+/* ===================== DESENHO DO CARIMBO ===================== */
+const ICONES={
+  serra:'<path d="M-46 22 L-24 -8 L-12 6 L6 -26 L22 -2 L30 -10 L46 22 Z" fill="currentColor"/><path d="M6 -26 L0 -14 L6 -17 L12 -12 Z" fill="#fffdf8" opacity=".9"/><g fill="currentColor"><path d="M-36 22 l5 -14 l5 14z"/><path d="M-27 22 l4 -11 l4 11z"/></g>',
+  mirante:'<path d="M-46 22 L-20 -14 L-6 4 L10 -18 L46 22 Z" fill="currentColor"/><circle cx="22" cy="-22" r="7" fill="none" stroke="currentColor" stroke-width="3"/><g stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M22 -36v-5M34 -32l4 -4M10 -32l-4 -4M37 -22h5M7 -22h-5"/></g>',
+  pico:'<path d="M-46 22 L-8 -26 L4 -14 L14 -22 L46 22 Z" fill="currentColor"/><path d="M-8 -26 v-20" stroke="currentColor" stroke-width="3"/><path d="M-8 -46 l18 5 l-18 5z" fill="currentColor"/>'
+};
+let nId=0;
+function svgCarimbo(uc,c,reg){
+  const id='c'+(++nId), cor=c.cor, data=reg?new Date(reg.data).toLocaleDateString('pt-BR'):'';
+  const rot=reg?reg.rot:0;
+  return `<svg viewBox="-110 -110 220 220" xmlns="http://www.w3.org/2000/svg" style="color:${cor}">
+  <defs>
+    <filter id="${id}f" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="3" seed="${(reg&&reg.seed)||3}" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -3 2.55" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in" result="t"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="7" result="d"/>
+      <feDisplacementMap in="t" in2="d" scale="2.4"/>
+    </filter>
+    <path id="${id}a" d="M-80 0 A80 80 0 0 1 80 0"/>
+    <path id="${id}b" d="M-86 0 A86 86 0 0 0 86 0"/>
+  </defs>
+  <g transform="rotate(${rot})" filter="url(#${id}f)" fill="${cor}" font-family="Arial Black,Arial,Helvetica,sans-serif" font-weight="900">
+    <circle r="104" fill="none" stroke="${cor}" stroke-width="5"/>
+    <circle r="94" fill="none" stroke="${cor}" stroke-width="1.6"/>
+    <circle r="62" fill="none" stroke="${cor}" stroke-width="1.6"/>
+    <text font-size="13.2" letter-spacing="1.1" text-anchor="middle"><textPath href="#${id}a" startOffset="50%">PRESERVANDO O NOSSO QUINTAL</textPath></text>
+    <text font-size="12" letter-spacing=".6" text-anchor="middle"><textPath href="#${id}b" startOffset="50%">${uc.curto.toUpperCase()} · ${data||'ES'}</textPath></text>
+    <circle cx="-74" cy="0" r="3"/><circle cx="74" cy="0" r="3"/>
+    <g transform="translate(0,-6) scale(.92)">${ICONES[c.icone]}</g>
+    <text y="38" font-size="15" letter-spacing="1.5" text-anchor="middle">${c.titulo}</text>
+    ${reg&&reg.teste?'<text y="54" font-size="8.5" letter-spacing="1.5" text-anchor="middle" opacity=".8">TESTE</text>':''}
+  </g></svg>`;
+}
+
+/* ===================== PASSAPORTE ===================== */
+function desenhar(){
+  document.getElementById('ucs').innerHTML=UCS.map(uc=>{
+    const feitos=uc.carimbos.filter(c=>dados.carimbos[uc.id+'-'+c.id]).length;
+    return `<div class="uc"><h2>${uc.nome}</h2><div class="mun">${uc.mun} · ${feitos} de ${uc.carimbos.length} carimbos</div>
+    <div class="slots">${uc.carimbos.map(c=>{const r=dados.carimbos[uc.id+'-'+c.id];
+      return r?`<button class="slot ok" aria-label="Carimbo ${c.rotulo}" onclick="verCarimbo('${uc.id}','${c.id}')">${svgCarimbo(uc,c,r)}</button>`
+              :`<button class="slot" onclick="abrir('${uc.id}')"><span><b>${c.titulo}</b>${c.ajuda}</span></button>`}).join('')}</div>
+    <button class="btn" onclick="abrir('${uc.id}')">${feitos===uc.carimbos.length?'Ver no mapa':'Carimbar meu passaporte'}</button></div>`}).join('');
+  if(TESTE) painelTeste();
+}
+
+/* ===================== FOLHA (mapa + pontos) ===================== */
+const veu=document.getElementById('veu'), folha=document.getElementById('folha');
+function fechar(){veu.classList.remove('on');ucAberta=null}
+veu.addEventListener('click',e=>{if(e.target===veu)fechar()});
+
+function abrir(ucId){
+  ucAberta=UCS.find(u=>u.id===ucId); veu.classList.add('on'); telaPontos();
+  if(!vigia&&!simulado) ligarGPS();
+}
+function ligarGPS(){
+  if(!('geolocation' in navigator)){erroGPS='Este aparelho não tem localização disponível.';telaPontos();return}
+  vigia=navigator.geolocation.watchPosition(p=>{
+    if(simulado) return;
+    pos={lon:p.coords.longitude,lat:p.coords.latitude,acc:p.coords.accuracy}; erroGPS=null; if(ucAberta&&!emDesafio) telaPontos();
+  },e=>{erroGPS=e.code===1?'A localização foi bloqueada. Libere o acesso à localização para este site nas configurações do navegador.':'Não consegui pegar o sinal de GPS. Tente num lugar mais aberto.'; if(ucAberta&&!emDesafio) telaPontos();},
+  {enableHighAccuracy:true,maximumAge:5000,timeout:30000});
+}
+let erroGPS=null, emDesafio=false;
+
+function miniMapa(uc){
+  const [x0,y0,x1,y1]=uc.bbox, k=Math.cos(((y0+y1)/2)*rad), W=200, s=W/((x1-x0)*k), H=(y1-y0)*s, m=10;
+  const P=(lon,lat)=>[(lon-x0)*k*s+m,(y1-lat)*s+m];
+  const d='M'+uc.limite.map(p=>P(p[0],p[1]).map(v=>v.toFixed(1)).join(',')).join('L')+'Z';
+  let g=`<path d="${d}" fill="#18965f22" stroke="#18965f" stroke-width="2"/>`;
+  uc.carimbos.filter(c=>c.tipo==='ponto').forEach(c=>{const[x,y]=P(c.lon,c.lat);const f=dados.carimbos[uc.id+'-'+c.id];
+    g+=`<circle cx="${x}" cy="${y}" r="5.5" fill="${f?c.cor:'#fff'}" stroke="${c.cor}" stroke-width="2.2"/>`});
+  if(pos){let[x,y]=P(pos.lon,pos.lat);const fora=x<0||y<0||x>W+2*m||y>H+2*m;
+    x=Math.max(6,Math.min(W+2*m-6,x));y=Math.max(6,Math.min(H+2*m-6,y));
+    g+=fora?`<circle cx="${x}" cy="${y}" r="6" fill="#d9822b" stroke="#fff" stroke-width="2"/>`
+           :`<circle cx="${x}" cy="${y}" r="13" fill="#1cbaec33"/><circle cx="${x}" cy="${y}" r="6" fill="#1cbaec" stroke="#fff" stroke-width="2.2"/>`}
+  return `<svg viewBox="0 0 ${W+2*m} ${(H+2*m).toFixed(0)}">${g}</svg>`;
+}
+
+function telaPontos(){
+  const uc=ucAberta; if(!uc) return; emDesafio=false;
+  let est;
+  if(erroGPS) est=`<span class="grande">Sem localização</span>${erroGPS}`;
+  else if(!pos) est=`<span class="grande">Procurando você…</span>Se o celular perguntar, permita o uso da localização.`;
+  else{
+    const a=situacao(uc,uc.carimbos[0]);
+    est=`<span class="grande">${a.ok?'Você está na APA!':'Você ainda não está na APA'}</span>${a.ok?'Escolha um carimbo abaixo.':a.txt+'.'}
+      <span class="prec">${simulado?'Posição simulada ('+simulado+')':'Precisão do GPS: ±'+Math.round(pos.acc)+' m'}</span>`;
+    if(!simulado&&pos.acc>150) est+=`<span class="prec"> · sinal fraco, aguarde um pouco</span>`;
+  }
+  const fraco=pos&&!simulado&&pos.acc>150;
+  folha.innerHTML=`<div class="topo"><h2>${uc.nome}</h2><button class="x" onclick="fechar()" aria-label="Fechar">×</button></div>
+   <div class="mapa">${miniMapa(uc)}<div class="estado">${est}</div></div>
+   <div class="lista">${uc.carimbos.map(c=>{const f=dados.carimbos[uc.id+'-'+c.id],s=situacao(uc,c);
+     return `<div class="ponto"><div><b>${c.rotulo}</b><small>${f?'Carimbado em '+new Date(f.data).toLocaleDateString('pt-BR'):s.txt}</small></div>
+     ${f?'<span class="feito">✓ Feito</span>':`<button ${s.ok&&!fraco?'':'disabled'} onclick="desafio('${c.id}')">Carimbar</button>`}</div>`}).join('')}</div>`;
+}
+
+/* ===================== DESAFIO + CARIMBADA ===================== */
+function desafio(cId){
+  const uc=ucAberta,c=uc.carimbos.find(x=>x.id===cId); emDesafio=true;
+  folha.innerHTML=`<div class="topo"><h2>${c.rotulo}</h2><button class="x" onclick="telaPontos()" aria-label="Voltar">×</button></div>
+   <div class="desafio"><p>${c.pergunta}</p><div class="dica" id="dica"></div>
+   ${c.opcoes.map((o,i)=>`<button class="op" onclick="responder(this,'${cId}',${i})">${o}</button>`).join('')}</div>`;
+}
+function responder(el,cId,i){
+  const uc=ucAberta,c=uc.carimbos.find(x=>x.id===cId);
+  if(i!==c.certa){el.classList.remove('errada');void el.offsetWidth;el.classList.add('errada');document.getElementById('dica').textContent='Quase! Dica: '+c.dica;return}
+  const reg={data:Date.now(),rot:Math.round(Math.random()*24-12),seed:1+Math.floor(Math.random()*90),teste:!!simulado};
+  dados.carimbos[uc.id+'-'+c.id]=reg; salvar();
+  mostrarCarimbo(uc,c,reg,true); desenhar();
+}
+function mostrarCarimbo(uc,c,reg,novo){
+  emDesafio=true;
+  const todos=uc.carimbos.every(x=>dados.carimbos[uc.id+'-'+x.id]);
+  folha.innerHTML=`<div class="topo"><h2>${c.rotulo}</h2><button class="x" onclick="${novo?'telaPontos()':'fechar()'}" aria-label="Fechar">×</button></div>
+   <div class="palco"><div class="marca" style="--r:0deg">${svgCarimbo(uc,c,reg)}</div></div>
+   <p class="parabens">${novo?`<b>Carimbado!</b>${todos?'Você completou todos os carimbos da '+uc.curto+'!':'Seu passaporte ganhou mais um carimbo.'}`
+     :'Carimbado em '+new Date(reg.data).toLocaleDateString('pt-BR')}</p>
+   <button class="btn" onclick="baixar('${uc.id}','${c.id}')">Salvar imagem do carimbo</button>
+   <button class="btn sec" onclick="${novo?'telaPontos()':'fechar()'}">${novo?'Voltar aos carimbos':'Fechar'}</button>`;
+  const m=folha.querySelector('.marca');
+  if(novo){ requestAnimationFrame(()=>m.classList.add('bate')); if(navigator.vibrate) setTimeout(()=>navigator.vibrate(60),300); somBatida(); }
+  else m.style.opacity=1;
+}
+function verCarimbo(ucId,cId){const uc=UCS.find(u=>u.id===ucId);ucAberta=uc;veu.classList.add('on');
+  mostrarCarimbo(uc,uc.carimbos.find(c=>c.id===cId),dados.carimbos[ucId+'-'+cId],false)}
+
+function somBatida(){try{const A=new (window.AudioContext||window.webkitAudioContext)(),t=A.currentTime+.28;
+  const o=A.createOscillator(),g=A.createGain();o.type='sine';o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(45,t+.12);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.6,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.18);
+  o.connect(g).connect(A.destination);o.start(t);o.stop(t+.2)}catch(e){}}
+
+function baixar(ucId,cId){
+  const uc=UCS.find(u=>u.id===ucId),c=uc.carimbos.find(x=>x.id===cId),reg=dados.carimbos[ucId+'-'+cId];
+  const svg=svgCarimbo(uc,c,reg).replace('<svg ','<svg width="900" height="900" ');
+  const img=new Image(),url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
+  img.onload=()=>{const cv=document.createElement('canvas');cv.width=1080;cv.height=1080;const x=cv.getContext('2d');
+    x.fillStyle='#f6f3ec';x.fillRect(0,0,1080,1080);x.drawImage(img,90,70,900,900);
+    x.fillStyle='#1e4575';x.font='600 30px system-ui,sans-serif';x.textAlign='center';x.fillText('Meu passaporte · Preservando o Nosso Quintal',540,1035);
+    URL.revokeObjectURL(url);
+    cv.toBlob(async b=>{const nome=`carimbo-${ucId}-${cId}.png`,f=new File([b],nome,{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Meu carimbo'});return}catch(e){if(e.name==='AbortError')return}}
+      const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;a.click()},'image/png')};
+  img.src=url;
+}
+
+/* ===================== MODO TESTE (?teste=1) ===================== */
+function painelTeste(){
+  const uc=UCS[0], op=[['Fora (Vitória)',-40.3128,-20.3155],['Dentro da APA',-40.462,-19.885],
+    ['No mirante',uc.carimbos[1].lon,uc.carimbos[1].lat],['No pico',uc.carimbos[2].lon,uc.carimbos[2].lat]];
+  document.getElementById('painelTeste').innerHTML=`<div class="teste"><b>Modo teste</b> · simula a posição para conferir o passaporte sem ir à APA. Carimbos feitos aqui saem marcados "TESTE".
+   <div class="linha">${op.map((o,i)=>`<button class="${simulado===o[0]?'on':''}" onclick="simular(${i})">${o[0]}</button>`).join('')}
+   <button class="${simulado?'':'on'}" onclick="simular(-1)">GPS real</button></div>
+   <div class="linha"><button onclick="zerar()">Zerar passaporte</button></div></div>`;
+  window._op=op;
+}
+function simular(i){ if(i<0){simulado=null;pos=null;ligarGPS()} else {const o=_op[i];simulado=o[0];pos={lon:o[1],lat:o[2],acc:8}}
+  painelTeste(); if(ucAberta&&!emDesafio) telaPontos(); }
+function zerar(){dados={carimbos:{}};salvar();desenhar()}
+
+desenhar();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
