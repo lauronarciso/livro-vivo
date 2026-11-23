@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Libras · Serviços ambientais e ecossistêmicos · Preservando o Nosso Quintal</title>
+<meta name="theme-color" content="#1e4575">
+<style>
+  :root{--azul:#1e4575;--verde:#18965f;--fundo:#f6f3ec;--papel:#fffdf8;--linha:#e3dccd;--suave:#5b6a88;--amarelo:#f2c400}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--fundo);color:var(--azul);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .app{max-width:860px;margin:0 auto;padding:16px 16px 60px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  header img{width:56px}
+  header small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--verde);font-weight:700}
+  header h1{margin:2px 0 0;font-size:22px;line-height:1.1;font-weight:800}
+  header p{margin:3px 0 0;font-size:13px;color:#3a4a6b}
+  .pagina{width:100%;border-radius:14px;display:block;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+  .abas{display:flex;gap:6px;margin:18px 0 12px;background:#e9e3d6;border-radius:14px;padding:5px}
+  .abas button{flex:1;border:0;background:none;border-radius:10px;padding:11px 6px;font:700 14px system-ui;color:var(--azul);cursor:pointer}
+  .abas button.on{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .painel{display:none}.painel.on{display:block}
+  .cartao{background:var(--papel);border:1px solid var(--linha);border-radius:16px;padding:16px}
+  .video{aspect-ratio:16/9;border-radius:12px;background:#203352 linear-gradient(135deg,#203352,#2d4b78);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;gap:8px}
+  .video .mao{font-size:44px}
+  .video b{font-size:17px}
+  .video span{font-size:13.5px;opacity:.85;max-width:440px;line-height:1.45}
+  .como{display:flex;gap:12px;align-items:flex-start;background:#eaf3fb;border:1px solid #c9def2;border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:14px;line-height:1.45}
+  .como .n{flex:none;width:26px;height:26px;border-radius:50%;background:#1a73c9;color:#fff;font:800 13px system-ui;display:flex;align-items:center;justify-content:center}
+  .passos{display:grid;gap:8px}
+  .trecho{background:var(--papel);border:1.5px solid var(--linha);border-radius:14px;padding:14px 16px;margin-top:10px;font-size:16.5px;line-height:1.55;color:#22314f;cursor:pointer;transition:border-color .2s,background .2s}
+  .trecho:hover{border-color:#1a73c9;background:#f4f9ff}
+  .trecho h3{margin:0 0 4px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--verde)}
+  .trecho.destaque{background:#fffbe6;border-color:#f0d98a;font-weight:700}
+  .trecho p{margin:0}
+  .nota{font-size:12.5px;color:var(--suave);line-height:1.5;margin-top:14px}
+  footer{margin-top:26px;font-size:11.5px;color:var(--suave);text-align:center;line-height:1.55}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <img src="../../passaporte/logo.png" alt="Preservando o Nosso Quintal">
+    <div><small>Preservando o Nosso Quintal · Libras</small><h1>Serviços ambientais e ecossistêmicos</h1><p>Páginas 64 e 65</p></div>
+  </header>
+
+  <img class="pagina" src="../../folhear/img/p00_servicos_ambientais.jpg" alt="Páginas 64 e 65 do livro: Serviços ambientais e ecossistêmicos, com foto de um sabiá-da-praia">
+
+  <div class="abas" role="tablist">
+    <button class="on" data-p="interprete">🎬 Intérprete</button>
+    <button data-p="avatar">🤟 Avatar</button>
+    <button data-p="texto">📄 Texto</button>
+  </div>
+
+  <!-- 1. vídeo com intérprete humano -->
+  <section class="painel on" id="interprete">
+    <div class="video" id="videoInterprete">
+      <div class="mao">🤟</div>
+      <b>Vídeo em Libras com intérprete</b>
+      <span>Aqui entra o vídeo desta página gravado por intérprete de Libras. Enquanto ele não fica pronto, use a aba <b>Avatar</b>.</span>
+    </div>
+    <p class="nota">A tradução por intérprete humano é a forma preferida pela comunidade surda: traz expressão facial, ritmo e escolhas de sinais que o avatar automático ainda não faz.</p>
+  </section>
+
+  <!-- 2. avatar VLibras -->
+  <section class="painel" id="avatar">
+    <div class="como"><div class="passos">
+      <div style="display:flex;gap:10px;align-items:center"><span class="n">1</span><span>Toque no botão azul de <b>Libras</b> que aparece na lateral da tela.</span></div>
+      <div style="display:flex;gap:10px;align-items:center"><span class="n">2</span><span>Depois toque em um dos trechos abaixo. O avatar traduz o trecho em Libras.</span></div>
+    </div></div>
+    <div id="trechos"></div>
+    <p class="nota">Tradução automática feita pelo <b>VLibras</b>, ferramenta pública e gratuita do Governo Federal. A tradução automática pode ter imprecisões.</p>
+  </section>
+
+  <!-- 3. texto -->
+  <section class="painel" id="texto"><div class="cartao" id="textoCorrido"></div></section>
+
+  <footer>Série Preservando o Nosso Quintal · Editora Naturalistas<br>Libras por avatar: VLibras (Governo Federal)</footer>
+</div>
+
+<!-- VLibras: widget oficial -->
+<div vw class="enabled">
+  <div vw-access-button class="active"></div>
+  <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
+</div>
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+  try { new window.VLibras.Widget('https://vlibras.gov.br/app'); } catch(e) { console.warn('VLibras indisponível', e); }
+
+  const TEXTO=[
+    {p:'À sombra de uma árvore, o prazer de beber um copo de água, apreciar uma bela paisagem e ouvir a melodia das aves parecem coisas comuns. Embora sejam rotineiros, não percebemos a importância desses benefícios que a natureza nos oferece diariamente. A necessidade de conservar os recursos naturais vai muito além de nossa compreensão e entendimento.'},
+    {p:'Trata-se de uma infinidade de recursos que beneficiam toda a sociedade e garantem nosso bem-estar: a polinização das plantas, a regulação do clima, o fornecimento de água potável e a proteção das encostas das montanhas, por exemplo.'},
+    {p:'Esses benefícios são chamados de Serviços Ecossistêmicos e são classificados em diferentes categorias:'},
+    {h:'Serviços de provisão',p:'Fornecem bens e produtos diretamente utilizados pelos seres humanos, como água, mel, frutas, madeira, peixes e sementes. Esses serviços são essenciais para nossa sobrevivência e para a economia.'},
+    {h:'Serviços culturais',p:'Proporcionam benefícios intangíveis, como a beleza das paisagens naturais, das praias, dos parques e das áreas de lazer e turismo. Esses serviços têm valor estético, recreativo, educacional e científico, contribuindo para a qualidade de vida das pessoas.'},
+    {h:'Serviços reguladores',p:'Controlam processos naturais e são fundamentais para a manutenção do equilíbrio ecológico. Entre esses serviços estão a regulação do clima, a estabilização de encostas, a purificação e a manutenção da qualidade do ar e a vazão dos rios.'},
+    {h:'Serviços de suporte',p:'Provêm os recursos necessários para que outros serviços ecossistêmicos existam e funcionem adequadamente. Esses serviços incluem a reciclagem de nutrientes, a formação do solo, a dispersão de sementes e a polinização.'},
+    {p:'Existem também os Serviços Ambientais, que são ações realizadas, individual ou coletivamente, para a manutenção dos Serviços Ecossistêmicos, como a recuperação de nascentes e a restauração de áreas degradadas. Essas atividades podem ser remuneradas por meio de programas governamentais para Pagamento por Serviços Ambientais (PSA). O Governo do Estado promove tais iniciativas pelo Programa Reflorestar, que oferece apoio técnico e financeiro aos agricultores que desenvolvem práticas sustentáveis.'},
+    {p:'As unidades de conservação são fundamentais para a manutenção dos serviços ecossistêmicos e para o fomento dos serviços ambientais.',d:1}
+  ];
+  document.getElementById('trechos').innerHTML=TEXTO.map(t=>`<div class="trecho${t.d?' destaque':''}">${t.h?`<h3>${t.h}</h3>`:''}<p>${t.p}</p></div>`).join('');
+  document.getElementById('textoCorrido').innerHTML=TEXTO.map(t=>(t.h?`<h3 style="margin:16px 0 4px;color:#18965f;font-size:15px">${t.h}</h3>`:'')+`<p style="margin:0 0 12px;font-size:16.5px;line-height:1.6;color:#22314f;${t.d?'font-weight:700':''}">${t.p}</p>`).join('');
+
+  document.querySelectorAll('.abas button').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('.abas button').forEach(x=>x.classList.toggle('on',x===b));
+    document.querySelectorAll('.painel').forEach(p=>p.classList.toggle('on',p.id===b.dataset.p));
+  });
+</script>
+</body>
+</html>
