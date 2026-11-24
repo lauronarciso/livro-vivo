@@ -55,6 +55,7 @@
 const MIRANTE={nome:'Mirante do Goiapaba-Açu',lon:-40.4722,lat:-19.9152};
 const DECLINACAO=-24;          // declinação magnética aproximada no centro do ES (graus)
 const ALCANCE=45000;           // metros
+const PERTO=220;               // terreno mais perto que isso é ignorado (resolução de 90 m)
 const PASSO_AZ=0.2;            // graus
 const FAIXAS=[2500,7000,16000,ALCANCE];   // linhas de cristas (perto → longe)
 const R_TERRA=6371000, K_REFR=0.13;
@@ -72,6 +73,8 @@ Promise.all([fetch('dados.json').then(r=>r.json()), new Promise(ok=>{const i=new
   D=d; const c=document.createElement('canvas');c.width=d.w;c.height=d.h;const x=c.getContext('2d');x.drawImage(img,0,0);
   const px=x.getImageData(0,0,d.w,d.h).data; Z=new Float32Array(d.w*d.h);
   for(let i=0;i<Z.length;i++)Z[i]=px[i*4]*256+px[i*4+1];
+  {let best=[MIRANTE.lon,MIRANTE.lat,-1];for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const lo=MIRANTE.lon+dx*D.dx,la=MIRANTE.lat+dy*D.dy,h=alt(lo,la);if(h>best[2])best=[lo,la,h]}
+   MIRANTE.lon=best[0];MIRANTE.lat=best[1];}
   posicionar(MIRANTE.lon,MIRANTE.lat,null);
   document.getElementById('carregando').remove(); tamanho(); requestAnimationFrame(desenhar);
 });
@@ -88,7 +91,7 @@ function posicionar(lon,lat,acc){
   const h0=alt(lon,lat)+1.7; viewer={lon,lat,h0,acc,kx:111320*Math.cos(lat*rad),ky:110574};
   const N=Math.round(360/PASSO_AZ); horiz=new Float32Array(N); faixas=FAIXAS.map(()=>new Float32Array(N)); const far=new Float32Array(N), farMar=new Uint8Array(N);
   for(let k=0;k<N;k++){const az=k*PASSO_AZ*rad,se=Math.sin(az),co=Math.cos(az);let m=-90,b=0,dm=0,zm=1;
-    for(let d=50;d<=ALCANCE;d+=Math.max(40,d*0.008)){
+    for(let d=PERTO;d<=ALCANCE;d+=Math.max(40,d*0.008)){
       const lo=lon+se*d/viewer.kx, la=lat+co*d/viewer.ky, h=alt(lo,la)-d*d/(2*R_TERRA)*(1-K_REFR);
       const a=Math.atan2(h-h0,d)*deg; if(a>m){m=a;dm=d;zm=alt(lo,la)}
       while(b<FAIXAS.length&&d>FAIXAS[b]){faixas[b][k]=m;b++}
@@ -104,7 +107,7 @@ function posicionar(lon,lat,acc){
     let h=alt(lo,la); if(tipo==='pico'){for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)h=Math.max(h,alt(lo+dx*D.dx,la+dy*D.dy))}
     const hc=h-dist*dist/(2*R_TERRA)*(1-K_REFR), ang=Math.atan2(hc+(tipo==='pico'?2:15)-viewer.h0,dist)*deg, az=(Math.atan2(e,n)*deg+360)%360;
     // linha de visada
-    let vis=true;const se=e/dist,co=n/dist;for(let d=60;d<dist-120;d+=Math.max(40,d*0.008)){const hh=alt(lon+se*d/viewer.kx,lat+co*d/viewer.ky)-d*d/(2*R_TERRA)*(1-K_REFR);if(Math.atan2(hh-viewer.h0,d)*deg>ang+0.03){vis=false;break}}
+    let vis=true;const se=e/dist,co=n/dist;for(let d=PERTO;d<dist-120;d+=Math.max(40,d*0.008)){const hh=alt(lon+se*d/viewer.kx,lat+co*d/viewer.ky)-d*d/(2*R_TERRA)*(1-K_REFR);if(Math.atan2(hh-viewer.h0,d)*deg>ang+0.03){vis=false;break}}
     if(!vis)continue;
     if(tipo==='pico'&&h<200&&!dentroAPA(lo,la))continue;
     alvos.push({tipo,nome,lat:la,lon:lo,ele:ele||Math.round(h),dist,az,ang,apa:dentroAPA(lo,la)});
@@ -113,7 +116,7 @@ function posicionar(lon,lat,acc){
   // limite da APA no terreno
   limiteProj=D.limite.map(([lo,la])=>{const e=(lo-lon)*viewer.kx,n=(la-lat)*viewer.ky,dist=Math.hypot(e,n)||1,h=alt(lo,la)+3-dist*dist/(2*R_TERRA)*(1-K_REFR);
     const ang=Math.atan2(h-viewer.h0,dist)*deg;let vis=true;const se=e/dist,co=n/dist;
-    for(let d=60;d<dist-90;d+=Math.max(40,d*0.008)){const hh=alt(lon+se*d/viewer.kx,lat+co*d/viewer.ky)-d*d/(2*R_TERRA)*(1-K_REFR);if(Math.atan2(hh-viewer.h0,d)*deg>ang+0.05){vis=false;break}}
+    for(let d=PERTO;d<dist-90;d+=Math.max(40,d*0.008)){const hh=alt(lon+se*d/viewer.kx,lat+co*d/viewer.ky)-d*d/(2*R_TERRA)*(1-K_REFR);if(Math.atan2(hh-viewer.h0,d)*deg>ang+0.05){vis=false;break}}
     return{az:(Math.atan2(e,n)*deg+360)%360,ang,vis,dist}});
   const dentro=dentroAPA(lon,lat);
   document.getElementById('local').textContent=(acc==null?MIRANTE.nome+' · '+Math.round(viewer.h0-1.7)+' m':'Sua posição ±'+Math.round(acc)+' m · '+Math.round(viewer.h0-1.7)+' m')+(dentro?' · dentro da APA':'');
