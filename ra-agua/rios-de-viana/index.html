@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Os rios de Viana · a água escorrendo no mapa</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<style>
+  :root{--azul:#1e4575;--verde:#18965f}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  #inicio{position:fixed;inset:0;z-index:10;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:20px 16px;box-sizing:border-box;
+    background:linear-gradient(180deg,rgba(15,31,56,.55),rgba(15,31,56,.92)),url('alvo.jpg') center 60%/cover}
+  .cartao{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:22px;box-sizing:border-box;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .cartao small{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--verde);font-weight:800}
+  .cartao h1{margin:4px 0 6px;font-size:1.6rem;font-weight:900;color:var(--azul);line-height:1.1}
+  .cartao p{margin:0 0 14px;color:#3a4a6b;font-size:.98rem;line-height:1.4}
+  .passos{list-style:none;padding:0;margin:0 0 16px;text-align:left}
+  .passos li{display:flex;gap:10px;align-items:center;margin:8px 0;color:#22314f;font-weight:700;font-size:.95rem}
+  .passos b{flex:none;width:26px;height:26px;border-radius:50%;background:#1c8fe0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+  .btn{border:0;border-radius:30px;background:var(--azul);color:#fff;font:800 1.1rem system-ui;padding:13px 30px;cursor:pointer}
+  .teste{display:block;margin-top:14px;font-size:.82rem;color:var(--azul)}
+  #dica,#erro{position:fixed;left:50%;transform:translateX(-50%);z-index:5;display:none;border-radius:16px;padding:9px 16px;font-weight:700;font-size:.95rem;text-align:center;max-width:85vw}
+  #dica{bottom:28px;background:rgba(15,31,56,.85);color:#fff}
+  #erro{top:20px;background:#fff;color:#b8322a;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+  #credito{position:fixed;left:0;right:0;bottom:0;z-index:4;display:none;padding:6px 10px;font-size:10px;color:#fff;text-align:center;text-shadow:0 1px 2px #000}
+  .a-enter-vr,.a-enter-ar,.a-orientation-modal{display:none!important}
+</style>
+</head>
+<body>
+<div id="inicio"><div class="cartao">
+  <small>Pequeno Guarda-Parque · Viana</small>
+  <h1>Os rios de Viana</h1>
+  <p>Aponte o celular para o mapa da caderneta e veja a água da chuva escorrer pelos córregos até o Rio Jucu.</p>
+  <ol class="passos">
+    <li><b>1</b><span>Toque em Começar e permita a câmera</span></li>
+    <li><b>2</b><span>Encaixe a página inteira na tela, de cima</span></li>
+    <li><b>3</b><span>Quando a linha do município encaixar, a água começa a correr</span></li>
+  </ol>
+  <button class="btn" id="btn">Começar</button>
+  <a class="teste" href="alvo.jpg" target="_blank">Sem a caderneta? Abra o mapa de teste em outra tela</a>
+</div></div>
+<div id="dica">Aponte para o mapa impresso</div>
+<div id="erro"></div>
+<div id="credito">Série Preservando o Nosso Quintal · caminho da água estimado pela rede de drenagem do mapa</div>
+
+<a-scene mindar-image="imageTargetSrc: mapa.mind; maxTrack: 1; autoStart: false; uiScanning: no; uiLoading: no; filterMinCF: 0.0001; filterBeta: 0.001"
+  color-space="sRGB" renderer="colorManagement: true; antialias: true; alpha: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <a-entity id="alvo" mindar-image-target="targetIndex: 0">
+    <a-entity id="agua" agua></a-entity>
+  </a-entity>
+</a-scene>
+
+<script>
+// limite do município (contorno do mapa impresso), em unidades do alvo (largura da página = 1, centro = 0)
+const LIMITE=[[0.0568,-0.5111],[0.0391,-0.5103],[-0.1156,-0.4128],[-0.1261,-0.4128],[-0.135,-0.4176],[-0.1527,-0.4176],[-0.1567,-0.4152],[-0.1672,-0.4152],[-0.1753,-0.4216],[-0.1817,-0.4232],[-0.2139,-0.4241],[-0.2309,-0.4289],[-0.251,-0.4289],[-0.2566,-0.4241],[-0.2663,-0.4241],[-0.2873,-0.445],[-0.2961,-0.445],[-0.2977,-0.4466],[-0.3187,-0.4466],[-0.3211,-0.449],[-0.3259,-0.4498],[-0.3268,-0.4515],[-0.3429,-0.4515],[-0.4166,-0.3817],[-0.4166,-0.3656],[-0.4142,-0.3616],[-0.4102,-0.3592],[-0.4077,-0.3471],[-0.4029,-0.3415],[-0.4021,-0.3245],[-0.3956,-0.3141],[-0.3948,-0.3004],[-0.3912,-0.3],[-0.3892,-0.2963],[-0.3892,-0.2867],[-0.392,-0.2855],[-0.3965,-0.2794],[-0.3973,-0.2754],[-0.3973,-0.248],[-0.3767,-0.2476],[-0.3731,-0.2456],[-0.3731,-0.2423],[-0.3699,-0.2415],[-0.3699,-0.2359],[-0.3658,-0.2278],[-0.3658,-0.2166],[-0.3646,-0.2145],[-0.3606,-0.2145],[-0.3582,-0.2129],[-0.3356,-0.2129],[-0.3332,-0.2145],[-0.3268,-0.2145],[-0.3219,-0.2186],[-0.3114,-0.2186],[-0.3098,-0.217],[-0.3034,-0.2162],[-0.2752,-0.217],[-0.2687,-0.2162],[-0.2615,-0.2113],[-0.2454,-0.2097],[-0.2365,-0.2041],[-0.2204,-0.2033],[-0.2196,-0.2017],[-0.2107,-0.2017],[-0.2083,-0.2],[-0.1994,-0.2],[-0.1978,-0.1984],[-0.1793,-0.196],[-0.1789,-0.1884],[-0.1728,-0.1863],[-0.168,-0.1807],[-0.1511,-0.1807],[-0.1438,-0.1791],[-0.1418,-0.1771],[-0.1418,-0.161],[-0.1378,-0.1577],[-0.1313,-0.1456],[-0.1237,-0.1372],[-0.1112,-0.1352],[-0.1116,-0.1251],[-0.1221,-0.1243],[-0.1249,-0.1174],[-0.1285,-0.1138],[-0.1342,-0.1122],[-0.1454,-0.1122],[-0.1471,-0.117],[-0.1583,-0.117],[-0.1604,-0.1183],[-0.1608,-0.1243],[-0.1769,-0.1243],[-0.1801,-0.1203],[-0.1922,-0.1203],[-0.1926,-0.0868],[-0.1878,-0.0812],[-0.1878,-0.0723],[-0.1946,-0.0711],[-0.226,-0.0719],[-0.2276,-0.0687],[-0.2381,-0.0687],[-0.2413,-0.0622],[-0.251,-0.0622],[-0.2518,-0.0389],[-0.2663,-0.0389],[-0.2667,-0.0441],[-0.274,-0.0522],[-0.2752,-0.0574],[-0.2921,-0.0574],[-0.2949,-0.0554],[-0.2957,-0.0199],[-0.2921,-0.0195],[-0.2901,-0.0143],[-0.2853,-0.0111],[-0.2828,-0.0054],[-0.2828,0.005],[-0.2752,0.0054],[-0.274,0.0163],[-0.2683,0.0171],[-0.2683,0.0284],[-0.2716,0.03],[-0.2716,0.0534],[-0.2699,0.0542],[-0.2683,0.0727],[-0.2651,0.0784],[-0.2651,0.0848],[-0.2603,0.0864],[-0.2587,0.0929],[-0.2571,0.0937],[-0.2579,0.1187],[-0.2595,0.1211],[-0.2595,0.1267],[-0.2635,0.1315],[-0.2635,0.1743],[-0.2619,0.1775],[-0.2619,0.2017],[-0.2562,0.2081],[-0.2554,0.2186],[-0.2526,0.2246],[-0.2373,0.2246],[-0.2337,0.2113],[-0.2284,0.2069],[-0.2196,0.2061],[-0.2151,0.2017],[-0.2151,0.1839],[-0.2168,0.1823],[-0.2168,0.1726],[-0.2135,0.1702],[-0.2083,0.161],[-0.1986,0.161],[-0.1946,0.1674],[-0.1559,0.1682],[-0.1511,0.1779],[-0.1382,0.1779],[-0.1326,0.1835],[-0.1277,0.1859],[-0.1229,0.1916],[-0.1156,0.1924],[-0.1132,0.1972],[-0.0733,0.1968],[-0.0741,0.1565],[-0.0717,0.1517],[-0.0725,0.1187],[-0.0709,0.1154],[-0.0709,0.0921],[-0.0725,0.0872],[-0.0725,0.0768],[-0.0685,0.0727],[-0.0677,0.0695],[-0.0661,0.0614],[-0.0661,0.0485],[-0.0612,0.0405],[-0.0604,0.0349],[-0.0556,0.0292],[-0.0548,0.0179],[-0.0504,0.0127],[-0.0423,0.0127],[-0.0383,0.0095],[-0.0262,0.0095],[-0.0246,0.0111],[0.0028,0.0095],[0.0044,0.0127],[0.0117,0.0127],[0.0181,0.0167],[0.0479,0.0167],[0.0496,0.0199],[0.0536,0.0199],[0.0552,0.0224],[0.0592,0.0224],[0.06,0.0248],[0.0641,0.0256],[0.0665,0.0296],[0.0786,0.0304],[0.0846,0.0365],[0.0846,0.0389],[0.0874,0.0417],[0.0955,0.0417],[0.0987,0.0465],[0.1027,0.0473],[0.106,0.0514],[0.1124,0.0538],[0.1197,0.0635],[0.1358,0.0635],[0.137,0.0622],[0.1378,0.0526],[0.1418,0.0502],[0.1446,0.0417],[0.1535,0.0417],[0.1543,0.0433],[0.1616,0.0441],[0.164,0.0498],[0.1793,0.0554],[0.1841,0.0586],[0.2027,0.0586],[0.2115,0.0465],[0.2204,0.0441],[0.226,0.0369],[0.2534,0.0361],[0.2619,0.0179],[0.2816,0.0079],[0.2836,-0.0006],[0.2881,-0.001],[0.2897,-0.0034],[0.2933,-0.0046],[0.2933,-0.0119],[0.2981,-0.0143],[0.2981,-0.024],[0.3054,-0.0248],[0.3054,-0.0441],[0.3046,-0.0506],[0.3022,-0.053],[0.303,-0.0957],[0.3086,-0.1005],[0.3098,-0.1058],[0.3191,-0.107],[0.3368,-0.1311],[0.3368,-0.1448],[0.3392,-0.1505],[0.3485,-0.1509],[0.3525,-0.1477],[0.355,-0.1477],[0.3558,-0.1444],[0.3719,-0.1444],[0.3755,-0.1465],[0.3759,-0.1493],[0.4025,-0.1501],[0.4053,-0.1537],[0.4053,-0.1698],[0.4041,-0.171],[0.3537,-0.19],[0.3521,-0.227],[0.3469,-0.2282],[0.334,-0.2387],[0.3066,-0.2444],[0.2397,-0.2476],[0.2301,-0.2492],[0.2147,-0.2548],[0.2063,-0.2681],[0.201,-0.2734],[0.1176,-0.2722],[0.1176,-0.2778],[0.0854,-0.4011],[0.0854,-0.4228],[0.0802,-0.4232],[0.079,-0.4261],[0.0568,-0.5111]];
+// grade da drenagem: célula de 3 px da página (2482×3509), a partir da linha 1150
+const GH=676,GW=827,K=3,PW=2482,PH=3509,Y0=1150,ALT=0.004,NG=1800;
+const OFF=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+const cx=c=>((c+.5)*K)/PW-.5, cy=r=>PH/PW/2-(Y0+(r+.5)*K)/PW;
+let ativo=false,tAtivo=0;
+
+AFRAME.registerComponent('agua',{
+  init(){
+    const T=AFRAME.THREE,el=this.el;this.T=T;
+    const lin=[];const w=0.0016;
+    for(let i=0;i<LIMITE.length;i++){const a=LIMITE[i],b=LIMITE[(i+1)%LIMITE.length];const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L*w,ny=dx/L*w;
+      lin.push(a[0]+nx,a[1]+ny,ALT, a[0]-nx,a[1]-ny,ALT, b[0]+nx,b[1]+ny,ALT, a[0]-nx,a[1]-ny,ALT, b[0]-nx,b[1]-ny,ALT, b[0]+nx,b[1]+ny,ALT);}
+    const gl=new T.BufferGeometry();gl.setAttribute('position',new T.Float32BufferAttribute(lin,3));
+    this.limMat=new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9,side:T.DoubleSide,depthTest:false});
+    const limite=new T.Mesh(gl,this.limMat);limite.renderOrder=5;limite.visible=false;el.object3D.add(limite);this.limite=limite;
+    fetch('drenagem.bin').then(r=>r.arrayBuffer()).then(buf=>{this.drenagem(new Uint8Array(buf));this.criar()});
+  },
+  drenagem(b){
+    const N=GH*GW,D=new Int32Array(N).fill(-1),cls=new Uint8Array(N);
+    for(let i=0;i<N;i++){cls[i]=b[i]>>4;const d=b[i]&15;if(d<8){const r=(i/GW|0)-OFF[d][0],c=i%GW-OFF[d][1];D[i]=r*GW+c}}
+    // acumulação (A) e distância das nascentes pela rede (L), em ordem topológica
+    const deg=new Int32Array(N);for(let i=0;i<N;i++)if(D[i]>=0)deg[D[i]]++;
+    const A=new Float32Array(N).fill(1),L=new Float32Array(N),fila=new Int32Array(N);let ini=0,fim=0;
+    for(let i=0;i<N;i++)if(cls[i]&&!deg[i])fila[fim++]=i;
+    while(ini<fim){const i=fila[ini++],j=D[i];if(j<0)continue;A[j]+=A[i];const l=L[i]+(cls[i]>=2?1:0);if(l>L[j])L[j]=l;if(--deg[j]===0)fila[fim++]=j}
+    const nasc=[];for(let i=0;i<N;i++)if(cls[i]===1||cls[i]===2)nasc.push(i);  // gotas só dentro do município
+    Object.assign(this,{D,A,L,cls,nasc:Int32Array.from(nasc)});
+  },
+  criar(){
+    const T=this.T,{A,L,cls}=this;
+    const pos=[],cheg=[],tam=[];
+    for(let i=0;i<GH*GW;i++){if(cls[i]<2)continue;const r=(i/GW)|0,c=i%GW;pos.push(cx(c),cy(r),ALT);cheg.push(L[i]);
+      let k=Math.log(A[i]/60+1);if(cls[i]===3)k=Math.max(k,2.6);tam.push(Math.min(k,3))}
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));
+    g.setAttribute('cheg',new T.Float32BufferAttribute(cheg,1));g.setAttribute('tam',new T.Float32BufferAttribute(tam,1));
+    this.riosMat=new T.ShaderMaterial({transparent:true,depthTest:false,depthWrite:false,uniforms:{t:{value:0},px:{value:600},esc:{value:1}},
+      vertexShader:`attribute float cheg;attribute float tam;uniform float t;uniform float px;uniform float esc;varying float a;varying float k;
+        void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;a=smoothstep(cheg-40.,cheg,t);k=tam;
+        gl_PointSize=(0.0014+0.0009*tam)*esc*px*projectionMatrix[1][1]/-mv.z;}`,
+      fragmentShader:`varying float a;varying float k;void main(){vec2 p=gl_PointCoord-.5;float d=length(p);if(d>.5)discard;
+        vec3 c=mix(vec3(.55,.85,1.),vec3(.05,.45,.95),clamp(k/3.,0.,1.));gl_FragColor=vec4(c,a*.95*smoothstep(.5,.2,d));}`});
+    const rios=new T.Points(g,this.riosMat);rios.renderOrder=2;this.el.object3D.add(rios);
+    const cv=document.createElement('canvas');cv.width=cv.height=64;const x=cv.getContext('2d');
+    const gr=x.createRadialGradient(26,24,2,32,32,30);gr.addColorStop(0,'#fff');gr.addColorStop(.25,'#9ad6ff');gr.addColorStop(.7,'#1f7fd6');gr.addColorStop(1,'rgba(31,127,214,0)');
+    x.fillStyle=gr;x.beginPath();x.arc(32,32,30,0,7);x.fill();const tex=new T.CanvasTexture(cv);
+    this.gPos=new Float32Array(NG*3);this.est=[];for(let k=0;k<NG;k++){this.est.push({});this.nova(k)}
+    const gg=new T.BufferGeometry();gg.setAttribute('position',new T.BufferAttribute(this.gPos,3));
+    this.gotasMat=new T.PointsMaterial({map:tex,size:0.011,transparent:true,depthTest:false,depthWrite:false,opacity:0});
+    const gotas=new T.Points(gg,this.gotasMat);gotas.renderOrder=3;this.el.object3D.add(gotas);this.gg=gg;
+    this.pronto=true;
+  },
+  nova(k){const s=this.est[k],i=this.nasc[(Math.random()*this.nasc.length)|0];s.i=i;s.p=Math.random();s.vida=3+Math.random()*5;
+    this.gPos[k*3]=cx(i%GW);this.gPos[k*3+1]=cy((i/GW)|0);this.gPos[k*3+2]=ALT},
+  tick(t,dtms){
+    if(!this.pronto)return;const dt=Math.min(dtms/1000,.05),D=this.D;
+    this.riosMat.uniforms.px.value=this.el.sceneEl.renderer.domElement.height/2;
+    // o MindAR trabalha em pixels do alvo: o tamanho dos pontos acompanha a escala real do objeto
+    const ws=new this.T.Vector3();this.el.object3D.getWorldScale(ws);
+    this.riosMat.uniforms.esc.value=ws.x;this.gotasMat.size=0.008*ws.x*this.el.sceneEl.camera.projectionMatrix.elements[5];
+    this.limite.visible=ativo;
+    if(!ativo){this.gotasMat.opacity=0;this.riosMat.uniforms.t.value=0;return}
+    tAtivo+=dt;
+    this.gotasMat.opacity=Math.min(.95,tAtivo*1.2);
+    this.riosMat.uniforms.t.value=Math.max(0,tAtivo-1.5)*70;
+    for(let k=0;k<NG;k++){const s=this.est[k];s.vida-=dt;if(D[s.i]<0||s.vida<=0){this.nova(k);continue}
+      s.p+=dt*45;while(s.p>=1){s.p-=1;s.i=D[s.i];if(s.i<0||D[s.i]<0)break}
+      if(s.i<0||D[s.i]<0){this.nova(k);continue}
+      const a=s.i,b=D[a],ra=(a/GW)|0,ca=a%GW,rb=(b/GW)|0,cb=b%GW;
+      this.gPos[k*3]=cx(ca)+(cx(cb)-cx(ca))*s.p;this.gPos[k*3+1]=cy(ra)+(cy(rb)-cy(ra))*s.p;}
+    this.gg.attributes.position.needsUpdate=true;
+  }
+});
+
+const dica=document.getElementById('dica'),erro=document.getElementById('erro'),credito=document.getElementById('credito');
+const scene=document.querySelector('a-scene');
+function mostrarErro(m){erro.textContent=m;erro.style.display='block';dica.style.display='none'}
+scene.addEventListener('arError',()=>mostrarErro('Não foi possível abrir a câmera. Verifique a permissão e abra o link direto no Safari ou no Chrome (não dentro do WhatsApp/Instagram).'));
+document.getElementById('btn').addEventListener('click',()=>{
+  document.getElementById('inicio').style.display='none';dica.textContent='Abrindo a câmera…';dica.style.display='block';
+  const ini=()=>{try{scene.systems['mindar-image-system'].start()}catch(e){mostrarErro('Erro ao iniciar: '+e.message)}};
+  if(scene.hasLoaded)ini();else scene.addEventListener('loaded',ini);
+});
+scene.addEventListener('arReady',()=>{dica.textContent='Aponte para o mapa impresso'});
+const alvo=document.getElementById('alvo');
+alvo.addEventListener('targetFound',()=>{ativo=true;dica.style.display='none';credito.style.display='block'});
+alvo.addEventListener('targetLost',()=>{ativo=false;tAtivo=0;dica.style.display='block';credito.style.display='none'});
+</script>
+</body>
+</html>
